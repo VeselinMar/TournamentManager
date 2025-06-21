@@ -28,19 +28,27 @@ class Player(models.Model):
         self.is_allowed_to_play = not (self.red_cards >= 1 or self.yellow_cards >= 2)
 
 class Match(models.Model):
+    FIELD_CHOICES = (
+        ('A', 'Field A'),
+        ('B', 'Field B'),
+    )
+
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
-    
+
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
-    
+
     is_finished = models.BooleanField(default=False)
+
+    start_time = models.TimeField()
+    field = models.CharField(max_length=1, choices=FIELD_CHOICES)
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name}"
 
     def apply_result(self):
-        if self.is_finished:  # Guard clause
+        if self.is_finished:
             return
 
         if self.home_score > self.away_score:
