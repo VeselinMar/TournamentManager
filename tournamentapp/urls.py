@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import home
+from .views import HomePageView, TeamCreateView
 
 urlpatterns = [
-    path('', home, name='home'),
+    path('', HomePageView.as_view(), name='home'),
+    path('teams/create/', TeamCreateView.as_view(), name='team-create'),
 ]
