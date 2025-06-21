@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Match</title>
+</head>
+<body>
+    <h1>Edit Match: {{ object.home_team.name }} vs {{ object.away_team.name }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Result</button>
+    </form>
+
+    <a href="{% url 'match-detail' object.pk %}">Back to Match Details</a>
+
+</body>
+</html>

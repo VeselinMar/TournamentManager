@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView, DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from .models import Match, Team, Goal
-from .forms import TeamForm, MatchForm
+from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
 
 
@@ -47,3 +47,9 @@ class MatchDetailView(DetailView):
 
         context['goals'] = Goal.objects.filter(match=match)
         return context
+
+class MatchEditView(UpdateView):
+    model = Match
+    form_class = MatchEditForm
+    template_name = 'matches/match_edit.html'
+    success_url = reverse_lazy('home')

@@ -75,3 +75,9 @@ class Goal(models.Model):
         return f"{self.player.name} scored for {self.team.name} in match: {self.match.home_team.name} - {self.match.away_team.name}"
 
 
+    def save(self, *args, **kwargs):
+        created = self.pk is None
+        super().save(*args, **kwargs)
+        if created:
+            self.player.goals += 1
+            self.player.save()

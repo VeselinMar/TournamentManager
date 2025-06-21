@@ -23,6 +23,9 @@
         <p>No goals recorded.</p>
     {% endif %}
 
+    <p>    <a href="{% url 'match-edit' match.pk %}">Edit Result</a>
+</p>
+
     <hr>
     <a href="{% url 'home' %}">Back to Home</a>
     <!-- Later we'll add buttons/links to add goals/cards or finish match -->
