@@ -59,3 +59,9 @@ class TopScorersView(ListView):
     template_name = 'matches/top_scorers.html'
     context_object_name = 'players'
     queryset = Player.objects.all().order_by('-goals')
+
+class TeamLeaderboardView(ListView):
+    model = Team
+    template_name = 'matches/team_leaderboard.html'
+    context_object_name = 'teams'
+    queryset = Team.objects.all().order_by('-points', 'name')

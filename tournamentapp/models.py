@@ -78,6 +78,3 @@ class Goal(models.Model):
     def save(self, *args, **kwargs):
         created = self.pk is None
         super().save(*args, **kwargs)
-        if created:
-            self.player.goals += 1
-            self.player.save()
