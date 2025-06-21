@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView
 from .models import Match, Team
-from .forms import TeamForm
+from .forms import TeamForm, MatchForm
 from django.urls import reverse_lazy
 
 
@@ -28,4 +28,10 @@ class TeamCreateView(CreateView):
     model = Team
     form_class = TeamForm
     template_name = 'matches/team_form.html'
+    success_url = reverse_lazy('home')
+
+class MatchCreateView(CreateView):
+    model = Match
+    form_class = MatchForm
+    template_name = 'matches/match_form.html'
     success_url = reverse_lazy('home')
