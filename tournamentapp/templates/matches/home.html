@@ -6,8 +6,9 @@
 <body>
     <h1>Matchday Overview</h1>
     {% if no_teams %}
-    <p>No teams found. <a href="{% url 'team-create' %}">Add teams</a> to begin.</p>
+    <p>No teams found. <a href="{% url 'team-create' %}">Add team</a> to begin.</p>
     {% else %}
+        <p><a href="{% url 'team-create' %}">Add team</a> to begin.</p>
         {% if no_matches %}
         <p>Teams are set up, but no matches have been created yet. <a href="{% url 'match-create' %}">Create the match schedule</a>.</p>
         {% else %}
