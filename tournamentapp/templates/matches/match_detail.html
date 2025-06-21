@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Match Details</title>
+</head>
+<body>
+    <h1>{{ match.home_team.name }} vs {{ match.away_team.name }}</h1>
+    <p>Start Time: {{ match.start_time }}</p>
+    <p>Field: {{ match.get_field_display }}</p>
+    <p>Status: {% if match.is_finished %}Finished{% else %}In Progress{% endif %}</p>
+    <p>Score: {{ match.home_score }} - {{ match.away_score }}</p>
+
+    <hr>
+
+    <h2>Goals</h2>
+    {% if goals %}
+        <ul>
+            {% for goal in goals %}
+                <li>{{ goal.player.name }} ({{ goal.player.team.name }})</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No goals recorded.</p>
+    {% endif %}
+
+    <hr>
+    <a href="{% url 'home' %}">Back to Home</a>
+    <!-- Later we'll add buttons/links to add goals/cards or finish match -->
+</body>
+</html>
