@@ -1,52 +1,45 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Matchday Overview</title>
-</head>
-<body>
-    <h1>Matchday Overview</h1>
-    {% if no_teams %}
-    <p>No teams found. <a href="{% url 'team-create' %}">Add team</a> to begin.</p>
-    {% else %}
-        <p><a href="{% url 'team-create' %}">Add team</a> to begin.</p>
-        {% if no_matches %}
-        <p>Teams are set up, but no matches have been created yet. <a href="{% url 'match-create' %}">Create the match schedule</a>.</p>
-        {% else %}
-        <p><a href="{% url 'match-create' %}">Create match</a></p>
-        
+{% extends 'base.html' %}
 
-        <div>
-            <div>
-                <h2>Spielfield 8</h2>
-                {% for match in field_a_matches %}
-                    <div>
-                        <strong>{{ match.start_time }}</strong><br>
-                        {{ match.home_team.name }} vs {{ match.away_team.name }}<br>
-                        {% if match.is_finished %}
-                            Result: {{ match.home_score }} - {{ match.away_score }}
-                        {% endif %}
-                        <a href="{% url 'match-detail' match.pk %}">Match Details</a>
-                    </div>
-                {% endfor %}
-            </div>
+{% block title %}Matchday Overview{% endblock %}
 
-            <div>
-                <h2>Spielfield 9</h2>
-                {% for match in field_b_matches %}
-                    <div>
-                        <strong>{{ match.start_time }}</strong><br>
-                        {{ match.home_team.name }} vs {{ match.away_team.name }}<br>
-                        {% if match.is_finished %}
-                            Result: {{ match.home_score }} - {{ match.away_score }}
-                        {% endif %}
-                        <a href="{% url 'match-detail' match.pk %}">Match Details</a>
-                    </div>
-                {% endfor %}
-            </div>
+{% block content %}
+<h1>Matchday Overview</h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <h2>Field 8</h2>
+    {% for match in field_a_matches %}
+      <div class="card mb-3 {% if match.is_finished %}bg-light{% endif %}">
+        <div class="card-body">
+          <h5 class="card-title">{{ match.home_team.name }} vs {{ match.away_team.name }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ match.start_time }}</h6>
+          {% if match.is_finished %}
+            <p>Result: {{ match.home_score }} - {{ match.away_score }}</p>
+          {% endif %}
+          <a href="{% url 'match-detail' match.pk %}" class="card-link">Match Details</a>
         </div>
+      </div>
+    {% empty %}
+      <p>No matches scheduled on this field.</p>
+    {% endfor %}
+  </div>
 
-        {% endif %}
-    {% endif %}
-
-</body>
-</html>
+  <div class="col-md-6">
+    <h2>Field 9</h2>
+    {% for match in field_b_matches %}
+      <div class="card mb-3 {% if match.is_finished %}bg-light{% endif %}">
+        <div class="card-body">
+          <h5 class="card-title">{{ match.home_team.name }} vs {{ match.away_team.name }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ match.start_time }}</h6>
+          {% if match.is_finished %}
+            <p>Result: {{ match.home_score }} - {{ match.away_score }}</p>
+          {% endif %}
+          <a href="{% url 'match-detail' match.pk %}" class="card-link">Match Details</a>
+        </div>
+      </div>
+    {% empty %}
+      <p>No matches scheduled on this field.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
