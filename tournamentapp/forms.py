@@ -48,25 +48,43 @@ class MatchEditForm(forms.ModelForm):
     def save(self, commit=True):
         match = super().save(commit=False)
 
-        if not match.is_finished:
-            if match.home_score > match.away_score:
-                match.home_team.points += 3
-            elif match.home_score < match.away_score:
-                match.away_team.points += 3
+        # --- Step 1: Undo previous effects ---
+        if match.is_finished:
+            # Reverse points from previous result
+            if self.match.home_score > self.match.away_score:
+                self.match.home_team.points = max(self.match.home_team.points - 3, 0)
+            elif self.match.home_score < self.match.away_score:
+                self.match.away_team.points = max(self.match.away_team.points - 3, 0)
             else:
-                match.home_team.points += 1
-                match.away_team.points += 1
+                self.match.home_team.points = max(self.match.home_team.points - 1, 0)
+                self.match.away_team.points = max(self.match.away_team.points - 1, 0)
+            self.match.home_team.save()
+            self.match.away_team.save()
 
-            match.home_team.save()
-            match.away_team.save()
+            # Reverse goals from players
+            for goal in self.match.goals.all():
+                goal.player.goals = max(goal.player.goals - 1, 0)
+                goal.player.save()
+
+            # Delete all previous goals
+            self.match.goals.all().delete()
+
+        # --- Step 2: Apply new result ---
+        if match.home_score > match.away_score:
+            match.home_team.points += 3
+        elif match.home_score < match.away_score:
+            match.away_team.points += 3
+        else:
+            match.home_team.points += 1
+            match.away_team.points += 1
+
+        match.home_team.save()
+        match.away_team.save()
 
         match.is_finished = True
         match.save()
 
-        # Remove any previously assigned goals
-        match.goals.all().delete()
-
-        # Assign goals
+        # --- Step 3: Assign new goals ---
         home_names = self.cleaned_data.get('home_scorers', '').splitlines()
         away_names = self.cleaned_data.get('away_scorers', '').splitlines()
 

@@ -16,8 +16,8 @@ class HomePageView(TemplateView):
 
         context.update({
             'teams': teams,
-            'field_a_matches': Match.objects.filter(field='A').order_by('start_time'),
-            'field_b_matches': Match.objects.filter(field='B').order_by('start_time'),
+            'field_a_matches': Match.objects.filter(field='8').order_by('start_time'),
+            'field_b_matches': Match.objects.filter(field='9').order_by('start_time'),
             'no_teams': not teams.exists(),
             'no_matches': not matches_exist,
         })

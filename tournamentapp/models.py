@@ -29,8 +29,8 @@ class Player(models.Model):
 
 class Match(models.Model):
     FIELD_CHOICES = (
-        ('A', 'Field A'),
-        ('B', 'Field B'),
+        ('8', 'Field 8'),
+        ('9', 'Field 9'),
     )
 
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')

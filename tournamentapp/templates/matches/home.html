@@ -12,10 +12,12 @@
         {% if no_matches %}
         <p>Teams are set up, but no matches have been created yet. <a href="{% url 'match-create' %}">Create the match schedule</a>.</p>
         {% else %}
+        <p><a href="{% url 'match-create' %}">Create match</a></p>
+        
 
         <div>
             <div>
-                <h2>Field A</h2>
+                <h2>Spielfield 8</h2>
                 {% for match in field_a_matches %}
                     <div>
                         <strong>{{ match.start_time }}</strong><br>
@@ -23,14 +25,13 @@
                         {% if match.is_finished %}
                             Result: {{ match.home_score }} - {{ match.away_score }}
                         {% endif %}
-                        <br>
                         <a href="{% url 'match-detail' match.pk %}">Match Details</a>
                     </div>
                 {% endfor %}
             </div>
 
             <div>
-                <h2>Field B</h2>
+                <h2>Spielfield 9</h2>
                 {% for match in field_b_matches %}
                     <div>
                         <strong>{{ match.start_time }}</strong><br>
@@ -38,7 +39,6 @@
                         {% if match.is_finished %}
                             Result: {{ match.home_score }} - {{ match.away_score }}
                         {% endif %}
-                        <br>
                         <a href="{% url 'match-detail' match.pk %}">Match Details</a>
                     </div>
                 {% endfor %}
