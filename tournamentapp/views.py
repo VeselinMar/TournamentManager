@@ -1,6 +1,6 @@
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
-from .models import Match, Team, Goal
+from .models import Match, Team, Goal, Player
 from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
 
@@ -53,3 +53,9 @@ class MatchEditView(UpdateView):
     form_class = MatchEditForm
     template_name = 'matches/match_edit.html'
     success_url = reverse_lazy('home')
+
+class TopScorersView(ListView):
+    model = Player
+    template_name = 'matches/top_scorers.html'
+    context_object_name = 'players'
+    queryset = Player.objects.all().order_by('-goals')
