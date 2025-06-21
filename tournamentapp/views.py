@@ -1,7 +1,7 @@
-from django.views.generic import TemplateView, DetailView
-from django.views.generic.edit import CreateView
-from .models import Match, Team, Goal
-from .forms import TeamForm, MatchForm
+from django.views.generic import TemplateView, DetailView, ListView
+from django.views.generic.edit import CreateView, UpdateView
+from .models import Match, Team, Goal, Player
+from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
 
 
@@ -16,8 +16,8 @@ class HomePageView(TemplateView):
 
         context.update({
             'teams': teams,
-            'field_a_matches': Match.objects.filter(field='A').order_by('start_time'),
-            'field_b_matches': Match.objects.filter(field='B').order_by('start_time'),
+            'field_a_matches': Match.objects.filter(field='8').order_by('start_time'),
+            'field_b_matches': Match.objects.filter(field='9').order_by('start_time'),
             'no_teams': not teams.exists(),
             'no_matches': not matches_exist,
         })
@@ -47,3 +47,21 @@ class MatchDetailView(DetailView):
 
         context['goals'] = Goal.objects.filter(match=match)
         return context
+
+class MatchEditView(UpdateView):
+    model = Match
+    form_class = MatchEditForm
+    template_name = 'matches/match_edit.html'
+    success_url = reverse_lazy('home')
+
+class TopScorersView(ListView):
+    model = Player
+    template_name = 'matches/top_scorers.html'
+    context_object_name = 'players'
+    queryset = Player.objects.all().order_by('-goals')
+
+class TeamLeaderboardView(ListView):
+    model = Team
+    template_name = 'matches/team_leaderboard.html'
+    context_object_name = 'teams'
+    queryset = Team.objects.all().order_by('-points', 'name')

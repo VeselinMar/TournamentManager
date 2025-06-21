@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Top Scorers</title>
+</head>
+<body>
+    <h1>Top Scorers</h1>
+
+    {% if players %}
+        <ol>
+        {% for player in players %}
+            <li>
+                {{ player.name }} ({{ player.team.name }}) — {{ player.goals }} goal{{ player.goals|pluralize }}
+            </li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No goals recorded yet.</p>
+    {% endif %}
+
+    <a href="{% url 'home' %}">Back to Home</a>
+</body>
+</html>
+
+{% endblock %}

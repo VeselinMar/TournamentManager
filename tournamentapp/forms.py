@@ -1,5 +1,5 @@
 from django import forms
-from .models import Team, Match
+from .models import Team, Match, Player, Goal
 
 class TeamForm(forms.ModelForm):
     class Meta:
@@ -18,3 +18,90 @@ class MatchForm(forms.ModelForm):
 
         if home_team == away_team:
             raise forms.ValidationError("Home and Away teams must be different.")
+
+
+class MatchEditForm(forms.ModelForm):
+    home_scorers = forms.CharField(
+        widget=forms.Textarea(attrs={'placeholder': 'One scorer per line for Home Team'}),
+        required=False,
+        label="Home Scorers"
+    )
+    away_scorers = forms.CharField(
+        widget=forms.Textarea(attrs={'placeholder': 'One scorer per line for Away Team'}),
+        required=False,
+        label="Away Scorers"
+    )
+
+    class Meta:
+        model = Match
+        fields = ['home_score', 'away_score']
+
+    def __init__(self, *args, **kwargs):
+        self.match = kwargs.get('instance')
+        super().__init__(*args, **kwargs)
+
+        # Dynamically label the score fields using team names
+        if self.match:
+            self.fields['home_score'].label = self.match.home_team.name
+            self.fields['away_score'].label = self.match.away_team.name
+
+    def save(self, commit=True):
+        match = super().save(commit=False)
+
+        # --- Step 1: Undo previous effects ---
+        if match.is_finished:
+            # Reverse points from previous result
+            if self.match.home_score > self.match.away_score:
+                self.match.home_team.points = max(self.match.home_team.points - 3, 0)
+            elif self.match.home_score < self.match.away_score:
+                self.match.away_team.points = max(self.match.away_team.points - 3, 0)
+            else:
+                self.match.home_team.points = max(self.match.home_team.points - 1, 0)
+                self.match.away_team.points = max(self.match.away_team.points - 1, 0)
+            self.match.home_team.save()
+            self.match.away_team.save()
+
+            # Reverse goals from players
+            for goal in self.match.goals.all():
+                goal.player.goals = max(goal.player.goals - 1, 0)
+                goal.player.save()
+
+            # Delete all previous goals
+            self.match.goals.all().delete()
+
+        # --- Step 2: Apply new result ---
+        if match.home_score > match.away_score:
+            match.home_team.points += 3
+        elif match.home_score < match.away_score:
+            match.away_team.points += 3
+        else:
+            match.home_team.points += 1
+            match.away_team.points += 1
+
+        match.home_team.save()
+        match.away_team.save()
+
+        match.is_finished = True
+        match.save()
+
+        # --- Step 3: Assign new goals ---
+        home_names = self.cleaned_data.get('home_scorers', '').splitlines()
+        away_names = self.cleaned_data.get('away_scorers', '').splitlines()
+
+        for name in home_names:
+            name = name.strip()
+            if name:
+                player, _ = Player.objects.get_or_create(name=name, team=match.home_team)
+                Goal.objects.create(match=match, player=player, team=match.home_team)
+                player.goals += 1
+                player.save()
+
+        for name in away_names:
+            name = name.strip()
+            if name:
+                player, _ = Player.objects.get_or_create(name=name, team=match.away_team)
+                Goal.objects.create(match=match, player=player, team=match.away_team)
+                player.goals += 1
+                player.save()
+
+        return match

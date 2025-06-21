@@ -29,8 +29,8 @@ class Player(models.Model):
 
 class Match(models.Model):
     FIELD_CHOICES = (
-        ('A', 'Field A'),
-        ('B', 'Field B'),
+        ('8', 'Field 8'),
+        ('9', 'Field 9'),
     )
 
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
@@ -75,3 +75,6 @@ class Goal(models.Model):
         return f"{self.player.name} scored for {self.team.name} in match: {self.match.home_team.name} - {self.match.away_team.name}"
 
 
+    def save(self, *args, **kwargs):
+        created = self.pk is None
+        super().save(*args, **kwargs)

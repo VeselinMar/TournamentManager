@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Team Leaderboard</title>
+</head>
+<body>
+    <h1>Team Leaderboard</h1>
+
+    {% if teams %}
+        <ol>
+        {% for team in teams %}
+            <li>
+                {% if team.logo %}
+                    <img src="{{ team.logo.url }}" alt="{{ team.name }} logo" width="30" height="30">
+                {% endif %}
+                {{ team.name }} — {{ team.points }} point{{ team.points|pluralize }}
+            </li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No teams available.</p>
+    {% endif %}
+
+    <a href="{% url 'home' %}">Back to Home</a>
+</body>
+</html>
+
+{% endblock %}
