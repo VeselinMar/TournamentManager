@@ -120,6 +120,12 @@ class Match(models.Model):
     start_time = models.DateTimeField()
     field = models.ForeignKey(Field, on_delete=models.SET_NULL, null=True, blank=True)
 
+    class Meta:
+        unique_together = ('home_team', 'away_team', 'start_time')
+        ordering = ['start_time']
+        verbose_name = "Match"
+        verbose_name_plural = "Matches"
+
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name}"
 
