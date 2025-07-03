@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Team, Player, Match, GoalEvent, Field
+from .models import Team, Player, Match, GoalEvent, Field, MatchEvent
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
@@ -26,3 +26,15 @@ class MatchAdmin(admin.ModelAdmin):
 class GoalAdmin(admin.ModelAdmin):
     list_display = ('match', 'player', 'team')
     search_fields = ('player__name', 'team__name')
+
+@admin.register(Field)
+class FieldAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+@admin.register(MatchEvent)
+class MatchEventAdmin(admin.ModelAdmin):
+    list_display = ('match', 'event_type', 'player', 'team', 'minute')
+    list_filter = ('event_type', 'team')
+    search_fields = ('player__name', 'team__name')
+    ordering = ('match', 'minute')

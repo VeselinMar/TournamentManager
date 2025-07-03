@@ -8,27 +8,7 @@
 <div class="row">
   <div class="col-md-6">
     <h2>Field 8</h2>
-    {% for match in field_a_matches %}
-      <div class="card mb-3 {% if match.is_finished %}bg-success text-white{% else %}bg-light{% endif %}">
-        <div class="card-body">
-          <h5 class="card-title">{{ match.home_team.name }} vs {{ match.away_team.name }}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">{{ match.start_time }}</h6>
-          {% if match.is_finished %}
-              <p class="h4 text-black fw-bold">
-                  Result: {{ match.home_score }} - {{ match.away_score }}
-              </p>
-          {% endif %}
-          <a href="{% url 'match-detail' match.pk %}" class="btn btn-primary btn-sm">Score</a>
-        </div>
-      </div>
-    {% empty %}
-      <p>No matches scheduled on this field.</p>
-    {% endfor %}
-  </div>
-
-  <div class="col-md-6">
-    <h2>Field 9</h2>
-    {% for match in field_b_matches %}
+    {% for match in matches %}
       <div class="card mb-3 {% if match.is_finished %}bg-success text-white{% else %}bg-light{% endif %}">
         <div class="card-body">
           <h5 class="card-title">{{ match.home_team.name }} vs {{ match.away_team.name }}</h5>

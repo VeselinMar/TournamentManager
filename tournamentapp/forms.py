@@ -40,7 +40,6 @@ class MatchEditForm(forms.ModelForm):
         self.match = kwargs.get('instance')
         super().__init__(*args, **kwargs)
 
-        # Dynamically label the score fields using team names
         if self.match:
             self.fields['home_score'].label = self.match.home_team.name
             self.fields['away_score'].label = self.match.away_team.name
@@ -48,60 +47,70 @@ class MatchEditForm(forms.ModelForm):
     def save(self, commit=True):
         match = super().save(commit=False)
 
-        # --- Step 1: Undo previous effects ---
+        # Step 1: Reverse previous match effects
         if match.is_finished:
-            # Reverse points from previous result
-            if self.match.home_score > self.match.away_score:
-                self.match.home_team.points = max(self.match.home_team.points - 3, 0)
-            elif self.match.home_score < self.match.away_score:
-                self.match.away_team.points = max(self.match.away_team.points - 3, 0)
-            else:
-                self.match.home_team.points = max(self.match.home_team.points - 1, 0)
-                self.match.away_team.points = max(self.match.away_team.points - 1, 0)
-            self.match.home_team.save()
-            self.match.away_team.save()
+            self._reverse_previous_results()
 
-            # Reverse goals from players
-            for goal in self.match.goals.all():
-                goal.player.goals = max(goal.player.goals - 1, 0)
-                goal.player.save()
-
-            # Delete all previous goals
-            self.match.goals.all().delete()
-
-        # --- Step 2: Apply new result ---
-        if match.home_score > match.away_score:
-            match.home_team.points += 3
-        elif match.home_score < match.away_score:
-            match.away_team.points += 3
-        else:
-            match.home_team.points += 1
-            match.away_team.points += 1
-
-        match.home_team.save()
-        match.away_team.save()
+        # Step 2: Apply new match points
+        self._apply_match_points(match)
 
         match.is_finished = True
         match.save()
 
-        # --- Step 3: Assign new goals ---
-        home_names = self.cleaned_data.get('home_scorers', '').splitlines()
-        away_names = self.cleaned_data.get('away_scorers', '').splitlines()
-
-        for name in home_names:
-            name = name.strip()
-            if name:
-                player, _ = Player.objects.get_or_create(name=name, team=match.home_team)
-                Goal.objects.create(match=match, player=player, team=match.home_team)
-                player.goals += 1
-                player.save()
-
-        for name in away_names:
-            name = name.strip()
-            if name:
-                player, _ = Player.objects.get_or_create(name=name, team=match.away_team)
-                Goal.objects.create(match=match, player=player, team=match.away_team)
-                player.goals += 1
-                player.save()
+        # Step 3: Register new goal events
+        self._register_goal_events(match)
 
         return match
+
+    def _reverse_previous_results(self):
+        match = self.match
+
+        # Reverse tournament points
+        if match.home_score > match.away_score:
+            match.home_team.tournament_points = max(0, match.home_team.tournament_points - 3)
+        elif match.home_score < match.away_score:
+            match.away_team.tournament_points = max(0, match.away_team.tournament_points - 3)
+        else:
+            match.home_team.tournament_points = max(0, match.home_team.tournament_points - 1)
+            match.away_team.tournament_points = max(0, match.away_team.tournament_points - 1)
+
+        match.home_team.save()
+        match.away_team.save()
+
+        # Reverse player goal counters and delete goal events
+        for goal_event in GoalEvent.objects.filter(match=match):
+            player = goal_event.player
+            if player and player.goals > 0:
+                player.goals -= 1
+                player.save()
+            goal_event.delete()
+
+    def _apply_match_points(self, match):
+        if match.home_score > match.away_score:
+            match.home_team.tournament_points += 3
+        elif match.home_score < match.away_score:
+            match.away_team.tournament_points += 3
+        else:
+            match.home_team.tournament_points += 1
+            match.away_team.tournament_points += 1
+
+        match.home_team.save()
+        match.away_team.save()
+
+    def _register_goal_events(self, match):
+        home_scorers = self.cleaned_data.get('home_scorers', '').splitlines()
+        away_scorers = self.cleaned_data.get('away_scorers', '').splitlines()
+
+        for name in map(str.strip, home_scorers):
+            if name:
+                player, _ = Player.objects.get_or_create(name=name, team=match.home_team)
+                GoalEvent.objects.create(match=match, team=match.home_team, player=player, minute=0)
+                player.goals += 1
+                player.save()
+
+        for name in map(str.strip, away_scorers):
+            if name:
+                player, _ = Player.objects.get_or_create(name=name, team=match.away_team)
+                GoalEvent.objects.create(match=match, team=match.away_team, player=player, minute=0)
+                player.goals += 1
+                player.save()
