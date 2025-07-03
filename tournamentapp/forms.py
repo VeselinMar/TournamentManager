@@ -1,5 +1,5 @@
 from django import forms
-from .models import Team, Match, Player, Goal
+from .models import Team, Match, Player, GoalEvent
 
 class TeamForm(forms.ModelForm):
     class Meta:
