@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
-from .models import Match, Team, Goal, Player
+from .models import Match, Team, GoalEvent, Player
 from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
 
@@ -64,4 +64,4 @@ class TeamLeaderboardView(ListView):
     model = Team
     template_name = 'matches/team_leaderboard.html'
     context_object_name = 'teams'
-    queryset = Team.objects.all().order_by('-points', 'name')
+    queryset = Team.objects.all().order_by('-tournament_points', 'name')
