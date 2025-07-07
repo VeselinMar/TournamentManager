@@ -6,7 +6,6 @@ class Team(models.Model):
     name = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Enter the team name.",
         verbose_name="Team Name",
         )
 
@@ -14,7 +13,6 @@ class Team(models.Model):
         upload_to='team_logos/',
         blank=True,
         null=True,
-        help_text="Upload a logo for the team (optional).",
         verbose_name="Team Logo",
         )
 

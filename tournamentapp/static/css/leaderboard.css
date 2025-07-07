@@ -1,0 +1,75 @@
+/* Container holding both columns side by side */
+.leaderboard-container {
+  display: flex;
+  justify-content: center;
+  gap: 4rem; /* bigger gap between columns */
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #2e7d32; /* dark green */
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.15);
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+/* Each distinct column container */
+.leaderboard-column {
+  flex: 1;
+  min-width: 320px;
+  background-color: #388e3c; /* a bit lighter green for distinct block */
+  padding: 1.5rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Section headings */
+.leaderboard-column h1 {
+  color: #c8e6c9; /* lighter green */
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #81c784; /* light green border */
+  padding-bottom: 0.5rem;
+}
+
+/* Lists */
+.leaderboard-column ol {
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+/* List items */
+.leaderboard-column li {
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+}
+
+/* Team logos */
+.leaderboard-column li img {
+  margin-right: 0.8rem;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Fallback messages */
+.leaderboard-column p {
+  color: #a5d6a7;
+  font-style: italic;
+}
+
+/* Responsive stacking for smaller screens */
+@media (max-width: 700px) {
+  .leaderboard-container {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem;
+  }
+  .leaderboard-column {
+    min-width: auto;
+  }
+}

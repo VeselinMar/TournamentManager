@@ -1,5 +1,9 @@
+import csv
+from django import forms
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
+from django.contrib import messages
+from django.shortcuts import redirect
 from .models import Match, Team, GoalEvent, Player, MatchEvent
 from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
@@ -29,6 +33,35 @@ class TeamCreateView(CreateView):
     form_class = TeamForm
     template_name = 'matches/team_form.html'
     success_url = reverse_lazy('home')
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get('submit_type') == 'batch':
+            csv_file = request.FILES.get('csv_file')
+            if not csv_file or not csv_file.name.lower().endswith('.csv'):
+                messages.error(request, 'Please upload a valid CSV file.')
+                return redirect('team-create')
+
+            try:
+                decoded_file = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.reader(decoded_file)
+                created = 0
+                for row in reader:
+                    if row:
+                        name = row[0].strip()
+                        form = TeamForm(data={'name': name})
+                        if form.is_valid():
+                            form.save()
+                            created += 1
+                        else:
+                            # Optionally collect and show form errors
+                            messages.warning(request, f"Skipped invalid entry '{name}': {form.errors['name'][0]}")
+                messages.success(request, f'{created} team(s) successfully created.')
+            except Exception as e:
+                messages.error(request, f'Error processing CSV file: {str(e)}')
+
+            return redirect('team-create')
+
+        return super().post(request, *args, **kwargs)
 
 class MatchCreateView(CreateView):
     model = Match

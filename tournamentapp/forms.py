@@ -1,3 +1,4 @@
+import re
 from django import forms
 from .models import Team, Match, Player, GoalEvent
 
@@ -5,20 +6,34 @@ class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
         fields = ['name', 'logo']
+        
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip().title()
+
+        # Basic validation: letters, numbers, spaces, dashes, ampersand
+        if not re.match(r'^[\w\s\-&]{1,50}$', name):
+            raise forms.ValidationError("Invalid team name. Use letters, numbers, dashes or '&'.")
+
+        return name
 
 class MatchForm(forms.ModelForm):
     class Meta:
         model = Match
         fields = ['home_team', 'away_team', 'start_time', 'field']
+        widgets = {
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'field': forms.Select(attrs={'class': 'form-control'}),
+        }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        home_team = cleaned_data.get('home_team')
-        away_team = cleaned_data.get('away_team')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If initial data exists, convert to proper format for datetime-local input
+        if self.instance and self.instance.start_time:
+            self.initial['start_time'] = self.instance.start_time.strftime('%Y-%m-%dT%H:%M')
 
-        if home_team == away_team:
-            raise forms.ValidationError("Home and Away teams must be different.")
-
+    def clean_start_time(self):
+        start_time = self.cleaned_data['start_time']
+        return start_time
 
 class MatchEditForm(forms.ModelForm):
     home_scorers = forms.CharField(
