@@ -1,8 +1,9 @@
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
-from .models import Match, Team, GoalEvent, Player
+from .models import Match, Team, GoalEvent, Player, MatchEvent
 from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
+from django.db.models import Q
 
 
 class HomePageView(TemplateView):
@@ -87,12 +88,11 @@ class TeamLeaderboardView(ListView):
             for team in group:
                 opponents = [t for t in group if t != team]
                 mutual_matches = Match.objects.filter(
-                    is_finished=True &
-                    (
+                    is_finished=True,
+                    ).filter(
                         Q(home_team=team, away_team__in=opponents) |
                         Q(away_team=team, home_team__in=opponents)
                     )
-                )
 
                 goals_for = MatchEvent.objects.filter(
                     match__in=mutual_matches,
