@@ -55,28 +55,24 @@ class MatchEditView(UpdateView):
     template_name = 'matches/match_edit.html'
     success_url = reverse_lazy('home')
 
-class TopScorersView(ListView):
-    model = Player
-    template_name = 'matches/top_scorers.html'
-    context_object_name = 'players'
-    queryset = Player.objects.all().order_by('-goals')
+class LeaderboardView(TemplateView):
+    template_name = 'matches/leaderboard.html'
 
-class TeamLeaderboardView(ListView):
-    model = Team
-    template_name = 'matches/team_leaderboard.html'
-    context_object_name = 'teams'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    def get_queryset(self):
+        # Top scorers
+        players = Player.objects.all().order_by('-goals')
+        context['players'] = players
+
+        # Team leaderboard (same logic from TeamLeaderboardView)
         teams = list(Team.objects.all())
-
-        # Step 1: Group teams by tournament points
         points_groups = {}
         for team in teams:
             points_groups.setdefault(team.tournament_points, []).append(team)
 
         sorted_teams = []
 
-        # Step 2: Sort each group
         for points in sorted(points_groups.keys(), reverse=True):
             group = points_groups[points]
 
@@ -84,15 +80,14 @@ class TeamLeaderboardView(ListView):
                 sorted_teams.extend(group)
                 continue
 
-            # Step 3: For tied teams, compute goal difference in their mutual matches
             for team in group:
                 opponents = [t for t in group if t != team]
                 mutual_matches = Match.objects.filter(
-                    is_finished=True,
-                    ).filter(
-                        Q(home_team=team, away_team__in=opponents) |
-                        Q(away_team=team, home_team__in=opponents)
-                    )
+                    is_finished=True
+                ).filter(
+                    Q(home_team=team, away_team__in=opponents) |
+                    Q(away_team=team, home_team__in=opponents)
+                )
 
                 goals_for = MatchEvent.objects.filter(
                     match__in=mutual_matches,
@@ -111,8 +106,8 @@ class TeamLeaderboardView(ListView):
 
                 team.goal_difference_vs_tied = goals_for - goals_against
 
-            # Sort tied teams by head-to-head goal difference and name
             group.sort(key=lambda t: (-t.goal_difference_vs_tied, t.name))
             sorted_teams.extend(group)
 
-        return sorted_teams
+        context['teams'] = sorted_teams
+        return context
