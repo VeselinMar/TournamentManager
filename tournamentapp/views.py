@@ -4,7 +4,7 @@ from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib import messages
 from django.shortcuts import redirect
-from .models import Match, Team, GoalEvent, Player, MatchEvent
+from .models import Match, Team, GoalEvent, Player, MatchEvent, Field
 from .forms import TeamForm, MatchForm, MatchEditForm
 from django.urls import reverse_lazy
 from django.db.models import Q
@@ -68,6 +68,11 @@ class MatchCreateView(CreateView):
     form_class = MatchForm
     template_name = 'matches/match_form.html'
     success_url = reverse_lazy('home')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['fields'] = Field.objects.all()
+        return context
 
 class MatchDetailView(DetailView):
     model = Match

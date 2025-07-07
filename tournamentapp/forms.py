@@ -17,12 +17,22 @@ class TeamForm(forms.ModelForm):
         return name
 
 class MatchForm(forms.ModelForm):
+    custom_field = forms.CharField(
+        label="Field",
+        max_length=25,
+        widget=forms.TextInput(attrs={
+            'list': 'field-options',
+            'placeholder': 'Enter field name or select from list'
+        }),
+        )
     class Meta:
         model = Match
-        fields = ['home_team', 'away_team', 'start_time', 'field']
+        fields = ['home_team', 'away_team', 'start_time']
         widgets = {
-            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'field': forms.Select(attrs={'class': 'form-control'}),
+            'start_time': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                }
+                ),
         }
 
     def __init__(self, *args, **kwargs):

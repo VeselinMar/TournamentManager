@@ -25,7 +25,21 @@
       </div>
     {% endfor %}
 
+    <datalist id="field-options">
+      {% for field_obj in fields %}
+        <option value="{{ field_obj.name }}"></option>
+      {% endfor %}
+    </datalist>
+
+
     <button type="submit" class="btn btn-submit">Create Match</button>
 </form>
+
+{# Datalist element should be outside the form loop and only once #}
+<datalist id="field-options">
+  {% for field_obj in fields %}
+    <option value="{{ field_obj.name }}"></option>
+  {% endfor %}
+</datalist>
 
 {% endblock %}
