@@ -28,6 +28,54 @@ class HomePageView(TemplateView):
 
         return context
 
+class TeamListView(ListView):
+    model = Team
+    template_name = 'matches/team_list.html'
+    context_object_name = 'teams'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['teams'] = Team.objects.all().order_by('name')
+        return context
+
+class TeamDetailView(DetailView):
+    model = Team
+    template_name = 'matches/team_detail.html'
+    context_object_name = 'team'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        team = self.object
+
+        # Get matches for the team
+        all_matches = Match.objects.filter(
+            Q(home_team=team) | Q(away_team=team)
+        ).order_by('start_time')
+
+        # Determine fini match results
+        finished_matches = []
+        for match in all_matches.filter(is_finished=True):
+            is_home = match.home_team == team
+            team_score = match.home_score if is_home else match.away_score
+            opponent_score = match.away_score if is_home else match.home_score
+            if team_score > opponent_score:
+                match.result = 'win'
+            elif team_score < opponent_score:
+                match.result = 'loss'
+            else:
+                match.result = 'draw'
+            match.goal_difference = abs(team_score - opponent_score)
+            finished_matches.append(match)
+
+        # Split matches into finished and upcoming
+        context['finished_matches'] = finished_matches
+        context['upcoming_matches'] = all_matches.filter(is_finished=False)
+
+        # Get players in the team
+        context['players'] = team.players.all()
+
+        return context
+
 class TeamCreateView(CreateView):
     model = Team
     form_class = TeamForm
