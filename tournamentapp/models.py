@@ -102,7 +102,11 @@ class Player(models.Model):
         super().save(*args, **kwargs)
 
 class Field(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=50,
+        unique=True
+        )
+    default='Main Field'
 
     def __str__(self):
         return self.name
@@ -116,7 +120,12 @@ class Match(models.Model):
 
     is_finished = models.BooleanField(default=False)
     start_time = models.DateTimeField()
-    field = models.ForeignKey(Field, on_delete=models.SET_NULL, null=True, blank=True)
+    field = models.ForeignKey(
+        Field, 
+        on_delete=models.PROTECT,
+        null=False, 
+        blank=False,
+        )
 
     class Meta:
         unique_together = ('home_team', 'away_team', 'start_time')
