@@ -1,36 +1,46 @@
 import csv
 from django import forms
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
+from django.http import JsonResponse
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field
-from .forms import TeamForm, MatchForm, MatchEditForm
+from .forms import TeamForm, MatchForm, MatchEditForm, MatchEventForm
 from django.urls import reverse_lazy
-from django.db.models import Q
+from django.db.models import Q, Count
+from collections import defaultdict
 
 
 class HomePageView(TemplateView):
-    template_name = 'matches/home.html'
+    template_name = 'home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         teams = Team.objects.all()
-        matches_exist = Match.objects.exists()
+        matches = Match.objects.select_related('field', 'home_team', 'away_team').order_by('start_time')
+
+        # Group matches by field
+        matches_by_field = defaultdict(list)
+        for match in matches:
+            field_name = match.field.name
+            matches_by_field[field_name].append(match)
 
         context.update({
             'teams': teams,
-            'matches': Match.objects.all().order_by('start_time'),
+            'matches_by_field': dict(matches_by_field),
             'no_teams': not teams.exists(),
-            'no_matches': not matches_exist,
+            'no_matches': not matches.exists(),
         })
 
         return context
 
 class TeamListView(ListView):
     model = Team
-    template_name = 'matches/team_list.html'
+    template_name = 'teams/team_list.html'
     context_object_name = 'teams'
 
     def get_context_data(self, **kwargs):
@@ -40,7 +50,7 @@ class TeamListView(ListView):
 
 class TeamDetailView(DetailView):
     model = Team
-    template_name = 'matches/team_detail.html'
+    template_name = 'teams/team_detail.html'
     context_object_name = 'team'
 
     def get_context_data(self, **kwargs):
@@ -52,7 +62,7 @@ class TeamDetailView(DetailView):
             Q(home_team=team) | Q(away_team=team)
         ).order_by('start_time')
 
-        # Determine fini match results
+        # Determine finished match results
         finished_matches = []
         for match in all_matches.filter(is_finished=True):
             is_home = match.home_team == team
@@ -79,7 +89,7 @@ class TeamDetailView(DetailView):
 class TeamCreateView(CreateView):
     model = Team
     form_class = TeamForm
-    template_name = 'matches/team_form.html'
+    template_name = 'teams/team_form.html'
     success_url = reverse_lazy('home')
 
     def post(self, request, *args, **kwargs):
@@ -140,6 +150,83 @@ class MatchEditView(UpdateView):
     form_class = MatchEditForm
     template_name = 'matches/match_edit.html'
     success_url = reverse_lazy('home')
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        team = self.object.home_team if request.POST['team'] == 'home' else self.object.away_team
+        player_name = request.POST['player_name'].strip()
+        minute = request.POST['minute'].strip()
+
+        player, _ = Player.objects.get_or_create(name=player_name, team=team)
+        MatchEvent.objects.create(
+            match=self.object,
+            event_type=request.POST['event_type'],
+            minute=minute,
+            team=team,
+            player=player
+        )
+        return redirect('match-detail', pk=self.object.pk)
+
+@require_POST
+def create_match_event(request, match_id):
+
+    if request.method == 'POST':
+        event_type = request.POST.get('event_type')
+        team_side = request.POST.get('team')
+        player_id = request.POST.get('player_id')
+        minute = request.POST.get('minute', '0')
+
+        match = get_object_or_404(Match, id=match_id)
+        team = match.home_team if team_side == 'home' else match.away_team
+
+        player = get_object_or_404(Player, id=player_id, team=team)
+
+        MatchEvent.objects.create(
+            match=match,
+            team=team,
+            player=player,
+            event_type=event_type,
+            minute=minute,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'player_name': player.name,
+            'event_type': event_type
+        })
+
+@csrf_exempt
+def add_player(request, team_name):
+    if request.method == 'POST':
+        player_name = request.POST.get('player')
+        if not player_name:
+            return JsonResponse({'success': False, 'error': 'Player name is required.'}, status=400)
+
+        try:
+            team = Team.objects.get(name=team_name)
+        except Team.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Team not found.'}, status=404)
+
+        player, created = Player.objects.get_or_create(name=player_name.strip(), team=team)
+
+        return JsonResponse({
+            'success': True,
+            'player': {
+                'id': player.id,
+                'name': player.name,
+                'team': team.name
+            }
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+@require_POST
+def finish_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+
+    if not match.is_finished:
+        match.apply_result()
+
+    return redirect('match-detail', pk=match_id)
 
 class LeaderboardView(TemplateView):
     template_name = 'matches/leaderboard.html'

@@ -9,7 +9,7 @@
 <body>
     <h1>{{ match.home_team.name }} vs {{ match.away_team.name }}</h1>
     <p>Start Time: {{ match.start_time }}</p>
-    <p>Field: {{ match.get_field_display }}</p>
+    <p>Field: {{ match.field }}</p>
     <p>Status: {% if match.is_finished %}Finished{% else %}In Progress{% endif %}</p>
     <p>Score: {{ match.home_score }} - {{ match.away_score }}</p>
 
@@ -26,12 +26,8 @@
         <p>No goals recorded.</p>
     {% endif %}
 
-    <p>    <a href="{% url 'match-edit' match.pk %}">Edit Result</a>
-</p>
-
     <hr>
     <a href="{% url 'home' %}">Back to Home</a>
-    <!-- Later we'll add buttons/links to add goals/cards or finish match -->
 </body>
 </html>
 {% endblock %}

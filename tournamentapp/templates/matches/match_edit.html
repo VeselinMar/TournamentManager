@@ -1,21 +1,74 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Match</title>
-</head>
-<body>
-    <h1>Edit Match: {{ object.home_team.name }} vs {{ object.away_team.name }}</h1>
+<div class="container mt-4" id="match-wrapper" data-match-id="{{ match.id }}">
+  <h2 class="mb-4 text-center">{{ match.home_team.name }} VS {{ match.away_team.name }}</h2>
+  <h2 class="mb-4 text-center">{{ match.home_score }} - {{ match.away_score }}</h2>
 
-    <form method="post">
+  <div class="row">
+
+    <!-- Home Team -->
+    <div class="col-md-6">
+      <h4>{{ match.home_team.name }}</h4>
+      <ul id="home-player-list" class="list-group mb-2">
+        {% for player in match.home_team.players.all %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ player.name }}
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-success assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="goal">⚽</button>
+              <button class="btn btn-warning assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="yellow_card">🟨</button>
+              <button class="btn btn-danger assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="red_card">🟥</button>
+              <button class="btn btn-secondary assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="own_goal">❗</button>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No players in this team.</li>
+        {% endfor %}
+      </ul>
+      <form id="home-player-form" data-team-id="{{ match.home_team.name }}">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save Result</button>
+        <div class="input-group">
+          <input type="text" name="player" class="form-control" placeholder="Add Player to {{ match.home_team.name }}" required>
+          <button class="btn btn-primary" type="submit">Add</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Away Team -->
+    <div class="col-md-6">
+      <h4>{{ match.away_team.name }}</h4>
+      <ul id="away-player-list" class="list-group mb-2">
+        {% for player in match.away_team.players.all %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ player.name }}
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-success assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="goal">⚽</button>
+              <button class="btn btn-warning assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="yellow_card">🟨</button>
+              <button class="btn btn-danger assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="red_card">🟥</button>
+              <button class="btn btn-secondary assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="own_goal">❗</button>
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No players in this team.</li>
+        {% endfor %}
+      </ul>
+      <form id="away-player-form" data-team-id="{{ match.away_team.name }}">
+        {% csrf_token %}
+        <div class="input-group">
+          <input type="text" name="player" class="form-control" placeholder="Add Player to {{ match.away_team.name }}" required>
+          <button class="btn btn-primary" type="submit">Add</button>
+        </div>
+      </form>
+    </div>
+    <form method="post" action={% url 'finish-match' match.id %} class="mt-4 text-center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-lg">🏁 Finish Match 🏁</button>
     </form>
+  </div>
+</div>
+{% endblock %}
 
-    <a href="{% url 'match-detail' object.pk %}">Back to Match Details</a>
-
-</body>
-</html>
+{% block extra_js %}
+<script src="{% static 'js/match_edit.js' %}"></script>
 {% endblock %}

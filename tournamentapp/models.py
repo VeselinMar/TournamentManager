@@ -39,7 +39,6 @@ class Team(models.Model):
         self.tournament_points += points
         self.save()
     
-
 class Player(models.Model):
     name = models.CharField(
         max_length=100,
@@ -150,6 +149,9 @@ class Match(models.Model):
         # Set the score fields
         self.home_score = home_goals
         self.away_score = away_goals
+
+        for event in self.events.all():
+            event.apply_event_effects()
 
         # Assign points
         if home_goals > away_goals:
@@ -273,11 +275,6 @@ class MatchEvent(models.Model):
     
 
     def clean(self):
-        if self.event_type in ['goal', 'own_goal', 'yellow_card', 'red_card'] and not self.player:
-            raise ValidationError("Player must be specified for goal/card events.")
-    
-        if self.event_type == 'substitution' and not (self.player and self.substitute_player):
-            raise ValidationError("Both players must be specified for substitutions.")
         
         if self.substitute_player and self.substitute_player.team != self.team:
             raise ValidationError("Substitute must be from the same team.")
@@ -304,3 +301,8 @@ class GoalEvent(MatchEvent):
 
     def __str__(self):
         return f"GOAL: {self.player} for {self.team} in {self.match}"
+    
+    def clean(self):
+        super().clean()
+        if self.event_type != 'goal':
+            raise ValidationError("This event must be a goal.")
