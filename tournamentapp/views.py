@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field
-from .forms import TeamForm, MatchForm, MatchEditForm, MatchEventForm
+from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm
 from django.urls import reverse_lazy
 from django.db.models import Q, Count
 from collections import defaultdict
@@ -88,7 +88,7 @@ class TeamDetailView(DetailView):
 
 class TeamCreateView(CreateView):
     model = Team
-    form_class = TeamForm
+    form_class = TeamCreateForm
     template_name = 'teams/team_form.html'
     success_url = reverse_lazy('home')
 
@@ -123,8 +123,8 @@ class TeamCreateView(CreateView):
 
 class MatchCreateView(CreateView):
     model = Match
-    form_class = MatchForm
-    template_name = 'matches/match_form.html'
+    form_class = MatchCreateForm
+    template_name = 'matches/match_create.html'
     success_url = reverse_lazy('home')
 
     def get_context_data(self, **kwargs):
@@ -166,67 +166,6 @@ class MatchEditView(UpdateView):
             player=player
         )
         return redirect('match-detail', pk=self.object.pk)
-
-@require_POST
-def create_match_event(request, match_id):
-
-    if request.method == 'POST':
-        event_type = request.POST.get('event_type')
-        team_side = request.POST.get('team')
-        player_id = request.POST.get('player_id')
-        minute = request.POST.get('minute', '0')
-
-        match = get_object_or_404(Match, id=match_id)
-        team = match.home_team if team_side == 'home' else match.away_team
-
-        player = get_object_or_404(Player, id=player_id, team=team)
-
-        MatchEvent.objects.create(
-            match=match,
-            team=team,
-            player=player,
-            event_type=event_type,
-            minute=minute,
-        )
-
-        return JsonResponse({
-            'success': True,
-            'player_name': player.name,
-            'event_type': event_type
-        })
-
-@csrf_exempt
-def add_player(request, team_name):
-    if request.method == 'POST':
-        player_name = request.POST.get('player')
-        if not player_name:
-            return JsonResponse({'success': False, 'error': 'Player name is required.'}, status=400)
-
-        try:
-            team = Team.objects.get(name=team_name)
-        except Team.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Team not found.'}, status=404)
-
-        player, created = Player.objects.get_or_create(name=player_name.strip(), team=team)
-
-        return JsonResponse({
-            'success': True,
-            'player': {
-                'id': player.id,
-                'name': player.name,
-                'team': team.name
-            }
-        })
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
-
-@require_POST
-def finish_match(request, match_id):
-    match = get_object_or_404(Match, id=match_id)
-
-    if not match.is_finished:
-        match.apply_result()
-
-    return redirect('match-detail', pk=match_id)
 
 class LeaderboardView(TemplateView):
     template_name = 'matches/leaderboard.html'
@@ -284,3 +223,76 @@ class LeaderboardView(TemplateView):
 
         context['teams'] = sorted_teams
         return context
+
+class FieldAddView(CreateView):
+    model = Field
+    form_class = FieldCreateForm
+    template_name = 'fields/field_create.html'
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['fields'] = Field.objects.all()
+        return context
+
+@require_POST
+def create_match_event(request, match_id):
+
+    if request.method == 'POST':
+        event_type = request.POST.get('event_type')
+        team_side = request.POST.get('team')
+        player_id = request.POST.get('player_id')
+        minute = request.POST.get('minute', '0')
+
+        match = get_object_or_404(Match, id=match_id)
+        team = match.home_team if team_side == 'home' else match.away_team
+
+        player = get_object_or_404(Player, id=player_id, team=team)
+
+        MatchEvent.objects.create(
+            match=match,
+            team=team,
+            player=player,
+            event_type=event_type,
+            minute=minute,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'player_name': player.name,
+            'event_type': event_type
+        })
+
+@csrf_exempt
+def add_player(request, team_id):
+    if request.method == 'POST':
+        player_name = request.POST.get('player')
+        if not player_name:
+            return JsonResponse({'success': False, 'error': 'Player name is required.'}, status=400)
+
+        try:
+            team = get_object_or_404(Team, id=team_id)
+        except Team.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Team not found.'}, status=404)
+
+        player, created = Player.objects.get_or_create(name=player_name.strip(), team=team)
+
+        return JsonResponse({
+            'success': True,
+            'player': {
+                'id': player.id,
+                'name': player.name,
+                'team': team.name
+            }
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+@require_POST
+def finish_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+
+    if not match.is_finished:
+        match.apply_result()
+
+    return redirect('match-detail', pk=match_id)
+

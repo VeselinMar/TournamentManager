@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const formData = new FormData(form);
       const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-      fetch(`/teams/${teamName}/add-player/`, {
+      fetch(`/teams/${teamId}/add-player/`, {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken

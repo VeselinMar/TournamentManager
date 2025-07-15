@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     HomePageView, TeamListView, TeamDetailView, TeamCreateView,
-    MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, create_match_event, add_player, finish_match
+    MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView, create_match_event, add_player, finish_match
 )
 urlpatterns = [
     path('', HomePageView.as_view(), name='home'),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('matches/<int:pk>/edit/', MatchEditView.as_view(), name='match-edit'),
     path('matches/<int:match_id>/add-event/', create_match_event, name='create-match-event'),
     path('leaderboard/', LeaderboardView.as_view(), name='leaderboard'),
-    path('teams/<str:team_name>/add-player/', add_player, name='add-player'),
+    path('teams/<int:team_id>/add-player/', add_player, name='add-player'),
     path('matches/<int:match_id>/finish/', finish_match, name='finish-match'),
+    path('fields/create/', FieldAddView.as_view(), name='field-create'),
 ]

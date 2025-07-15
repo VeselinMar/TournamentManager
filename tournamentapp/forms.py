@@ -2,10 +2,10 @@ import re
 from django import forms
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent
 
-class TeamForm(forms.ModelForm):
+class TeamCreateForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields = ['name', 'logo']
+        fields = ['name',]
         
     def clean_name(self):
         name = self.cleaned_data['name'].strip().title()
@@ -16,7 +16,7 @@ class TeamForm(forms.ModelForm):
 
         return name
 
-class MatchForm(forms.ModelForm):
+class MatchCreateForm(forms.ModelForm):
     class Meta:
         model = Match
         fields = ['home_team', 'away_team', 'start_time', 'field']
@@ -46,6 +46,16 @@ class MatchForm(forms.ModelForm):
     def clean_start_time(self):
         start_time = self.cleaned_data['start_time']
         return start_time
+
+class FieldCreateForm(forms.ModelForm):
+    class Meta:
+        model = Field
+        fields = ['name',]
+    
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip().title()
+    
+        return name
 
 class MatchEditForm(forms.ModelForm):
     class Meta:
