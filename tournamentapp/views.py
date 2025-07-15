@@ -12,6 +12,7 @@ from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventFor
 from django.urls import reverse_lazy
 from django.db.models import Q, Count
 from collections import defaultdict
+from django.utils.timezone import localtime
 
 
 class HomePageView(TemplateView):
@@ -20,20 +21,27 @@ class HomePageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        teams = Team.objects.all()
         matches = Match.objects.select_related('field', 'home_team', 'away_team').order_by('start_time')
 
-        # Group matches by field
-        matches_by_field = defaultdict(list)
+        # Get all field names and unique times
+        all_field_names = sorted({match.field.name for match in matches})
+        matches_by_time = defaultdict(dict)
+
         for match in matches:
-            field_name = match.field.name
-            matches_by_field[field_name].append(match)
+            time_key = localtime(match.start_time).strftime("%H:%M")
+            matches_by_time[time_key][match.field.name] = match
+
+        timeline = []
+        for time, field_dict in sorted(matches_by_time.items()):
+            row = {
+                'time': time,
+                'matches': [field_dict.get(fname) for fname in all_field_names]
+            }
+            timeline.append(row)
 
         context.update({
-            'teams': teams,
-            'matches_by_field': dict(matches_by_field),
-            'no_teams': not teams.exists(),
-            'no_matches': not matches.exists(),
+            'timeline': timeline,
+            'field_names': all_field_names,
         })
 
         return context
@@ -174,7 +182,7 @@ class LeaderboardView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Top scorers
-        players = Player.objects.all().order_by('-goals')
+        players = Player.objects.filter(goals__gt=0).order_by('-goals')[:10]
         context['players'] = players
 
         # Team leaderboard (same logic from TeamLeaderboardView)

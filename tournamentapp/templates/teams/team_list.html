@@ -1,23 +1,24 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="team-list-style">
+  <div class="container team-list-container">
+      <h1 class="page-title">Teams</h1>
 
-<div class="container team-list-container">
-    <h1 class="page-title">Teams</h1>
+      {% if teams %}
+          <ul class="team-list">
+              {% for team in teams %}
+                  <li class="team-item">
+                      <a href="{% url 'team-detail' team.id %}" class="team-link">{{ team.name }}</a>
+                  </li>
+              {% endfor %}
+          </ul>
+      {% else %}
+          <p>No teams available.</p>
+      {% endif %}
 
-    {% if teams %}
-        <ul class="team-list">
-            {% for team in teams %}
-                <li class="team-item">
-                    <a href="{% url 'team-detail' team.id %}" class="team-link">{{ team.name }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No teams available.</p>
-    {% endif %}
-
-    <div class="actions">
-        <a href="{% url 'team-create' %}" class="btn btn-primary">Add Team</a>
-    </div>
-
+      <div class="actions">
+          <a href="{% url 'team-create' %}" class="btn btn-primary">Add Team</a>
+      </div>
+  </div>
+</div>
 {% endblock %}

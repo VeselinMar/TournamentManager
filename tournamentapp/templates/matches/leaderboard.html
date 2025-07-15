@@ -9,10 +9,9 @@
         <ol>
         {% for team in teams %}
             <li>
-                {% if team.logo %}
-                    <img src="{{ team.logo.url }}" alt="{{ team.name }} logo">
-                {% endif %}
-                {{ team.name }} — {{ team.tournament_points }} point{{ team.tournament_points|pluralize }}
+                <a href="{% url 'team-detail' team.pk %}">
+                {{ team.name }}
+                </a> — {{ team.tournament_points }} point{{ team.tournament_points|pluralize }}
             </li>
         {% endfor %}
         </ol>

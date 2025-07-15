@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<div class="field-style">
 <div class="container team-list-container">
     <h1 class="page-title">Fields</h1>
 
@@ -48,5 +49,6 @@
     <option value="{{ field_obj.name }}"></option>
   {% endfor %}
 </datalist>
+</div>
 
 {% endblock %}

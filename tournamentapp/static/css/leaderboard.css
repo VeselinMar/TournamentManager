@@ -23,6 +23,13 @@
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 
+/* Remove styling from links */
+.leaderboard-column a {
+  color: #c8e6c9;
+  text-decoration: none;
+  font-weight: bold;
+}
+
 /* Section headings */
 .leaderboard-column h1 {
   color: #c8e6c9; /* lighter green */

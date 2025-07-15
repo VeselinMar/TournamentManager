@@ -3,12 +3,6 @@
 <div class="container team-detail-container">
     <h1 class="page-title">{{ team.name }}</h1>
 
-    {% comment %} <div class="team-info">
-        <p><strong>Coach:</strong> {{ team.coach }}</p>
-        <p><strong>Founded:</strong> {{ team.founded }}</p>
-        <p><strong>Stadium:</strong> {{ team.stadium }}</p>
-    </div> {% endcomment %}
-
     <h2 class="matches-title">Finished Matches</h2>
     {% if finished_matches %}
         <ul class="match-list">
@@ -25,6 +19,19 @@
         </ul>
     {% else %}
         <p>No finished matches for this team.</p>
+    {% endif %}
+
+    <h2 class="players">Players</h2>
+    {% if players %}
+    <ul class="player-list">
+        {% for player in players %}
+            <li class="player-stats">
+                {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p></p>
     {% endif %}
 
 {% endblock %}
