@@ -66,6 +66,31 @@
       <button type="submit" class="btn btn-danger btn-lg">🏁 Finish Match 🏁</button>
     </form>
   </div>
+
+  <div id="match-events-log" class="mb-4">
+  <h4>Match Events Log</h4>
+  <ul class="list-group">
+    {% for event in match_events %}
+      <li class="list-group-item d-flex justify-content-between align-items-center" data-event-id="{{ event.id }}">
+        <span>
+          {{ event.timestamp|time:"H:i" }} - 
+          {{ event.player.name }} 
+          {% if event.event_type == 'goal' %} scored a goal ⚽
+          {% elif event.event_type == 'yellow_card' %} received a yellow card 🟨
+          {% elif event.event_type == 'red_card' %} received a red card 🟥
+          {% elif event.event_type == 'own_goal' %} scored an own goal ❗
+          {% else %} did {{ event.event_type }}
+          {% endif %}
+        </span>
+        <button class="btn btn-sm btn-danger delete-event-btn">Delete</button>
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No events recorded yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+
 </div>
 {% endblock %}
 

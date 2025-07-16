@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
 
 <div class="field-style">
@@ -7,11 +8,21 @@
 
     {% if fields %}
         <ul class="field-list">
-            {% for field in fields %}
-                <li class="field-item">
-                    {{ field }}
-                </li>
-            {% endfor %}
+          {% for field in fields %}
+            <li class="field-item d-flex justify-content-between align-items-center" data-field-id="{{ field.id }}">
+              <span class="field-name">{{ field.name }}</span>
+
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary btn-edit">✏️ Edit</button>
+
+                {% if not field.match_set.exists %}
+                  <button class="btn btn-outline-danger btn-delete">🗑️ Delete</button>
+                {% else %}
+                  <button class="btn btn-outline-secondary disabled" title="Cannot delete field with matches">🗑️ Delete</button>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
         </ul>
     {% else %}
         <p>No fields available.</p>
@@ -51,4 +62,8 @@
 </datalist>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fields.js' %}"></script>
 {% endblock %}

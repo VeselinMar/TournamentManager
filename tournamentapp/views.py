@@ -1,6 +1,7 @@
 import csv
+import json
 from django import forms
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
@@ -174,6 +175,12 @@ class MatchEditView(UpdateView):
             player=player
         )
         return redirect('match-detail', pk=self.object.pk)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        match = self.object
+        context['match_events'] = match.events.all()
+        return context
 
 class LeaderboardView(TemplateView):
     template_name = 'matches/leaderboard.html'
@@ -236,40 +243,53 @@ class FieldAddView(CreateView):
     model = Field
     form_class = FieldCreateForm
     template_name = 'fields/field_create.html'
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('field-create')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['fields'] = Field.objects.all()
         return context
+        
 
 @require_POST
 def create_match_event(request, match_id):
+    event_type = request.POST.get('event_type')
+    team_side = request.POST.get('team')
+    player_id = request.POST.get('player_id')
+    minute = request.POST.get('minute', '0')
 
-    if request.method == 'POST':
-        event_type = request.POST.get('event_type')
-        team_side = request.POST.get('team')
-        player_id = request.POST.get('player_id')
-        minute = request.POST.get('minute', '0')
+    match = get_object_or_404(Match, id=match_id)
+    team = match.home_team if team_side == 'home' else match.away_team
+    player = get_object_or_404(Player, id=player_id, team=team)
 
-        match = get_object_or_404(Match, id=match_id)
-        team = match.home_team if team_side == 'home' else match.away_team
+    event = MatchEvent.objects.create(
+        match=match,
+        team=team,
+        player=player,
+        event_type=event_type,
+        minute=minute,
+    )
 
-        player = get_object_or_404(Player, id=player_id, team=team)
+    # Recalculate score without finalizing the match
+    home_score = match.events.filter(event_type='goal', team=match.home_team).count()
+    home_score += match.events.filter(event_type='own_goal', team=match.away_team).count()
 
-        MatchEvent.objects.create(
-            match=match,
-            team=team,
-            player=player,
-            event_type=event_type,
-            minute=minute,
-        )
+    away_score = match.events.filter(event_type='goal', team=match.away_team).count()
+    away_score += match.events.filter(event_type='own_goal', team=match.home_team).count()
 
-        return JsonResponse({
-            'success': True,
+    return JsonResponse({
+        'success': True,
+        'player_name': player.name,
+        'event_type': event_type,
+        'home_score': home_score,
+        'away_score': away_score,
+        'event': {
+            'id': event.id,
             'player_name': player.name,
-            'event_type': event_type
-        })
+            'event_type': event_type,
+            'timestamp': f"{minute}'"
+        }
+    })
 
 @csrf_exempt
 def add_player(request, team_id):
@@ -304,3 +324,51 @@ def finish_match(request, match_id):
 
     return redirect('match-detail', pk=match_id)
 
+@require_http_methods(['DELETE'])
+def remove_match_event(request, event_id):
+    event = get_object_or_404(MatchEvent, id=event_id)
+    match = event.match
+
+    # Delete the event
+    event.delete()
+
+    # Recalculate score after deletion
+    home_score = match.events.filter(event_type='goal', team=match.home_team).count()
+    home_score += match.events.filter(event_type='own_goal', team=match.away_team).count()
+
+    away_score = match.events.filter(event_type='goal', team=match.away_team).count()
+    away_score += match.events.filter(event_type='own_goal', team=match.home_team).count()
+
+    return JsonResponse({
+        'success': True,
+        'home_score': home_score,
+        'away_score': away_score,
+    })
+
+@require_POST
+def field_edit(request, pk):
+    field = get_object_or_404(Field, pk=pk)
+
+    try:
+        data = json.loads(request.body)
+        new_name = data.get('name', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'})
+
+    if not new_name:
+        return JsonResponse({'success': False, 'error': 'Field name cannot be empty.'})
+
+    field.name = new_name
+    field.save()
+    return JsonResponse({'success': True, 'name': field.name})
+
+
+@require_POST
+def field_delete(request, pk):
+    field = get_object_or_404(Field, pk=pk)
+
+    if field.match_set.exists():
+        return JsonResponse({'success': False, 'error': 'Cannot delete field with assigned matches.'})
+
+    field.delete()
+    return JsonResponse({'success': True})
