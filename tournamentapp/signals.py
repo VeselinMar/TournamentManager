@@ -1,6 +1,6 @@
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from .models import Player
+from .models import Player, MatchEvent
 
 @receiver(pre_save, sender=Player)
 def apply_card_rules(sender, instance, **kwargs):

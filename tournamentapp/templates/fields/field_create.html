@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="field-style">
+<div class="container team-list-container">
+    <h1 class="page-title">Fields</h1>
+
+    {% if fields %}
+        <ul class="field-list">
+          {% for field in fields %}
+            <li class="field-item d-flex justify-content-between align-items-center" data-field-id="{{ field.id }}">
+              <span class="field-name">{{ field.name }}</span>
+
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary btn-edit">✏️ Edit</button>
+
+                {% if not field.match_set.exists %}
+                  <button class="btn btn-outline-danger btn-delete">🗑️ Delete</button>
+                {% else %}
+                  <button class="btn btn-outline-secondary disabled" title="Cannot delete field with matches">🗑️ Delete</button>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+    {% else %}
+        <p>No fields available.</p>
+    {% endif %}
+    
+<form method="post" class="field-create-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="form-error non-field-errors">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% for field in form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <small class="form-help">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <div class="form-error">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-submit">Create Field</button>
+</form>
+
+<datalist id="field-options">
+  {% for field_obj in fields %}
+    <option value="{{ field_obj.name }}"></option>
+  {% endfor %}
+</datalist>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fields.js' %}"></script>
+{% endblock %}

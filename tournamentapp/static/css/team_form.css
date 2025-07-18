@@ -1,0 +1,54 @@
+html, body {
+  height: 80%;
+  margin: 0;
+  padding: 0;
+  background-color: #2e7d32; /* dark green */
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+/* Scope all container styles to .team-form-container */
+.container.team-form-container {
+  max-width: 700px;
+  min-height: 60vh;
+  margin: 3rem auto;
+  padding: 2rem 3rem;
+  background-color: #2e7d32;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+.container.team-form-container .form-batch {
+  margin-top: 3rem;
+  padding: 2rem;
+  border-top: 2px solid #81c784; /* light green */
+}
+
+.container.team-form-container .form-single {
+  margin-top: 3rem;
+  padding: 2rem;
+  border-top: 2px solid #81c784; /* light green */
+}
+
+.container.team-form-container .page-title,
+.container.team-form-container .section-title {
+  color: #a5d6a7; /* light green */
+}
+
+.container.team-form-container .message {
+  background-color: #4caf50cc; /* semi-transparent green */
+  border-color: #81c784;
+  color: white;
+}
+
+.container.team-form-container button.btn-primary {
+  background-color: #81c784;
+  border-color: #66bb6a;
+  color: #1b5e20;
+}
+
+.container.team-form-container button.btn-primary:hover {
+  background-color: #66bb6a;
+  border-color: #388e3c;
+  color: white;
+}

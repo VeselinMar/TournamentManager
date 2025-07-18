@@ -1,0 +1,45 @@
+.team-detail-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #388e3c;
+  border-radius: 10px;
+}
+
+.team-info p {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.match-list, .player-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.match-item, .player-stats {
+  margin-bottom: 0.5rem;
+}
+
+.match-link {
+  text-decoration: none;
+  color: #2e7d32;
+}
+
+.match-link:hover {
+  text-decoration: underline;
+}
+
+.match-win {
+  background-color: #d4edda; /* light green */
+  border-left: 5px solid #28a745;
+}
+
+.match-loss {
+  background-color: #f8d7da; /* light red */
+  border-left: 5px solid #dc3545;
+}
+
+.match-draw {
+  background-color: #f0f0f0; /* light gray */
+  border-left: 5px solid #6c757d;
+}

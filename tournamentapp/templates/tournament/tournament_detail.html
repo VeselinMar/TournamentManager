@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if no_tournament %}
+  <p>You have no active tournament. <a href="{% url 'tournament-create' %}">Create a tournament now</a>.</p>
+{% else %}
+  <h2>{{ tournament.name }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        {% for field in field_names %}
+          <th>{{ field }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in timeline %}
+        <tr>
+          <td>{{ row.time }}</td>
+          {% for match in row.matches %}
+            <td>
+              {% if match %}
+                {{ match.home_team.name }} vs {{ match.away_team.name }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

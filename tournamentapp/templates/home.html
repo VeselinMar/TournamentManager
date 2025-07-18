@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Matchday Overview{% endblock %}
+
+{% block content %}
+<div class="home-style">
+<div class="container py-5">
+  <h1 class="text-center mb-4">🏆 Societas Bulgarica Cup 🏆</h1>
+
+  {% if timeline %}
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle text-center timeline-table">
+        <thead class="table-light">
+          <tr>
+            <th class="text-nowrap">Time</th>
+            {% for field in field_names %}
+              <th>{{ field }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in timeline %}
+            <tr>
+              <td class="fw-bold text-nowrap">{{ row.time }}</td>
+              {% for match in row.matches %}
+                <td>
+                  {% if match %}
+                    <div class="match-card {% if match.is_finished %}finished{% endif %}">
+                      <strong>{{ match.home_team.name }}</strong> vs <strong>{{ match.away_team.name }}</strong><br>
+                      {% if match.is_finished %}
+                        <span class="score text-success fw-bold">{{ match.home_score }} - {{ match.away_score }}</span><br>
+                      {% endif %}
+                      <a href="{% url 'match-edit' match.pk %}" class="btn btn-sm btn-outline-primary mt-2">Score</a>
+                    </div>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-center text-muted">No matches scheduled today.</p>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

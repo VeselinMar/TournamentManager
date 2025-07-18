@@ -1,45 +1,94 @@
+import re
 from django import forms
-from .models import Team, Match, Player, GoalEvent
+from django.utils.text import slugify
+from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
 
-class TeamForm(forms.ModelForm):
+class TournamentCreateForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ['name']
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.slug = slugify(instance.name)
+
+        if commit:
+            instance.save()
+        return instance
+
+class TeamCreateForm(forms.ModelForm):
     class Meta:
         model = Team
-        fields = ['name', 'logo']
+        fields = ['name',]
+        
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip().title()
 
-class MatchForm(forms.ModelForm):
+        # Basic validation: letters, numbers, spaces, dashes, ampersand
+        if not re.match(r'^[\w\s\-&]{1,50}$', name):
+            raise forms.ValidationError("Invalid team name. Use letters, numbers, dashes or '&'.")
+
+        return name
+
+class MatchCreateForm(forms.ModelForm):
     class Meta:
         model = Match
         fields = ['home_team', 'away_team', 'start_time', 'field']
+        widgets = {
+            'start_time': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                }
+                ),
+        }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        home_team = cleaned_data.get('home_team')
-        away_team = cleaned_data.get('away_team')
+    def __init__(self, *args, **kwargs):
+        tournament = kwargs.pop('tournament', None)
+        super().__init__(*args, **kwargs)
 
-        if home_team == away_team:
-            raise forms.ValidationError("Home and Away teams must be different.")
+        if tournament:
+            self.fields['home_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['away_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['field'].queryset = Field.objects.filter(tournament=tournament)
 
+        # If initial data exists, convert to proper format for datetime-local input
+        if self.instance and self.instance.start_time:
+            self.initial['start_time'] = self.instance.start_time.strftime('%Y-%m-%dT%H:%M')
+        
+        if not self.initial.get('field'):
+            try:
+                default_field = Field.objects.get(name='Main Field')
+                self.fields['field'].initial = default_field.id
+            except Field.DoesNotExist:
+                pass
+        
+        self.fields['field'].empty_label = None
+
+    def clean_start_time(self):
+        start_time = self.cleaned_data['start_time']
+        return start_time
+
+class FieldCreateForm(forms.ModelForm):
+    class Meta:
+        model = Field
+        fields = ['name',]
+    
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip().title()
+    
+        return name
 
 class MatchEditForm(forms.ModelForm):
-    home_scorers = forms.CharField(
-        widget=forms.Textarea(attrs={'placeholder': 'One scorer per line for Home Team'}),
-        required=False,
-        label="Home Scorers"
-    )
-    away_scorers = forms.CharField(
-        widget=forms.Textarea(attrs={'placeholder': 'One scorer per line for Away Team'}),
-        required=False,
-        label="Away Scorers"
-    )
-
     class Meta:
         model = Match
         fields = ['home_score', 'away_score']
+        labels = {
+            'home_score': 'Home Team Score',
+            'away_score': 'Away Team Score',
+        }
 
     def __init__(self, *args, **kwargs):
         self.match = kwargs.get('instance')
         super().__init__(*args, **kwargs)
-
         if self.match:
             self.fields['home_score'].label = self.match.home_team.name
             self.fields['away_score'].label = self.match.away_team.name
@@ -47,25 +96,20 @@ class MatchEditForm(forms.ModelForm):
     def save(self, commit=True):
         match = super().save(commit=False)
 
-        # Step 1: Reverse previous match effects
         if match.is_finished:
-            self._reverse_previous_results()
+            self._reverse_previous_points()
 
-        # Step 2: Apply new match points
         self._apply_match_points(match)
 
         match.is_finished = True
-        match.save()
-
-        # Step 3: Register new goal events
-        self._register_goal_events(match)
+        if commit:
+            match.save()
 
         return match
 
-    def _reverse_previous_results(self):
+    def _reverse_previous_points(self):
         match = self.match
 
-        # Reverse tournament points
         if match.home_score > match.away_score:
             match.home_team.tournament_points = max(0, match.home_team.tournament_points - 3)
         elif match.home_score < match.away_score:
@@ -76,14 +120,6 @@ class MatchEditForm(forms.ModelForm):
 
         match.home_team.save()
         match.away_team.save()
-
-        # Reverse player goal counters and delete goal events
-        for goal_event in GoalEvent.objects.filter(match=match):
-            player = goal_event.player
-            if player and player.goals > 0:
-                player.goals -= 1
-                player.save()
-            goal_event.delete()
 
     def _apply_match_points(self, match):
         if match.home_score > match.away_score:
@@ -97,20 +133,53 @@ class MatchEditForm(forms.ModelForm):
         match.home_team.save()
         match.away_team.save()
 
-    def _register_goal_events(self, match):
-        home_scorers = self.cleaned_data.get('home_scorers', '').splitlines()
-        away_scorers = self.cleaned_data.get('away_scorers', '').splitlines()
+class MatchEventForm(forms.ModelForm):
+    player = forms.CharField()
+    team = forms.CharField()
 
-        for name in map(str.strip, home_scorers):
-            if name:
-                player, _ = Player.objects.get_or_create(name=name, team=match.home_team)
-                GoalEvent.objects.create(match=match, team=match.home_team, player=player, minute=0)
-                player.goals += 1
-                player.save()
+    class Meta:
+        model = MatchEvent
+        fields = ['event_type',]
 
-        for name in map(str.strip, away_scorers):
-            if name:
-                player, _ = Player.objects.get_or_create(name=name, team=match.away_team)
-                GoalEvent.objects.create(match=match, team=match.away_team, player=player, minute=0)
-                player.goals += 1
-                player.save()
+    def __init__(self, *args, **kwargs):
+        self.match = kwargs.pop('match', None)
+        super().__init__(*args, **kwargs)
+        
+    def clean(self):
+        cleaned_data = super().clean()
+
+        player_name = cleaned_data.get('player')
+        team_key = cleaned_data.get('team')
+
+        if not player_name:
+            raise forms.ValidationError("Player name is required.")
+        
+        if not self.match:
+            raise forms.ValidationError("Match instance is required.")
+        
+        if team_key == 'home':
+            team_instance = self.match.home_team
+        elif team_key == 'away':
+            team_instance = self.match.away_team
+        else:
+            raise forms.ValidationError("Invalid team selection.")
+            
+        player, _ = Player.objects.get_or_create(name=player_name.strip(), team=team_instance)
+
+        cleaned_data['player'] = player 
+        cleaned_data['team'] = team_instance
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        event = super().save(commit=False)
+
+        event.match = self.match
+        event.player = self.cleaned_data['player']
+        event.team = self.cleaned_data['team']
+
+        if commit:
+            event.full_clean()
+            event.save()
+
+        return event

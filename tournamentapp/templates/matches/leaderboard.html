@@ -1,36 +1,38 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Team Leaderboard</h1>
 
-{% if teams %}
-    <ol>
-    {% for team in teams %}
-        <li>
-            {% if team.logo %}
-                <img src="{{ team.logo.url }}" alt="{{ team.name }} logo" width="30" height="30">
-            {% endif %}
-            {{ team.name }} — {{ team.tournament_points }} point{{ team.tournament_points|pluralize }}
-        </li>
-    {% endfor %}
-    </ol>
-{% else %}
-    <p>No teams available.</p>
-{% endif %}
+<div class="leaderboard-container">
 
-<hr>
-
-<h1>Top Scorers</h1>
-
-{% if players %}
-    <ol>
-    {% for player in players %}
-        <li>
-            {{ player.name }} ({{ player.team.name }}) — {{ player.goals }} goal{{ player.goals|pluralize }}
-        </li>
-    {% endfor %}
-    </ol>
-{% else %}
-    <p>No goals recorded yet.</p>
-{% endif %}
+  <div class="leaderboard-column">
+    <h1>Team Leaderboard</h1>
+    {% if teams %}
+        <ol>
+        {% for team in teams %}
+            <li>
+                <a href="{% url 'team-detail' tournament.id team.pk %}">
+                {{ team.name }}
+                </a> — {{ team.tournament_points }} point{{ team.tournament_points|pluralize }}
+            </li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No teams available.</p>
+    {% endif %}
+  </div>
+  <div class="leaderboard-column">
+    <h1>Top Scorers</h1>
+    {% if players %}
+        <ol>
+        {% for player in players %}
+            <li>
+                {{ player.name }} ({{ player.team.name }}) — {{ player.goals }} goal{{ player.goals|pluralize }}
+            </li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No goals recorded yet.</p>
+    {% endif %}
+  </div>
+</div>
 
 {% endblock %}

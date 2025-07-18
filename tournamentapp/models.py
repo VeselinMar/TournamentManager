@@ -1,20 +1,50 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
+
+class Tournament(models.Model):
+    name = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tournaments'
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True
+    )
+    is_finished = models.BooleanField(
+        default=False,
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.owner.email})"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
 
 
 class Team(models.Model):
     name = models.CharField(
         max_length=100,
-        unique=True,
-        help_text="Enter the team name.",
         verbose_name="Team Name",
         )
+
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='teams'
+    )
 
     logo = models.ImageField(
         upload_to='team_logos/',
         blank=True,
         null=True,
-        help_text="Upload a logo for the team (optional).",
         verbose_name="Team Logo",
         )
 
@@ -27,6 +57,9 @@ class Team(models.Model):
         default=0,
         verbose_name="Match Points",
         )
+
+    class Meta:
+        unique_together = ('name', 'tournament')
 
     def __str__(self):
         return self.name
@@ -41,7 +74,6 @@ class Team(models.Model):
         self.tournament_points += points
         self.save()
     
-
 class Player(models.Model):
     name = models.CharField(
         max_length=100,
@@ -104,12 +136,32 @@ class Player(models.Model):
         super().save(*args, **kwargs)
 
 class Field(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        default='Main Field'
+        )
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='fields'
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='fields'
+    )
 
     def __str__(self):
         return self.name
 
 class Match(models.Model):
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='matches'
+    )
+
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
 
@@ -118,7 +170,12 @@ class Match(models.Model):
 
     is_finished = models.BooleanField(default=False)
     start_time = models.DateTimeField()
-    field = models.ForeignKey(Field, on_delete=models.SET_NULL, null=True, blank=True)
+    field = models.ForeignKey(
+        Field, 
+        on_delete=models.PROTECT,
+        null=False, 
+        blank=False,
+        )
 
     class Meta:
         unique_together = ('home_team', 'away_team', 'start_time')
@@ -144,6 +201,9 @@ class Match(models.Model):
         self.home_score = home_goals
         self.away_score = away_goals
 
+        for event in self.events.all():
+            event.apply_event_effects()
+
         # Assign points
         if home_goals > away_goals:
             self.home_team.tournament_points += 3
@@ -163,6 +223,9 @@ class Match(models.Model):
         super().clean()
         if self.home_team == self.away_team:
             raise ValidationError("A team cannot play against itself.")
+
+        if self.home_team.tournament != self.tournament or self.away_team.tournament != self.tournament:
+            raise ValidationError("Both teams must belong to the same tournament as the match.")
 
         overlapping = Match.objects.filter(
             field=self.field,
@@ -266,15 +329,12 @@ class MatchEvent(models.Model):
     
 
     def clean(self):
-        if self.event_type in ['goal', 'own_goal', 'yellow_card', 'red_card'] and not self.player:
-            raise ValidationError("Player must be specified for goal/card events.")
-    
-        if self.event_type == 'substitution' and not (self.player and self.substitute_player):
-            raise ValidationError("Both players must be specified for substitutions.")
         
         if self.substitute_player and self.substitute_player.team != self.team:
             raise ValidationError("Substitute must be from the same team.")
-
+            
+        if self.event_type == 'substitution' and not self.substitute_player:
+            raise ValidationError("Substitution must specify a substitute player.")
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
@@ -297,3 +357,8 @@ class GoalEvent(MatchEvent):
 
     def __str__(self):
         return f"GOAL: {self.player} for {self.team} in {self.match}"
+    
+    def clean(self):
+        super().clean()
+        if self.event_type != 'goal':
+            raise ValidationError("This event must be a goal.")

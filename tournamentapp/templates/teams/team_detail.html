@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container team-detail-container">
+    <h1 class="page-title">{{ team.name }}</h1>
+
+    <h2 class="matches-title">Finished Matches</h2>
+    {% if finished_matches %}
+        <ul class="match-list">
+            {% for match in finished_matches %}
+                <li class="match-item match-{{ match.result }}">
+                    <a href="{% url 'match-detail' tournament.id match.id %}" class="match-link">
+                        {{ match.home_team.name }} vs {{ match.away_team.name }} —
+                        {{ match.start_time|date:"M d, Y H:i" }} <br>
+                        Result: {{ match.home_score }} - {{ match.away_score }} |
+                        Goal Difference: {{ match.goal_difference }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No finished matches for this team.</p>
+    {% endif %}
+
+    <h2 class="players">Players</h2>
+    {% if players %}
+    <ul class="player-list">
+        {% for player in players %}
+            <li class="player-stats">
+                {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p></p>
+    {% endif %}
+
+{% endblock %}

@@ -2,7 +2,12 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Team, Player, Match, GoalEvent, Field, MatchEvent
+from .models import Team, Player, Match, GoalEvent, Field, MatchEvent, Tournament
+
+@admin.register(Tournament)
+class TournamentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'owner', 'slug')
+    search_fields = ('owner', )
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
