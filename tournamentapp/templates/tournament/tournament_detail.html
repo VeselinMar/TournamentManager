@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% if no_tournament %}
-  <p>You have no active tournament. <a href="{% url 'tournament-create' %}">Create one now</a>.</p>
+  <p>You have no active tournament. <a href="{% url 'tournament-create' %}">Create a tournament now</a>.</p>
 {% else %}
   <h2>{{ tournament.name }}</h2>
   <table>

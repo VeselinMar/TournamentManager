@@ -13,6 +13,20 @@
     {% empty %}
       <li class="landing-page__list-item">No active tournaments right now.</li>
     {% endfor %}
+      <li>
+        <p>Would you like to create a tournament?</p>
+        <span>If you already have an account:
+        <a class="landing-page__link" href="{% url 'login' %}">
+          Login
+        </a>
+      </span>
+      <br>
+        <span>Or you can register:
+        <a class="landing-page__link" href="{% url 'register' %}">
+          Register
+        </a>
+      </span>
+      </li>
   </ul>
 </div>
 {% endblock %}

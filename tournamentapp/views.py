@@ -34,7 +34,7 @@ class TournamentCreateView(CreateView, LoginRequiredMixin):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('tournament-detail', kwargs={'pk': self.object.pk})
+        return reverse('team-create', kwargs={'tournament_id': self.object.pk})
 
 
 

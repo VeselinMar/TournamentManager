@@ -1,11 +1,20 @@
 import re
 from django import forms
+from django.utils.text import slugify
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
 
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'slug']
+        fields = ['name']
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.slug = slugify(instance.name)
+
+        if commit:
+            instance.save()
+        return instance
 
 class TeamCreateForm(forms.ModelForm):
     class Meta:

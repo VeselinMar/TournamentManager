@@ -24,4 +24,4 @@ class UserLoginView(LoginView):
         return get_post_login_redirect(self.request.user)
 
 class UserLogoutView(LogoutView):
-    next_page = reverse_lazy('login')
+    next_page = reverse_lazy('landing-page')
