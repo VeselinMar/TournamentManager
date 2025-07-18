@@ -9,7 +9,7 @@
         <ol>
         {% for team in teams %}
             <li>
-                <a href="{% url 'team-detail' team.pk %}">
+                <a href="{% url 'team-detail' tournament.id team.pk %}">
                 {{ team.name }}
                 </a> — {{ team.tournament_points }} point{{ team.tournament_points|pluralize }}
             </li>

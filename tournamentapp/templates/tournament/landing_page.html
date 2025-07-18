@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="landing-page">
+  <h2 class="landing-page__title">Ongoing Tournaments</h2>
+  <ul class="landing-page__list">
+    {% for tournament in tournaments %}
+      <li class="landing-page__list-item">
+        <a class="landing-page__link" href="{% url 'public-tournament-leaderboard' tournament.name %}">
+          {{ tournament.name }}
+        </a>
+      </li>
+    {% empty %}
+      <li class="landing-page__list-item">No active tournaments right now.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

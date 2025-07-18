@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4" id="match-wrapper" data-match-id="{{ match.id }}">
+<div class="container mt-4" id="match-wrapper" data-tournament-id="{{ tournament.id }}" data-match-id="{{ match.id }}">
   <h2 class="mb-4 text-center">{{ match.home_team.name }} VS {{ match.away_team.name }}</h2>
   <h2 class="mb-4 text-center">{{ match.home_score }} - {{ match.away_score }}</h2>
 
@@ -61,7 +61,7 @@
         </div>
       </form>
     </div>
-    <form method="post" action={% url 'finish-match' match.id %} class="mt-4 text-center">
+    <form method="post" action={% url 'finish-match' tournament.id match.id %} class="mt-4 text-center">
       {% csrf_token %}
       <button type="submit" class="btn btn-danger btn-lg">🏁 Finish Match 🏁</button>
     </form>

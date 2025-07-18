@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const matchWrapper = document.getElementById("match-wrapper");
   const matchId = matchWrapper?.dataset.matchId;
+  const tournamentId = matchWrapper?.dataset.tournamentId;
 
   const scoreDisplay = document.querySelector('#match-wrapper h2:nth-child(2)');
   const eventLog = document.getElementById('match-events-log')?.querySelector('ul');
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const formData = new FormData(form);
       const csrfToken = getCSRFToken();
 
-      fetch(`/teams/${teamId}/add-player/`, {
+      fetch(`/tournament/${tournamentId}/teams/${teamId}/add-player/`, {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken
@@ -98,14 +99,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const team = this.dataset.team;
         const eventType = this.dataset.type;
 
-        if (!matchId) {
-          console.error("❌ No match ID found");
-          return alert("Match ID is missing.");
+        if (!matchId || !tournamentId) {
+          console.error("❌ Match or Tournament ID missing");
+          return alert("Match or Tournament ID is missing.");
         }
 
         const csrfToken = getCSRFToken();
 
-        fetch(`/matches/${matchId}/add-event/`, {
+        fetch(`/tournament/${tournamentId}/matches/${matchId}/add-event/`, {
           method: "POST",
           headers: {
             "X-CSRFToken": csrfToken,
@@ -141,7 +142,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const li = e.target.closest('li');
       const eventId = li.dataset.eventId;
 
-      fetch(`/matches/delete-event/${eventId}/`, {
+      if (!tournamentId) {
+        console.error("❌ Tournament ID missing");
+        return alert("Tournament ID is missing.");
+      }
+
+      fetch(`/tournament/${tournamentId}/matches/delete-event/${eventId}/`, {
         method: 'DELETE',
         headers: {
           'X-CSRFToken': getCSRFToken(),

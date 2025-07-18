@@ -8,11 +8,16 @@ class TournamentappConfig(AppConfig):
     verbose_name = "Tournament Manager"
     
     def ready(self):
-        # Import signals to ensure they are registered
         import tournamentapp.signals
-        from tournamentapp.models import Field 
+        from tournamentapp.models import Field, Tournament
+        
         try:
             if not Field.objects.filter(name='Main Field').exists():
-                Field.objects.create(name='Main Field')
-        except (OperationalError, ProgrammingError) as e:
+                tournament = Tournament.objects.first()
+                if tournament:
+                    Field.objects.create(
+                        name='Main Field',
+                        tournament=tournament,
+                        owner=tournament.owner)
+        except (OperationalError, ProgrammingError):
             pass

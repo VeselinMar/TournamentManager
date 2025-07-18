@@ -1,6 +1,11 @@
 import re
 from django import forms
-from .models import Team, Match, Player, GoalEvent, Field, MatchEvent
+from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
+
+class TournamentCreateForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ['name', 'slug']
 
 class TeamCreateForm(forms.ModelForm):
     class Meta:
@@ -28,7 +33,13 @@ class MatchCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        tournament = kwargs.pop('tournament', None)
         super().__init__(*args, **kwargs)
+
+        if tournament:
+            self.fields['home_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['away_team'].queryset = Team.objects.filter(tournament=tournament)
+            self.fields['field'].queryset = Field.objects.filter(tournament=tournament)
 
         # If initial data exists, convert to proper format for datetime-local input
         if self.instance and self.instance.start_time:
