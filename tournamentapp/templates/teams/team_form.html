@@ -28,7 +28,7 @@ Team B
     <p>This allows you to quickly create multiple teams and assign players in one go.</p>
   </div>
 
-  <!-- Center: Forms -->
+  <!-- Center: Forms + Next Step -->
   <div class="dashboard-center container team-form-container">
     <h1 class="page-title">Add Team</h1>
 
@@ -48,7 +48,6 @@ Team B
     </form>
 
     <!-- CSV Upload -->
-    <h2 class="section-title">Add Teams From CSV</h2>
     <form method="post" enctype="multipart/form-data" class="form form-batch">
       {% csrf_token %}
       <div class="form-group">
@@ -57,6 +56,17 @@ Team B
       </div>
       <button type="submit" name="submit_type" value="batch" class="btn btn-success">Upload Teams</button>
     </form>
+    
+    <!-- Next Step: Add Fields -->
+    <div class="next-step">
+      <h2 class="section-title">Next Step: Add Fields</h2>
+      <p>
+        After adding your teams and players, you can create the fields where matches will take place.
+      </p>
+      <a href="{% url 'field-create' tournament_id=tournament.pk %}" class="btn btn-secondary">
+        Add Fields
+      </a>
+    </div>
   </div>
 
   <!-- Right: Teams List -->
@@ -68,9 +78,8 @@ Team B
         {% for team in tournament.teams.all %}
           <div class="team-card">
             <a href="{% url 'team-detail' tournament_id=tournament.pk pk=team.pk %}" class="team-link">
-            <h3>
-              {{ team.name }}
-            </h3>
+              <h3>{{ team.name }}</h3>
+            </a>
             {% if team.player_set.count %}
               <ul>
                 {% for player in team.player_set.all %}

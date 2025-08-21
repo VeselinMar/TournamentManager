@@ -6,7 +6,7 @@
   gap: 2rem;
   max-width: 1400px;
   margin: 3rem auto;
-  align-items: flex-start;
+  align-items: stretch; /* ensures columns are same height */
   flex-wrap: wrap; /* allows wrapping on smaller screens */
 }
 
@@ -21,7 +21,6 @@
 .dashboard-left,
 .dashboard-center,
 .dashboard-right {
-  max-height: 800px;
   flex: 1;
   min-width: 250px;
   padding: 2rem;
@@ -82,6 +81,9 @@
   padding: 2rem;
   border-radius: 10px;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 450px;
+  align-self: center;
 }
 
 .dashboard-center .form label {
@@ -100,7 +102,7 @@
   width: 100%;
   font-size: 0.95rem;
   outline: none;
-  background-color: #e8f5e9; /* light input background */
+  background-color: #e8f5e9;
   color: #1b5e20;
 }
 
@@ -127,6 +129,7 @@
 .dashboard-center .btn-primary:hover {
   background-color: #66bb6a;
   color: white;
+  transform: scale(1.03);
 }
 
 .dashboard-center .btn-success {
@@ -137,6 +140,7 @@
 .dashboard-center .btn-success:hover {
   background-color: #388e3c;
   color: #e8f5e9;
+  transform: scale(1.03);
 }
 
 .dashboard-center .section-title {
@@ -148,11 +152,43 @@
   padding-bottom: 0.3rem;
 }
 
+/* Next Step Box */
+.next-step {
+  background-color: #4caf50;
+  padding: 1.5rem 2rem;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+  margin-top: 2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 450px;
+  align-self: center;
+}
+
+.next-step .btn-secondary {
+  background-color: #81c784;
+  color: #1b5e20;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.next-step .btn-secondary:hover {
+  background-color: #66bb6a;
+  color: white;
+  transform: scale(1.03);
+}
+
 /* ==========================
    Scrollable Teams Section
 ========================== */
 .teams-scroll {
-  max-height: calc(4 * 120px + 5 * 1.42rem);
+  max-height: 80vh; /* dynamic height */
   overflow-y: auto;
   padding-right: 0.5rem;
 }
@@ -189,7 +225,7 @@
 }
 
 .team-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px) scale(1.02);
   box-shadow: 0 8px 16px rgba(0,0,0,0.3);
 }
 
@@ -212,11 +248,13 @@
 .team-link {
   color: #a5d6a7;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.2s;
+  display: block;
 }
 
 .team-link:hover {
   color: #ffffff;
+  transform: scale(1.02);
 }
 
 /* ==========================
@@ -237,5 +275,31 @@
 
   .teams-columns {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-center .form,
+  .next-step {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-left,
+  .dashboard-center,
+  .dashboard-right {
+    padding: 1rem;
+  }
+
+  .dashboard-center .page-title {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-center .form input,
+  .dashboard-center .form textarea {
+    font-size: 0.9rem;
+  }
+
+  .next-step {
+    padding: 1rem 1.5rem;
   }
 }
