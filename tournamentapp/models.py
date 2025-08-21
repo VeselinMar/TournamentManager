@@ -157,7 +157,7 @@ class Field(models.Model):
         verbose_name_plural = "Fields"
 
     def __str__(self):
-        return f"{self.name} ({self.tournament})"
+        return f"{self.name}"
 
 class Match(models.Model):
     tournament = models.ForeignKey(

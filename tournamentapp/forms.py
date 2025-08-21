@@ -64,9 +64,9 @@ class MatchCreateForm(forms.ModelForm):
         if self.instance and self.instance.start_time:
             self.initial['start_time'] = self.instance.start_time.strftime('%Y-%m-%dT%H:%M')
         
-        if not self.initial.get('field'):
+        if not self.initial.get('field') and tournament:
             try:
-                default_field = Field.objects.get(name='Main Field')
+                default_field = Field.objects.get(name='Main Field', tournament=tournament)
                 self.fields['field'].initial = default_field.id
             except Field.DoesNotExist:
                 pass
