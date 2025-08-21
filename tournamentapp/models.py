@@ -138,7 +138,6 @@ class Player(models.Model):
 class Field(models.Model):
     name = models.CharField(
         max_length=50,
-        unique=True,
         default='Main Field'
         )
     tournament = models.ForeignKey(
@@ -152,8 +151,13 @@ class Field(models.Model):
         related_name='fields'
     )
 
+    class Meta:
+        unique_together = ('name', 'tournament')
+        verbose_name = "Field"
+        verbose_name_plural = "Fields"
+
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.tournament})"
 
 class Match(models.Model):
     tournament = models.ForeignKey(
