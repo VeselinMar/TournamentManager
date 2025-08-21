@@ -1,54 +1,241 @@
-html, body {
-  height: 80%;
-  margin: 0;
-  padding: 0;
-  background-color: #2e7d32; /* dark green */
-  color: white;
-  font-family: Arial, sans-serif;
-}
-
-/* Scope all container styles to .team-form-container */
-.container.team-form-container {
-  max-width: 700px;
-  min-height: 60vh;
+/* ==========================
+   Dashboard Layout
+========================== */
+.team-dashboard {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
   margin: 3rem auto;
-  padding: 2rem 3rem;
-  background-color: #2e7d32;
+  align-items: flex-start;
+  flex-wrap: wrap; /* allows wrapping on smaller screens */
+}
+
+.section-title {
+  align-self: center;
+  font-weight: bold;
+}
+
+/* ==========================
+   Columns: Left, Center, Right
+========================== */
+.dashboard-left,
+.dashboard-center,
+.dashboard-right {
+  max-height: 800px;
+  flex: 1;
+  min-width: 250px;
+  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #e8f5e9;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.container.team-form-container .form-batch {
-  margin-top: 3rem;
-  padding: 2rem;
-  border-top: 2px solid #81c784; /* light green */
+/* Slightly different shades for visual separation */
+.dashboard-left {
+  background-color: #33691e;
+  color: #dcedc8;
 }
 
-.container.team-form-container .form-single {
-  margin-top: 3rem;
-  padding: 2rem;
-  border-top: 2px solid #81c784; /* light green */
+.dashboard-center {
+  background-color: #2e7d32;
 }
 
-.container.team-form-container .page-title,
-.container.team-form-container .section-title {
-  color: #a5d6a7; /* light green */
+.dashboard-right {
+  background-color: #2e7d32;
 }
 
-.container.team-form-container .message {
-  background-color: #4caf50cc; /* semi-transparent green */
-  border-color: #81c784;
+/* ==========================
+   Center: Team Form Container
+========================== */
+.dashboard-center .page-title {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #a5d6a7;
+  text-align: center;
+  font-weight: bold;
+}
+
+.dashboard-center .messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-center .message {
+  background-color: #4caf50cc;
+  border-left: 4px solid #81c784;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
   color: white;
 }
 
-.container.team-form-container button.btn-primary {
-  background-color: #81c784;
-  border-color: #66bb6a;
+/* Forms Styling */
+.dashboard-center .form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: #33691e;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.dashboard-center .form label {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  display: block;
+  color: #dcedc8;
+}
+
+.dashboard-center .form input[type="text"],
+.dashboard-center .form input[type="file"],
+.dashboard-center .form textarea {
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  width: 100%;
+  font-size: 0.95rem;
+  outline: none;
+  background-color: #e8f5e9; /* light input background */
   color: #1b5e20;
 }
 
-.container.team-form-container button.btn-primary:hover {
+.dashboard-center .form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Buttons */
+.dashboard-center .btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+}
+
+.dashboard-center .btn-primary {
+  background-color: #81c784;
+  color: #1b5e20;
+}
+
+.dashboard-center .btn-primary:hover {
   background-color: #66bb6a;
-  border-color: #388e3c;
   color: white;
+}
+
+.dashboard-center .btn-success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.dashboard-center .btn-success:hover {
+  background-color: #388e3c;
+  color: #e8f5e9;
+}
+
+.dashboard-center .section-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #a5d6a7;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #81c784;
+  padding-bottom: 0.3rem;
+}
+
+/* ==========================
+   Scrollable Teams Section
+========================== */
+.teams-scroll {
+  max-height: calc(4 * 120px + 5 * 1.42rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.teams-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.teams-scroll::-webkit-scrollbar-thumb {
+  background-color: #81c784;
+  border-radius: 4px;
+}
+
+.teams-scroll::-webkit-scrollbar-track {
+  background-color: #2e7d32;
+}
+
+/* ==========================
+   Team Cards
+========================== */
+.teams-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.team-card {
+  background-color: #388e3c;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  color: #e8f5e9;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.team-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+.team-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #a5d6a7;
+}
+
+.team-card ul {
+  list-style-type: disc;
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.team-card li {
+  margin: 0.2rem 0;
+}
+
+.team-link {
+  color: #a5d6a7;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.team-link:hover {
+  color: #ffffff;
+}
+
+/* ==========================
+   Responsive Adjustments
+========================== */
+@media (max-width: 1200px) {
+  .team-dashboard {
+    flex-direction: column;
+  }
+
+  .dashboard-left,
+  .dashboard-center,
+  .dashboard-right {
+    flex: unset;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+
+  .teams-columns {
+    grid-template-columns: 1fr;
+  }
 }

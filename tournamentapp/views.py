@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.utils.timezone import localtime
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,6 +17,9 @@ from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
+from formtools.wizard.views import SessionWizardView
+from .utils import handle_batch_lines
+
 
 class TournamentCreateView(CreateView, LoginRequiredMixin):
     model = Tournament
@@ -35,8 +38,6 @@ class TournamentCreateView(CreateView, LoginRequiredMixin):
 
     def get_success_url(self):
         return reverse('team-create', kwargs={'tournament_id': self.object.pk})
-
-
 
 class TournamentPublicView(DetailView):
     model = Tournament
@@ -200,67 +201,59 @@ class TeamCreateView(LoginRequiredMixin, CreateView):
     template_name = 'teams/team_form.html'
 
     def dispatch(self, request, *args, **kwargs):
+        # Get tournament and check ownership
         self.tournament_id = kwargs.get('tournament_id')
         self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
         return super().dispatch(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        form.instance.tournament = self.tournament
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Pass all teams for this tournament to the template
+        context['tournament'] = self.tournament
+        context['teams'] = self.tournament.teams.all().prefetch_related('player_set')
+        return context
 
     def get_success_url(self):
         return reverse('team-list', kwargs={'tournament_id': self.tournament.pk})
 
     def post(self, request, *args, **kwargs):
-        if request.POST.get('submit_type') == 'batch':
-            csv_file = request.FILES.get('csv_file')
-            if not csv_file or not csv_file.name.lower().endswith('.csv'):
+        submit_type = request.POST.get('submit_type')
+
+        # ===========================
+        # CSV batch upload
+        # ===========================
+        if submit_type == 'batch' and request.FILES.get('csv_file'):
+            csv_file = request.FILES['csv_file']
+            if not csv_file.name.lower().endswith('.csv'):
                 messages.error(request, 'Please upload a valid CSV file.')
                 return redirect('team-create', tournament_id=self.tournament.pk)
 
             try:
-                decoded_file = csv_file.read().decode('utf-8').splitlines()
-                created_teams = 0
-                created_players = 0
-                current_team = None
-
-                for line in decoded_file:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    if line[0].isupper():
-                        team_name = line
-                        form = TeamCreateForm(data={'name': team_name})
-                        if form.is_valid():
-                            team = form.save(commit=False)
-                            team.tournament = self.tournament
-                            team.save()
-                            current_team = team
-                            created_teams += 1
-                        else:
-                            messages.warning(request, f"Skipped invalid entry '{team_name}': {form.errors.get('name', ['Invalid data'])[0]}")
-                    
-                    elif line.startswith('-') and current_team:
-                        player_name = line[1:].strip()
-                        if player_name:
-                            player, created = Player.objects.get_or_create(name=player_name, team=current_team)
-                            if created:
-                                created_players += 1
-                        else:
-                            messages.warning(request, f"Skipped empty player name for team: {current_team}")
-                    else:
-                        messages.warning(request, f"Skipped unrecognizable line or no current team")
-
+                decoded_lines = csv_file.read().decode('utf-8').splitlines()
+                created_teams, created_players = handle_batch_lines(request, self.tournament, decoded_lines)
                 messages.success(request, f'{created_teams} team(s) and {created_players} player(s) successfully created.')
-            
             except Exception as e:
                 messages.error(request, f'Error processing CSV file: {str(e)}')
 
             return redirect('team-create', tournament_id=self.tournament.pk)
 
-        return super().post(request, *args, **kwargs)
+        # ===========================
+        # Multi-line textarea input
+        # ===========================
+        elif submit_type != 'batch':
+            multiline_input = request.POST.get('name', '').splitlines()
+            if not multiline_input:
+                messages.error(request, 'Please enter at least one team.')
+                return redirect('team-create', tournament_id=self.tournament.pk)
 
+            created_teams, created_players = handle_batch_lines(request, self.tournament, multiline_input)
+            messages.success(request, f'{created_teams} team(s) and {created_players} player(s) successfully created.')
+            return redirect('team-create', tournament_id=self.tournament.pk)
+
+        # ===========================
+        # Fallback: default CreateView behavior
+        # ===========================
+        return super().post(request, *args, **kwargs)
 
 class MatchCreateView(LoginRequiredMixin, CreateView):
     model = Match
@@ -322,7 +315,6 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
         })
         return context
 
-
 class MatchEditView(LoginRequiredMixin, UpdateView):
     model = Match
     form_class = MatchEditForm
@@ -359,10 +351,6 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
         context['match_events'] = match.events.all()
         context['tournament'] = self.tournament
         return context
-
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404
 
 class LeaderboardView(TemplateView):
     template_name = 'matches/leaderboard.html'
@@ -426,7 +414,6 @@ class LeaderboardView(TemplateView):
         context['tournament'] = tournament
         return context
 
-
 class FieldAddView(LoginRequiredMixin, CreateView):
     model = Field
     form_class = FieldCreateForm
@@ -454,7 +441,6 @@ class FieldAddView(LoginRequiredMixin, CreateView):
         context['fields'] = Field.objects.filter(tournament=self.tournament)
         context['tournament'] = self.tournament
         return context
-
 
 @require_POST
 @login_required
@@ -502,7 +488,6 @@ def create_match_event(request, tournament_id, match_id):
         }
     })
 
-
 @login_required
 def add_player(request, tournament_id, team_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
@@ -528,7 +513,6 @@ def add_player(request, tournament_id, team_id):
         })
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
-
 @require_POST
 @login_required
 def finish_match(request, tournament_id, match_id):
@@ -542,7 +526,6 @@ def finish_match(request, tournament_id, match_id):
         match.apply_result()
 
     return redirect('match-detail', tournament_id=tournament_id, pk=match_id)
-
 
 @require_http_methods(['DELETE'])
 @login_required
@@ -589,7 +572,6 @@ def remove_match_event(request, tournament_id, event_id):
         'away_score': updated_away_score,
     })
 
-
 @require_POST
 @login_required
 def field_edit(request, tournament_id, pk):
@@ -611,8 +593,6 @@ def field_edit(request, tournament_id, pk):
     field.name = new_name
     field.save()
     return JsonResponse({'success': True, 'name': field.name})
-
-
 
 @require_POST
 @login_required

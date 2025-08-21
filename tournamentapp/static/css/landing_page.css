@@ -1,0 +1,16 @@
+.landing-page-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+.general, .landing-page {
+  flex: 1;
+  padding: 4rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.landing-page__link {
+    text-decoration: none;
+    color: snow;
+}

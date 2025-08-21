@@ -1,32 +1,92 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="container team-form-container">
-  <h1 class="page-title">Add Team</h1>
+<div class="team-dashboard">
 
-  {% if messages %}
-    <div class="messages">
-      {% for message in messages %}
-        <div class="message">{{ message }}</div>
-      {% endfor %}
+  <!-- Left: Instructions -->
+  <div class="dashboard-left">
+    <h2>How to Add Teams and Players</h2>
+    <p>
+      You can add teams in two ways:
+    </p>
+    <ol>
+      <li>Type or paste team names in the textarea. Use a dash (-) to add players below a team.</li>
+      <li>Upload a CSV file with the same format.</li>
+    </ol>
+    <p><strong>Example format:</strong></p>
+    <pre>
+Team A
+- Player 1
+- Player 2
+- Player 3
+
+Team B
+-Player 4
+-Player 5
+-Player 6
+    </pre>
+    <p>This allows you to quickly create multiple teams and assign players in one go.</p>
+  </div>
+
+  <!-- Center: Forms -->
+  <div class="dashboard-center container team-form-container">
+    <h1 class="page-title">Add Team</h1>
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="message">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Single Team / Multi-line Input -->
+    <form method="post" enctype="multipart/form-data" class="form form-single">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Add Teams</button>
+    </form>
+
+    <!-- CSV Upload -->
+    <h2 class="section-title">Add Teams From CSV</h2>
+    <form method="post" enctype="multipart/form-data" class="form form-batch">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="csv_file" class="form-label">CSV File:</label>
+        <input type="file" name="csv_file" id="csv_file" class="form-input" accept=".csv" required>
+      </div>
+      <button type="submit" name="submit_type" value="batch" class="btn btn-success">Upload Teams</button>
+    </form>
+  </div>
+
+  <!-- Right: Teams List -->
+  <div class="dashboard-right">
+    {% if tournament %}
+    <h2 class="section-title">Teams</h2>
+    <div class="teams-scroll">
+      <div class="teams-columns">
+        {% for team in tournament.teams.all %}
+          <div class="team-card">
+            <a href="{% url 'team-detail' tournament_id=tournament.pk pk=team.pk %}" class="team-link">
+            <h3>
+              {{ team.name }}
+            </h3>
+            {% if team.player_set.count %}
+              <ul>
+                {% for player in team.player_set.all %}
+                  <li>{{ player.name }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+        {% empty %}
+          <p>No teams have been added yet.</p>
+        {% endfor %}
+      </div>
     </div>
-  {% endif %}
+    {% endif %}
+  </div>
 
-  <form method="post" enctype="multipart/form-data" class="form form-single">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Create Team</button>
-  </form>
-
-  <h2 class="section-title">Upload Teams</h2>
-  <form method="post" enctype="multipart/form-data" class="form form-batch">
-    {% csrf_token %}
-    <div class="form-group">
-      <label for="csv_file" class="form-label">CSV File:</label>
-      <input type="file" name="csv_file" id="csv_file" class="form-input" accept=".csv" required>
-    </div>
-    <button type="submit" name="submit_type" value="batch" class="btn btn-success">Upload Teams</button>
-  </form>
 </div>
 
 {% endblock %}

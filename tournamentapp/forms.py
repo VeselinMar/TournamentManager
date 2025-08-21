@@ -20,15 +20,25 @@ class TeamCreateForm(forms.ModelForm):
     class Meta:
         model = Team
         fields = ['name',]
+        widgets =  {
+            'name': forms.Textarea(
+                attrs = {
+                    'rows': 4,
+                    'placeholder': 'Enter one name of team per line.',
+                    'class': 'form-input',
+                }
+            )
+        }
         
     def clean_name(self):
-        name = self.cleaned_data['name'].strip().title()
+        name = self.cleaned_data['name'].strip()
 
-        # Basic validation: letters, numbers, spaces, dashes, ampersand
-        if not re.match(r'^[\w\s\-&]{1,50}$', name):
-            raise forms.ValidationError("Invalid team name. Use letters, numbers, dashes or '&'.")
+        names = [n.strip().title() for n in name.splitlines() if n.strip()]
+        for n in names:
+            if not re.match(r'^[\w\s\-&]{1,50}$', n):
+                raise forms.ValidationError("Invalid team name. Use letters, numbers, dashes or '&'.")
 
-        return name
+        return self.cleaned_data['name'].strip()
 
 class MatchCreateForm(forms.ModelForm):
     class Meta:
