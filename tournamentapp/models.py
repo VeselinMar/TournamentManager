@@ -159,6 +159,10 @@ class Field(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    @property
+    def has_matches(self):
+        return self.match_set.exists()
+
 class Match(models.Model):
     tournament = models.ForeignKey(
         Tournament,

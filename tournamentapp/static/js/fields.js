@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', e => {
       const li = e.target.closest('li');
       const fieldId = li.dataset.fieldId;
+      const tournamentId = li.dataset.tournamentId
       const nameSpan = li.querySelector('.field-name');
       const oldName = nameSpan.textContent.trim();
 
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newName = nameSpan.querySelector('.field-edit-input').value.trim();
         if (!newName) return alert("Field name cannot be empty.");
 
-        fetch(`/fields/${fieldId}/edit/`, {
+        fetch(`/tournament/${tournamentId}/fields/${fieldId}/edit/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -51,8 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const li = button.closest('li');
       const fieldId = li.dataset.fieldId;
+      const tournamentId = li.dataset.tournamentId;
 
-      fetch(`/fields/${fieldId}/delete/`, {
+      fetch(`/tournament/${tournamentId}/fields/${fieldId}/delete/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCookie('csrftoken')

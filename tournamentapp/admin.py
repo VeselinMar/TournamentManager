@@ -34,8 +34,8 @@ class GoalAdmin(admin.ModelAdmin):
 
 @admin.register(Field)
 class FieldAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('name', 'tournament')
+    search_fields = ('name', 'tournament')
 
 @admin.register(MatchEvent)
 class MatchEventAdmin(admin.ModelAdmin):
