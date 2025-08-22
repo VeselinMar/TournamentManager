@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <div class="landing-page-container">
   <div class="landing-page">
     <h2 class="landing-page__tournaments">Ongoing Tournaments</h2>
@@ -28,11 +29,11 @@
     </p>
     <h2 class="landing-page__actions">Create a new tournament</h2>
     <span>If you already have an account:
-      <a class="landing-page__link" href="{% url 'login' %}">Login</a>
+      <a class="landing-page__button" href="{% url 'login' %}">Login</a>
     </span>
     <br>
     <span>Or you can register:
-      <a class="landing-page__link" href="{% url 'register' %}">Register</a>
+      <a class="landing-page__button" href="{% url 'register' %}">Register</a>
     </span>
   </div>
 </div>

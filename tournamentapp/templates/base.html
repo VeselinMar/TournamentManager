@@ -13,22 +13,29 @@
     <!-- Vertical navbar at top -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
+
+            <!-- Brand only for logged-out users -->
+            {% if not user.is_authenticated %}
+                <a class="navbar-brand" href="{% url 'landing-page' %}">Football Tournament Manager</a>
+            {% endif %}
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
 
-                    {% if tournament %}
-                        {% if user.is_authenticated and tournament.owner == user %}
-                            <li class="nav-item">
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <!-- Left side: Tournament links (only for logged-in users) -->
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated and tournament and tournament.owner == user %}
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">Tournament</a>
-                            </li>
-                            <li class="nav-item">
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'leaderboard' tournament.id %}">Leaderboard</a>
-                            </li>
-                            {% if not tournament.is_finished %}
+                        </li>
+                        {% if not tournament.is_finished %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'team-list' tournament.id %}">Teams</a>
                             </li>
@@ -38,25 +45,38 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'match-create' tournament.id %}">Add Match</a>
                             </li>
-                            <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                            </li>
-                            {% endif %}
                         {% endif %}
+                    {% endif %}
+                </ul>
+
+                <!-- Right side: Account links -->
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item logout-form">
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="logout-button">Logout</button>
+                            </form>
+                        </li>
                     {% else %}
-                            <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'login' %}">Login</a>
-                            </li>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
-            {% if user.is_authenticated %}
-                <p>Logged in as {{ tournament.owner }}</p>
-            {% else %}
-            {% endif%}
+                {% if user.is_authenticated %}
+                        <span class="navbar-text">
+                            Logged in as {{ user }}
+                        </span>
+                {% endif %}
         </div>
     </nav>
+
+
 
     <!-- Page content below navbar -->
     <div class="container" style="margin-top: 80px;">

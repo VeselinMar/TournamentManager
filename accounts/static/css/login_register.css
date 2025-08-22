@@ -1,0 +1,98 @@
+/* --- Base Form Container --- */
+.auth-container {
+    max-width: 400px;
+    margin: 80px auto; /* adjust for navbar */
+    padding: 30px 35px;
+    background-color: #388e3c; /* lighter green card */
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    color: #e8f5e9; /* light text */
+    font-family: Arial, sans-serif;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-container:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Headings --- */
+.auth-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.8rem;
+    color: #c8e6c9;
+}
+
+/* --- Form Elements --- */
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.auth-container label {
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.auth-container input {
+    padding: 0.7rem 0.9rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.95rem;
+    outline: none;
+    width: 100%;
+    background-color: #e8f5e9;
+    color: #1b5e20;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-container input:focus {
+    border: 2px solid #81c784;
+    box-shadow: 0 0 6px rgba(129, 199, 132, 0.5);
+}
+
+/* --- Buttons --- */
+.auth-container button {
+    padding: 0.75rem 1.5rem;
+    background-color: #66bb6a;
+    color: #fff;
+    font-weight: bold;
+    border: none;
+    border-radius: 999px; /* pill style */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.auth-container button:hover {
+    background-color: #43a047;
+    transform: translateY(-2px);
+}
+
+/* --- Links --- */
+.auth-container p {
+    text-align: center;
+    margin-top: 1rem;
+    color: #c8e6c9;
+}
+
+.auth-container p a {
+    color: #a5d6a7;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.auth-container p a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* --- Responsive --- */
+@media (max-width: 500px) {
+    .auth-container {
+        margin: 60px 1rem;
+        padding: 25px 20px;
+    }
+}
