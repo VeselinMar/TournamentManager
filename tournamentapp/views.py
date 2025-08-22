@@ -7,18 +7,20 @@ from django.views.generic import TemplateView, DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.utils.timezone import localtime
+from django.utils import timezone
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
-from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm
+from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm,TournamentScheduleForm
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import handle_batch_lines
+from .utils import handle_batch_lines, create_round_robin_matches
 
 
 class TournamentCreateView(CreateView, LoginRequiredMixin):
@@ -608,3 +610,46 @@ def field_delete(request, tournament_id, pk):
 
     field.delete()
     return JsonResponse({'success': True})
+
+
+@login_required
+def generate_tournament_schedule(request, tournament_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id)
+
+    if request.method == 'POST':
+        form = TournamentScheduleForm(request.POST)
+        if form.is_valid():
+            start_time_input = form.cleaned_data['start_time']
+            game_duration_minutes = form.cleaned_data['game_duration']
+            pause_duration_minutes = form.cleaned_data['pause_duration']
+
+            # Build a full datetime object for today with the input time
+            start_time = timezone.now().replace(
+                hour=start_time_input.hour,
+                minute=start_time_input.minute,
+                second=0,
+                microsecond=0
+            )
+
+            game_duration = timedelta(minutes=game_duration_minutes)
+            pause_duration = timedelta(minutes=pause_duration_minutes)
+
+            try:
+                create_round_robin_matches(
+                    tournament=tournament,
+                    start_time=start_time,
+                    game_duration=game_duration,
+                    pause_duration=pause_duration
+                )
+                messages.success(request, "Round-robin schedule generated successfully!")
+            except Exception as e:
+                messages.error(request, f"Error generating schedule: {str(e)}")
+
+            return redirect('tournament-detail', pk=tournament.pk)
+    else:
+        form = TournamentScheduleForm()
+
+    return render(request, 'tournament/generate_schedule.html', {
+        'form': form,
+        'tournament': tournament
+    })

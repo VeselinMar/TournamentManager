@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Generate Round-Robin Schedule for "{{ tournament.name }}"</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Generate Schedule</button>
+</form>
+
+<a href="{% url 'tournament-detail' tournament.pk %}">← Back to Tournament</a>
+{% endblock %}

@@ -61,6 +61,20 @@
 </datalist>
 </div>
 
+<div class="next-step">
+  <p>Are you done adding fields? It's time to create the tournament matches!</p>
+  <p>You have two options:</p>
+  <ul>
+    <li><strong>Manual entry:</strong> Add matches one by one <a href="{% url 'match-create' tournament.id %}">here</a>.</li>
+    <li><strong>Automatic generation:</strong> Let the system generate a full tournament schedule for you. You can choose between a <em>round-robin</em> or <em>elimination</em> format.</li>
+  </ul>
+  <p>Once you’re ready, you can proceed to generate or add matches.</p>
+    <form action="{% url 'generate-tournament-schedule' tournament.id %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success">Generate Tournament Schedule</button>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}

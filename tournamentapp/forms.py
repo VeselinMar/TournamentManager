@@ -1,6 +1,7 @@
 import re
 from django import forms
 from django.utils.text import slugify
+from datetime import datetime, time
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
 
 class TournamentCreateForm(forms.ModelForm):
@@ -193,3 +194,20 @@ class MatchEventForm(forms.ModelForm):
             event.save()
 
         return event
+
+class TournamentScheduleForm(forms.Form):
+    start_time = forms.TimeField(
+        label="First Match Start Time",
+        initial=time(10, 0),
+        widget=forms.TimeInput(format='%H:%M')
+    )
+    game_duration = forms.IntegerField(
+        label="Game Duration (minutes)",
+        initial=15,
+        min_value=1
+    )
+    pause_duration = forms.IntegerField(
+        label="Pause Between Matches (minutes)",
+        initial=5,
+        min_value=0
+    )
