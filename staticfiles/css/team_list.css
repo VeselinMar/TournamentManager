@@ -1,0 +1,39 @@
+.team-list-style .container {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #388e3c;
+  border-radius: 10px;
+}
+
+.team-list-style .page-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: #ffffff;
+}
+
+.team-list-style .team-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.team-list-style .team-item {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.team-list-style .team-link {
+  text-decoration: none;
+  color: #f1f1f1;
+  font-weight: bold;
+}
+
+.team-list-style .team-link:hover {
+  text-decoration: underline;
+}
+
+.team-list-style .actions {
+  margin-top: 2rem;
+  text-align: center;
+}
