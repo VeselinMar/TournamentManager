@@ -27,11 +27,7 @@ wheels/
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
 media/
-
-# If you use the default SQLite DB, ignore it
-*.sqlite3
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
