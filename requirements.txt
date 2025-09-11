@@ -11,6 +11,7 @@ markdown-it-py==3.0.0
 mdurl==0.1.2
 packaging==25.0
 pillow==11.3.0
+psycopg-binary==3.2.10
 Pygments==2.19.2
 python-decouple==3.8
 python-dotenv==1.1.1
