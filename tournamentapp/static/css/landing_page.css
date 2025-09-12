@@ -1,16 +1,16 @@
-/* --- Landing Page Container --- */
 .landing-page-container {
     display: flex;
     gap: 2rem;
     align-items: flex-start;
     justify-content: center;
     padding: 3rem;
-    background-color: #2e7d32; /* dark green */
-    min-height: calc(100vh - 80px); /* account for navbar */
+    margin: 3rem auto;
+    max-width: 1200px;
     box-sizing: border-box;
+    background: #2e7d32;
     border-radius: 8px;
     box-shadow: 0 0 12px rgba(0,0,0,0.15);
-    color: white;
+    color: #fff;
     font-family: Arial, sans-serif;
 }
 
@@ -18,12 +18,12 @@
 .general,
 .landing-page {
     flex: 1;
+    min-width: 300px;
     padding: 3rem 2.5rem;
     border-radius: 12px;
-    background-color: #388e3c; /* lighter green card */
+    background: #388e3c;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    min-width: 300px;
 }
 
 .general:hover,
@@ -33,17 +33,18 @@
 }
 
 /* --- Headings --- */
-h2 {
+.general h2,
+.landing-page__tournaments {
+    margin-bottom: 1.2rem;
     font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 1.2rem;
-    color: #c8e6c9; /* light green text */
+    color: #c8e6c9; /* light green */
 }
 
 .landing-page__tournaments {
     text-align: center;
-    border-bottom: 2px solid #81c784;
     padding-bottom: 0.5rem;
+    border-bottom: 2px solid #81c784;
 }
 
 .landing-page__actions {
@@ -53,67 +54,64 @@ h2 {
 
 /* --- Lists --- */
 .landing-page__list {
-    list-style: none;
-    padding: 0;
     margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .landing-page__list-item {
-    background: #66bb6a; /* slightly lighter than card */
-    color: #fff;
     margin-bottom: 0.8rem;
-    border-radius: 8px;
-    overflow: hidden; /* ensures inner <a> fills the li */
     font-size: 1.1rem;
+    border-radius: 8px;
+    background: #66bb6a;
+    color: #fff;
+    overflow: hidden;
     transition: background 0.3s ease, transform 0.2s ease;
 }
 
-/* Make the <a> fill the entire li */
-.landing-page__list-item .landing-page__link {
-    display: block;           /* full width block */
-    padding: 0.8rem 1.2rem;   /* same as li padding */
-    color: inherit;           /* inherit white text */
-    text-decoration: none;
-    font-weight: 600;
+.landing-page__link {
+    display: block;
     width: 100%;
     height: 100%;
+    padding: 0.8rem 1.2rem;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
     transition: background 0.3s ease, transform 0.2s ease;
 }
 
-/* Hover effect */
 .landing-page__list-item:hover,
-.landing-page__list-item .landing-page__link:hover {
+.landing-page__link:hover {
     background: #2e7d32; /* dark green */
     transform: translateY(-2px);
 }
 
 /* --- Paragraphs --- */
 .general p {
+    margin-bottom: 1.5rem;
     line-height: 1.6;
     color: #e8f5e9; /* very light green */
-    margin-bottom: 1.5rem;
 }
 
-/* --- Buttons (Login / Register links) --- */
+/* --- Buttons --- */
 .landing-page__button {
     display: inline-block;
+    margin: 1rem 1rem 0 0;
     padding: 0.6rem 1.4rem;
-    margin-top: 1rem;
-    margin-right: 1rem;
-    background-color: #66bb6a; /* bright green */
-    color: #fff;
     font-weight: bold;
-    border-radius: 999px; /* pill style */
+    color: #fff;
+    background: #66bb6a;
+    border-radius: 999px; /* pill */
     text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .landing-page__button:hover {
-    background-color: #43a047; /* darker green */
+    background: #43a047; /* darker green */
     transform: translateY(-2px);
 }
 
-/* --- Responsive adjustments --- */
+/* --- Responsive --- */
 @media (max-width: 992px) {
     .landing-page-container {
         flex-direction: column;

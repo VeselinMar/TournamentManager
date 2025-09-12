@@ -1,45 +1,118 @@
+/* ==========================
+   Team Detail Page Styling
+========================== */
 .team-detail-container {
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #388e3c;
+  margin: 3rem auto; /* similar top/bottom spacing as dashboard */
+  padding: 2.5rem;
+  background-color: #33691e; /* dark green container */
   border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #e8f5e9;
+  font-family: Arial, sans-serif;
 }
 
-.team-info p {
+.team-detail-container .page-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #a5d6a7;
+  margin-bottom: 2rem;
+}
+
+.team-detail-container h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #81c784;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #81c784;
+  padding-bottom: 0.3rem;
+}
+
+.team-detail-container .team-info p {
   font-size: 1rem;
   margin-bottom: 0.5rem;
+  color: #dcedc8;
 }
 
-.match-list, .player-list {
+/* ==========================
+   Match & Player Lists
+========================== */
+.team-detail-container .match-list,
+.team-detail-container .player-list {
   list-style-type: none;
   padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
-.match-item, .player-stats {
-  margin-bottom: 0.5rem;
+.team-detail-container .match-item,
+.team-detail-container .player-stats {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  color: #e8f5e9;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.match-link {
+/* Match result color coding */
+.team-detail-container .match-win {
+  background-color: #388e3c;
+  border-left: 5px solid #81c784;
+}
+
+.team-detail-container .match-loss {
+  background-color: #c62828cc;
+  border-left: 5px solid #ef5350;
+}
+
+.team-detail-container .match-draw {
+  background-color: #f9f4c8;
+  border-left: 5px solid #fdd835;
+  color: #1b5e20;
+}
+
+.team-detail-container .match-item:hover,
+.team-detail-container .player-stats:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  cursor: default;
+}
+
+.team-detail-container .match-link {
   text-decoration: none;
-  color: #2e7d32;
+  color: inherit;
+  display: block;
+  transition: color 0.2s, transform 0.2s;
 }
 
-.match-link:hover {
-  text-decoration: underline;
+.team-detail-container .match-link:hover {
+  transform: scale(1.02);
+  text-decoration: none;
 }
 
-.match-win {
-  background-color: #d4edda; /* light green */
-  border-left: 5px solid #28a745;
-}
+/* ==========================
+   Responsive Adjustments
+========================== */
+@media (max-width: 768px) {
+  .team-detail-container {
+    padding: 1.5rem;
+  }
 
-.match-loss {
-  background-color: #f8d7da; /* light red */
-  border-left: 5px solid #dc3545;
-}
+  .team-detail-container .page-title {
+    font-size: 1.6rem;
+  }
 
-.match-draw {
-  background-color: #f0f0f0; /* light gray */
-  border-left: 5px solid #6c757d;
+  .team-detail-container h2 {
+    font-size: 1.3rem;
+  }
+
+  .team-detail-container .match-item,
+  .team-detail-container .player-stats {
+    font-size: 0.95rem;
+    padding: 0.6rem 0.8rem;
+  }
 }

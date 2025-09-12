@@ -1,44 +1,182 @@
-h2.mb-4 {
-  text-align: center;
-  color: #fff;
-  font-family: 'Arial', sans-serif;
+/* Match Edit Page - Container */
+#match-wrapper {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #2e7d32; /* dark green background */
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    color: #e8f5e9;
+    font-family: Arial, sans-serif;
 }
 
-.teams-container {
-  display: flex;
-  justify-content: center;
-  gap: 2rem; /* bigger gap between columns */
-  max-width: 1200px;
-  margin: 3rem auto;
-  padding: 2rem;
-  background-color: #2e7d32; /* dark green */
-  border-radius: 8px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.15);
-  color: white;
-  font-family: Arial, sans-serif;
+/* Headings */
+#match-wrapper h2 {
+    text-align: center;
+    color: #a5d6a7; /* lighter green */
+    margin-bottom: 1.5rem;
+    font-weight: bold;
 }
 
-.col-md-6 {
-  flex: 1;
-  min-width: 480px;
-  background-color: #388e3c; /* a bit lighter green for distinct block */
-  padding: 1.5rem 2rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+#match-wrapper h4 {
+    color: #c8e6c9;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-align: center;
 }
 
-.list-group-item {
-  font-size: 1.1rem;
-  line-height: 1rem;
-  display: flex;
-  align-items: center;
-  background-color: #3e9142;
-  color: #fff;
+/* Columns (Home / Away Teams) */
+#match-wrapper .col-md-6 {
+    background-color: #388e3c; /* slightly lighter green */
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 300px;
 }
 
-.btn-group, 
-btn-group-sm {
-  margin-left: 2rem;
-  display: flex;
-  gap: 0.7rem;
+/* Player Lists */
+#home-player-list,
+#away-player-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1rem;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+#home-player-list li,
+#away-player-list li {
+    background-color: #3e9142;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+}
+
+/* Player event buttons */
+.btn-group .btn {
+    font-size: 0.9rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-group .btn:hover {
+    transform: scale(1.1);
+}
+
+/* Add Player Form */
+#home-player-form,
+#away-player-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#home-player-form input,
+#away-player-form input {
+    flex: 1;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+}
+
+#home-player-form button,
+#away-player-form button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    background-color: #81c784;
+    border: none;
+    color: #1b5e20;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#home-player-form button:hover,
+#away-player-form button:hover {
+    background-color: #66bb6a;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Finish Match Button */
+#match-wrapper form button.btn-lg {
+    background-color: #c62828;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#match-wrapper form button.btn-lg:hover {
+    background-color: #ef5350;
+    transform: scale(1.05);
+}
+
+/* Match Events Log */
+#match-events-log {
+    margin-top: 2rem;
+    background-color: #33691e;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+}
+
+#match-events-log h4 {
+    color: #a5d6a7;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#match-events-log .list-group-item {
+    background-color: #3e9142;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+}
+
+#match-events-log .delete-event-btn {
+    background-color: #c62828;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#match-events-log .delete-event-btn:hover {
+    background-color: #ef5350;
+    transform: scale(1.05);
+}
+
+/* Scrollbars */
+#home-player-list::-webkit-scrollbar,
+#away-player-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#home-player-list::-webkit-scrollbar-thumb,
+#away-player-list::-webkit-scrollbar-thumb {
+    background-color: #81c784;
+    border-radius: 4px;
+}
+
+#home-player-list::-webkit-scrollbar-track,
+#away-player-list::-webkit-scrollbar-track {
+    background-color: #2e7d32;
 }
