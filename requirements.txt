@@ -1,6 +1,8 @@
 asgiref==3.9.0
 certifi==2025.6.15
 charset-normalizer==3.4.2
+decouple==0.0.7
+dj-database-url==3.0.1
 Django==5.2.4
 django-formtools==2.5.1
 docker==7.1.0
@@ -10,7 +12,9 @@ markdown-it-py==3.0.0
 mdurl==0.1.2
 packaging==25.0
 pillow==11.3.0
+psycopg-binary==3.2.10
 Pygments==2.19.2
+python-decouple==3.8
 python-dotenv==1.1.1
 requests==2.32.4
 rich==14.0.0
