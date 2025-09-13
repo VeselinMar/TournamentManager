@@ -2,12 +2,13 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4" id="match-wrapper" data-tournament-id="{{ tournament.id }}" data-match-id="{{ match.id }}">
+<div class="container mt-4" id="match-wrapper"
+     data-tournament-id="{{ tournament.id }}"
+     data-match-id="{{ match.id }}">
   <h2 class="mb-4 text-center">{{ match.home_team.name }} VS {{ match.away_team.name }}</h2>
   <h2 class="mb-4 text-center">{{ match.home_score }} - {{ match.away_score }}</h2>
 
   <div class="row">
-
     <!-- Home Team -->
     <div class="col-md-6">
       <h4>{{ match.home_team.name }}</h4>
@@ -16,10 +17,26 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ player.name }}
             <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-success assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="goal">⚽</button>
-              <button class="btn btn-warning assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="yellow_card">🟨</button>
-              <button class="btn btn-danger assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="red_card">🟥</button>
-              <button class="btn btn-secondary assign-event" data-player-id="{{ player.id }}" data-team="home" data-type="own_goal">❗</button>
+              <button class="btn btn-success assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="home"
+                      data-team-id="{{ match.home_team.id }}"
+                      data-type="goal">⚽</button>
+              <button class="btn btn-warning assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="home"
+                      data-team-id="{{ match.home_team.id }}"
+                      data-type="yellow_card">🟨</button>
+              <button class="btn btn-danger assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="home"
+                      data-team-id="{{ match.home_team.id }}"
+                      data-type="red_card">🟥</button>
+              <button class="btn btn-secondary assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="home"
+                      data-team-id="{{ match.home_team.id }}"
+                      data-type="own_goal">❗</button>
             </div>
           </li>
         {% empty %}
@@ -29,7 +46,8 @@
       <form id="home-player-form" data-team-id="{{ match.home_team.id }}">
         {% csrf_token %}
         <div class="input-group">
-          <input type="text" name="player" class="form-control" placeholder="Add Player to {{ match.home_team.name }}" required>
+          <input type="text" name="player" class="form-control"
+                 placeholder="Add Player to {{ match.home_team.name }}" required>
           <button class="btn btn-primary" type="submit">Add</button>
         </div>
       </form>
@@ -43,10 +61,26 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ player.name }}
             <div class="btn-group btn-group-sm" role="group">
-              <button class="btn btn-success assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="goal">⚽</button>
-              <button class="btn btn-warning assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="yellow_card">🟨</button>
-              <button class="btn btn-danger assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="red_card">🟥</button>
-              <button class="btn btn-secondary assign-event" data-player-id="{{ player.id }}" data-team="away" data-type="own_goal">❗</button>
+              <button class="btn btn-success assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="away"
+                      data-team-id="{{ match.away_team.id }}"
+                      data-type="goal">⚽</button>
+              <button class="btn btn-warning assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="away"
+                      data-team-id="{{ match.away_team.id }}"
+                      data-type="yellow_card">🟨</button>
+              <button class="btn btn-danger assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="away"
+                      data-team-id="{{ match.away_team.id }}"
+                      data-type="red_card">🟥</button>
+              <button class="btn btn-secondary assign-event"
+                      data-player-id="{{ player.id }}"
+                      data-team="away"
+                      data-team-id="{{ match.away_team.id }}"
+                      data-type="own_goal">❗</button>
             </div>
           </li>
         {% empty %}
@@ -56,41 +90,36 @@
       <form id="away-player-form" data-team-id="{{ match.away_team.id }}">
         {% csrf_token %}
         <div class="input-group">
-          <input type="text" name="player" class="form-control" placeholder="Add Player to {{ match.away_team.name }}" required>
+          <input type="text" name="player" class="form-control"
+                 placeholder="Add Player to {{ match.away_team.name }}" required>
           <button class="btn btn-primary" type="submit">Add</button>
         </div>
       </form>
     </div>
-    <form method="post" action={% url 'finish-match' tournament.id match.id %} class="mt-4 text-center">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-danger btn-lg">🏁 Finish Match 🏁</button>
-    </form>
   </div>
 
-  <div id="match-events-log" class="mb-4">
-  <h4>Match Events Log</h4>
-  <ul class="list-group">
-    {% for event in match_events %}
-      <li class="list-group-item d-flex justify-content-between align-items-center" data-event-id="{{ event.id }}">
-        <span>
-          {{ event.timestamp|time:"H:i" }} - 
-          {{ event.player.name }} 
-          {% if event.event_type == 'goal' %} scored a goal ⚽
-          {% elif event.event_type == 'yellow_card' %} received a yellow card 🟨
-          {% elif event.event_type == 'red_card' %} received a red card 🟥
-          {% elif event.event_type == 'own_goal' %} scored an own goal ❗
-          {% else %} did {{ event.event_type }}
-          {% endif %}
-        </span>
-        <button class="btn btn-sm btn-danger delete-event-btn">Delete</button>
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">No events recorded yet.</li>
-    {% endfor %}
-  </ul>
-</div>
-
-
+  <div id="match-events-log" class="mb-4 mt-4">
+    <h4>Match Events Log</h4>
+    <ul class="list-group">
+      {% for event in match_events %}
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            data-event-id="{{ event.id }}">
+          <span>
+            {{ event.timestamp|time:"H:i" }} - {{ event.player.name }}
+            {% if event.event_type == 'goal' %} scored a goal ⚽
+            {% elif event.event_type == 'yellow_card' %} received a yellow card 🟨
+            {% elif event.event_type == 'red_card' %} received a red card 🟥
+            {% elif event.event_type == 'own_goal' %} scored an own goal ❗
+            {% else %} did {{ event.event_type }}
+            {% endif %}
+          </span>
+          <button class="btn btn-sm btn-danger delete-event-btn">Delete</button>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">No events recorded yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
 </div>
 {% endblock %}
 
