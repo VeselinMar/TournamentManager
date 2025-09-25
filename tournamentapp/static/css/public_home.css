@@ -1,0 +1,149 @@
+/* ==========================
+   Layout
+========================== */
+.spectator-page {
+  display: flex;
+  flex-direction: column;
+  height: 91vh;
+}
+
+.sponsor-banner {
+  background: #e0f2f1;
+  text-align: center;
+  padding: 0.8rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.spectator-body {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  flex-grow: 1;
+  overflow: hidden; /* keep sponsors fixed */
+}
+
+.sponsor-column {
+  background: #f1f8f4;
+  padding: 1rem;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.spectator-content {
+  padding: 1rem 2rem;
+  overflow-y: auto; /* scroll only this section */
+  background: #fff;
+}
+
+/* ==========================
+   Titles
+========================== */
+.page-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: #1b5e20;
+}
+
+.current-matches h2,
+.timeline-section h2 {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #2e7d32;
+}
+
+/* ==========================
+   Current Matches
+========================== */
+.current-matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.current-match-card {
+  background: #e8f5e9;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.current-score {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #388e3c;
+}
+
+/* ==========================
+   Timeline Table
+========================== */
+.table-container {
+  max-height: 60vh; /* keep inside frame */
+  overflow-y: auto; /* scrolling only here */
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+}
+
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.timeline-table th,
+.timeline-table td {
+  border: 1px solid #c8e6c9;
+  padding: 0.7rem;
+  text-align: center;
+}
+
+.timeline-table thead {
+  background: #a5d6a7;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.match-card {
+  background: #f1f8f4;
+  padding: 0.4rem;
+  border-radius: 4px;
+}
+
+.match-card.finished {
+  background: #e0f2f1;
+}
+
+.score {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.btn-score {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  background: #81c784;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #1b5e20;
+  text-decoration: none;
+}
+
+.btn-score:hover {
+  background: #66bb6a;
+  color: #fff;
+}
+
+/* ==========================
+   Responsive
+========================== */
+@media (max-width: 992px) {
+  .spectator-body {
+    grid-template-columns: 1fr;
+  }
+  .sponsor-column {
+    display: none;
+  }
+}

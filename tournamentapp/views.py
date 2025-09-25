@@ -336,16 +336,17 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
         player_name = request.POST.get('player_name', '').strip()
         minute = request.POST.get('minute', '').strip()
 
-        if player_name:
-            player, _ = Player.objects.get_or_create(name=player_name, team=team)
-            MatchEvent.objects.create(
-                match=self.object,
-                event_type=request.POST.get('event_type'),
-                minute=minute,
-                team=team,
-                player=player
-            )
-        return redirect('match-detail', tournament_id=self.tournament.pk, pk=self.object.pk)
+        # Handled in match_edit.js
+        # if player_name:
+        #     player, _ = Player.objects.get_or_create(name=player_name, team=team)
+        #     MatchEvent.objects.create(
+        #         match=self.object,
+        #         event_type=request.POST.get('event_type'),
+        #         minute=minute,
+        #         team=team,
+        #         player=player
+        #     )
+        # return redirect('public/<slug:slug>/', tournament_id=self.tournament.pk, pk=self.object.pk)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

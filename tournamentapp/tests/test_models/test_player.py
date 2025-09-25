@@ -1,19 +1,43 @@
 from django.test import TestCase
 from django.utils import timezone
 from datetime import timedelta
-from tournamentapp.models import Player, Team, MatchEvent, GoalEvent, Match
+from tournamentapp.models import Player, Team, MatchEvent, GoalEvent, Match, Tournament, Field
+from accounts.models import AppUser
 
 class PlayerModelTests(TestCase):
     def setUp(self):
-        self.team = Team.objects.create(name="Test Team")
-        self.player = Player.objects.create(name="John Doe", team=self.team)
+        self.user = AppUser.objects.create(
+            email="testuser@abv.bg",
+            password="password123"
+        )
+        self.tournament = Tournament.objects.create(
+            name="testtournament",
+            owner=self.user
+        )
+        self.team = Team.objects.create(
+            name="Test Team",
+            tournament=self.tournament
+            )
+        self.away_team = Team.objects.create(
+            name="Second Team",
+            tournament=self.tournament
+        )
+        self.player = Player.objects.create(
+            name="John Doe",
+            team=self.team
+            )
+        self.field = Field.objects.create(
+            name="Main Field",
+            owner=self.user,
+            tournament=self.tournament
+        )
 
-        # Create a match instance required by event models
         self.match = Match.objects.create(
             home_team=self.team,
-            away_team=self.team,  # or create another team if needed
+            away_team=self.away_team,
             start_time=timezone.now() + timedelta(days=1),
-            field=None  # provide field if required, else allow null in model
+            field=self.field,
+            tournament=self.tournament
         )
 
     def test_initial_eligibility(self):
@@ -54,7 +78,7 @@ class PlayerModelTests(TestCase):
 
     def test_apply_event_effects_own_goal_increments_own_goals(self):
         event = MatchEvent.objects.create(
-            match=self.match,  # ensure this is valid match instance
+            match=self.match,
             event_type='own_goal',
             minute=15,
             team=self.team,

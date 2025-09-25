@@ -1,5 +1,6 @@
 from django.test import TestCase
-from tournamentapp.models import Player, Team, Field, Match, GoalEvent
+from tournamentapp.models import Player, Team, Field, Match, GoalEvent, Tournament
+from accounts.models import AppUser
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
@@ -8,16 +9,37 @@ from datetime import timedelta
 class MatchModelTests(TestCase):
 
     def setUp(self):
-        self.team1 = Team.objects.create(name="Team A")
-        self.team2 = Team.objects.create(name="Team B")
-        self.field = Field.objects.create(name="Field 1")
+        self.user = AppUser.objects.create(
+            email="testuser@abv.bg",
+            password="password123"
+        )
+
+        self.tournament = Tournament.objects.create(
+            name="Musterment",
+            owner=self.user
+        )
+
+        self.team1 = Team.objects.create(
+            name="Team A",
+            tournament=self.tournament
+            )
+        self.team2 = Team.objects.create(
+            name="Team B",
+            tournament=self.tournament
+            )
+        self.field = Field.objects.create(
+            name="Field 1",
+            tournament=self.tournament,
+            owner=self.user
+            )
         self.start_time = timezone.now() + timedelta(days=1)
 
         self.match = Match.objects.create(
             home_team=self.team1,
             away_team=self.team2,
             start_time=self.start_time,
-            field=self.field
+            field=self.field,
+            tournament=self.tournament
         )
 
         self.player1 = Player.objects.create(name="Player 1", team=self.team1)
@@ -35,7 +57,8 @@ class MatchModelTests(TestCase):
             home_team=self.team1,
             away_team=self.team1,
             start_time=self.start_time,
-            field=self.field
+            field=self.field,
+            tournament=self.tournament
         )
         with self.assertRaises(ValidationError):
             match.clean()

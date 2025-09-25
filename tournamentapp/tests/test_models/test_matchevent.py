@@ -3,24 +3,50 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 
-from tournamentapp.models import Team, Player, Match, Field, MatchEvent, GoalEvent
+from tournamentapp.models import Team, Player, Match, Field, MatchEvent, GoalEvent, Tournament
+from accounts.models import AppUser
 
 
 class MatchEventTests(TestCase):
 
     def setUp(self):
-        self.team1 = Team.objects.create(name="Team Alpha")
-        self.team2 = Team.objects.create(name="Team Beta")
-        self.field = Field.objects.create(name="Field A")
+        self.user = AppUser.objects.create(
+            email="testuser@abv.bg",
+            password="password123"
+            )
 
-        self.player1 = Player.objects.create(name="Player A", team=self.team1)
-        self.player2 = Player.objects.create(name="Player B", team=self.team2)
+        self.tournament = Tournament.objects.create(
+            name="Musterment",
+            owner=self.user
+            )
+
+        self.team1 = Team.objects.create(
+            name="Team Alpha",
+            tournament=self.tournament,
+        )
+        self.team2 = Team.objects.create(
+            name="Team Beta",
+            tournament=self.tournament,
+        )
+        self.field = Field.objects.create(
+            name="Field A",
+            tournament=self.tournament,
+            owner=self.user
+        )
+
+        self.player1 = Player.objects.create(
+            name="Player A", team=self.team1
+        )
+        self.player2 = Player.objects.create(
+            name="Player B", team=self.team2
+        )
 
         self.match = Match.objects.create(
             home_team=self.team1,
             away_team=self.team2,
             start_time=timezone.now() + timedelta(days=1),
-            field=self.field
+            field=self.field,
+            tournament = self.tournament
         )
 
     def test_create_general_event(self):
@@ -76,7 +102,7 @@ class MatchEventTests(TestCase):
         GoalEvent.objects.create(match=self.match, team=self.team2, player=self.player2)
 
         self.assertEqual(MatchEvent.objects.count(), 3)
-        self.assertEqual(GoalEvent.objects.count(), 2)  # Only 'goal' type events should be returned
+        self.assertEqual(GoalEvent.objects.count(), 2)
 
     def test_event_without_player(self):
         event = MatchEvent.objects.create(
@@ -84,7 +110,7 @@ class MatchEventTests(TestCase):
             event_type='substitution',
             team=self.team1,
             minute=55,
-            player=None  # Allowed
+            player=None
         )
         self.assertIsNone(event.player)
 

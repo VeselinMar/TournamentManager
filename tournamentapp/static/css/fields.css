@@ -1,159 +1,140 @@
 /* ==========================
-   Container
+   Field Styling
 ========================== */
 .field-style .team-list-container {
-    max-width: 700px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background-color: #388e3c;   /* consistent green tone */
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-    color: #fff;
-    font-family: Arial, sans-serif;
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #33691e; /* dark green container */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #e8f5e9;
+  font-family: Arial, sans-serif;
 }
 
-/* ==========================
-   Title
-========================== */
 .field-style .page-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    color: #f1f1f1;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #a5d6a7; /* light green accent */
 }
 
 /* ==========================
    Field List
 ========================== */
 .field-style .field-list {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 2rem;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .field-style .field-item {
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    background-color: #2e7d32;
-    border-radius: 6px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    font-size: 1.1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background-color: #388e3c; /* lighter green card */
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e8f5e9;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.field-style .field-item:hover {
+  background-color: #2e7d32;
+  transform: translateY(+2px);
 }
 
 /* ==========================
    Form Styling
 ========================== */
 .field-style .field-create-form {
-    margin-top: 2rem;
-    background-color: #2e7d32;
-    padding: 1.5rem;
-    border-radius: 8px;
+  margin-top: 2rem;
+  background-color: #2e7d32;
+  padding: 1.5rem;
+  border-radius: 8px;
 }
 
 .field-style .form-group {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .field-style .form-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #d0f0d0;
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #c8e6c9; /* softer light green */
 }
 
 .field-style input[type="text"],
-select,
-textarea {
-    width: 100%;
-    padding: 0.6rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+.field-style select,
+.field-style textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #f1f8f4;
+  color: #333;
 }
 
-.field-style .form-error {
-    color: #ffcccb;
-    font-size: 0.9rem;
-    margin-top: 0.4rem;
-}
-
+/* Errors */
+.field-style .form-error,
 .field-style .non-field-errors p {
-    color: #ffcccb;
-    margin-bottom: 0.5rem;
+  color: #ffcccb;
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
 }
 
 /* ==========================
-   Submit Button
+   Buttons
 ========================== */
 .field-style .btn-submit {
-    background-color: #1b5e20;
-    color: #fff;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  background-color: #81c784;
+  color: #1b5e20;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .field-style .btn-submit:hover {
-    background-color: #145a17;
-}
-
-/* ==========================
-   Edit/Delete Buttons
-========================== */
-.field-style .btn-group .btn {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.9rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  background-color: #66bb6a;
+  color: white;
+  transform: scale(1.03);
 }
 
 .field-style .btn-edit {
-    background-color: #ffee58;
-    color: #333;
+  background-color: #fff9c4;
+  color: #333;
+  border: 1px solid #fbc02d;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 .field-style .btn-edit:hover {
-    background-color: #fdd835;
+  background-color: #fff176;
 }
 
 .field-style .btn-delete {
-    background-color: #e53935;
-    color: #fff;
+  background-color: #ef5350;
+  color: #fff;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 .field-style .btn-delete:hover {
-    background-color: #c62828;
-}
-
-.field-style .btn-secondary.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.field-style .btn-success {
-    background-color: #43a047;
-    color: #fff;
-}
-
-.field-style .btn-success:hover {
-    background-color: #388e3c;
-}
-
-/* ==========================
-   Datalist Styling
-========================== */
-.field-style datalist option {
-    color: black;
+  background-color: #c62828;
 }
 
 /* ==========================
@@ -164,7 +145,7 @@ textarea {
     box-sizing: border-box;
     margin: 3rem auto;
     padding: 1rem, 1.5rem;
-    background-color: #66bb6a;
+    background-color: #2e7d32;
     color: #fff;
     border-radius: 8px;
     font-size: 0.95rem;
@@ -182,29 +163,32 @@ textarea {
     text-decoration: none;
 }
 
+.field-style .next-step .btn-success {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.8rem 1.6rem;
+}
+
 /* ==========================
    Responsive Tweaks
 ========================== */
 @media (max-width: 600px) {
-    .field-style .team-list-container {
-        padding: 1rem;
-    }
+  .field-style .team-list-container {
+    padding: 1rem;
+  }
 
-    .field-style .next-step {
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
+  .field-style .page-title {
+    font-size: 1.5rem;
+  }
 
-    .field-style .btn-submit {
-        width: 100%;
-    }
+  .field-style .field-item {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+  }
 
-    .field-style .field-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .field-style .btn-group {
-        margin-top: 0.5rem;
-    }
+  .field-style .btn-submit {
+    width: 100%;
+  }
 }

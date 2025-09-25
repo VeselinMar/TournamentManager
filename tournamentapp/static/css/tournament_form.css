@@ -1,21 +1,21 @@
-/* --- General Body --- */
+--- General Body ---
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: #e8f5e9; /* very light green background */
+    background: #e8f5e9;
     margin: 0;
     padding: 0;
 }
 
 /* --- Form Container --- */
 form {
-    background: #388e3c; /* slightly darker green card */
+    background: #388e3c;
     width: 80%;
     max-width: 800px;
     margin: 50px auto;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-    color: #ffffff; /* text inside form */
+    color: #ffffff;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -30,7 +30,7 @@ h2 {
     font-size: 1.8rem;
     margin-top: 40px;
     margin-bottom: 20px;
-    color: #388e3c; /* dark green heading */
+    color: #388e3c;
     font-weight: bold;
 }
 
@@ -45,7 +45,7 @@ form label {
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #dcedc8; /* lighter green for contrast */
+    color: #dcedc8;
 }
 
 /* --- Inputs / Selects / Textareas --- */
@@ -54,17 +54,17 @@ form select,
 form textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #81c784; /* light green border */
+    border: 1px solid #81c784;
     border-radius: 6px;
-    background: #a5d6a7; /* pale green background */
-    color: #1b5e20; /* dark green text */
+    background: #a5d6a7;
+    color: #1b5e20;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 form input:focus,
 form select:focus,
 form textarea:focus {
-    border-color: #2e7d32; /* darker green on focus */
+    border-color: #2e7d32;
     outline: none;
     box-shadow: 0 0 5px rgba(46, 125, 50, 0.5);
 }
@@ -73,7 +73,7 @@ form textarea:focus {
 form button {
     width: 100%;
     padding: 12px;
-    background: #66bb6a; /* bright green */
+    background: #66bb6a;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -84,6 +84,6 @@ form button {
 }
 
 form button:hover {
-    background: #43a047; /* darker green on hover */
+    background: #43a047;
     transform: translateY(-2px);
 }

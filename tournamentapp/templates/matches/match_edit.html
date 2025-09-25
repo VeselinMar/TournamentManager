@@ -120,7 +120,14 @@
       {% endfor %}
     </ul>
   </div>
-</div>
+  <div id="finish-match-button" class="mt-4 text-center">
+    <form method="post" action="{% url 'finish-match' tournament.id match.id %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-lg fw-bold">
+        Finish Match
+      </button>
+    </form>
+  </div>
 {% endblock %}
 
 {% block extra_js %}
