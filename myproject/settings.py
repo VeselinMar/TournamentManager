@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "tournamentapp",
     "accounts",
+    "sponsors",
     "formtools",
 ]
 
@@ -89,6 +90,10 @@ USE_TZ = True
 # Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default PK type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

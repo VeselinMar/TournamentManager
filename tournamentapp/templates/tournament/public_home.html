@@ -8,13 +8,25 @@
 
   <!-- Fixed sponsor top -->
   <header class="sponsor-banner sponsor-top">
-    <p>Main Sponsor Banner</p>
+    {% for sponsor in sponsors %}
+      <a href="{{ sponsor.link_url }}" target="_blank">
+        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+      </a>
+    {% empty %}
+      <p>No top sponsors yet</p>
+    {% endfor %}
   </header>
 
   <div class="spectator-body">
     <!-- Fixed left sponsors -->
     <aside class="sponsor-column sponsor-left">
-      <p>Left Sponsors</p>
+      {% for sponsor in sponsors %}
+        <a href="{{ sponsor.link_url }}" target="_blank">
+          <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+        </a>
+      {% empty %}
+        <p>No left sponsors yet</p>
+      {% endfor %}
     </aside>
 
     <!-- Scrollable central content -->
@@ -82,13 +94,25 @@
 
     <!-- Fixed right sponsors -->
     <aside class="sponsor-column sponsor-right">
-      <p>Right Sponsors</p>
-    </aside>
+    {% for sponsor in sponsors %}
+      <a href="{{ sponsor.link_url }}" target="_blank">
+        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+      </a>
+    {% empty %}
+      <p>No right sponsors yet</p>
+    {% endfor %}
+  </aside>
   </div>
 
   <!-- Fixed sponsor bottom -->
   <footer class="sponsor-banner sponsor-bottom">
-    <p>Bottom Sponsor Banner</p>
+    {% for sponsor in sponsors %}
+      <a href="{{ sponsor.link_url }}" target="_blank">
+        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+      </a>
+    {% empty %}
+      <p>No bottom sponsors yet</p>
+    {% endfor %}
   </footer>
 </div>
 {% endblock %}

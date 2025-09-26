@@ -54,6 +54,7 @@ class TournamentPublicView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tournament = self.object
+        context["sponsors"] = tournament.sponsors.all()
 
         today = datetime.today().date()
         matches_today = (
