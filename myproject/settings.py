@@ -93,8 +93,8 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_URL = "/media/"
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default PK type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -112,4 +112,4 @@ AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME")
 AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY")
 AZURE_CONTAINER = config("AZURE_CONTAINER")
 
-DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+DEFAULT_FILE_STORAGE = "myproject.storages.AzureMediaStorage"
