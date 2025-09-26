@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "storages",
     "tournamentapp",
     "accounts",
     "sponsors",
@@ -105,3 +106,10 @@ AUTH_USER_MODEL = "accounts.AppUser"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "login"
+
+# Azure storage settings
+AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME")
+AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY")
+AZURE_CONTAINER = config("AZURE_CONTAINER")
+
+DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
