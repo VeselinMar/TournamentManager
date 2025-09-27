@@ -110,6 +110,28 @@ LOGOUT_REDIRECT_URL = "login"
 # Azure storage settings
 AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME")
 AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY")
+AZURE_CONNECTION_STRING = config("AZURE_CONNECTION_STRING")
 AZURE_CONTAINER = config("AZURE_CONTAINER")
+AZURE_CONTAINER_STATIC = "static"
+AZURE_CONTAINER_MEDIA = "media"
 
-DEFAULT_FILE_STORAGE = "myproject.storages.AzureMediaStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+        "OPTIONS": {
+            "azure_container": AZURE_CONTAINER,
+            "account_name": AZURE_ACCOUNT_NAME,
+            "account_key": AZURE_ACCOUNT_KEY,
+            "connection_string": AZURE_CONNECTION_STRING,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+        "OPTIONS": {
+            "azure_container": AZURE_CONTAINER_STATIC,
+            "account_name": AZURE_ACCOUNT_NAME,
+            "account_key": AZURE_ACCOUNT_KEY,
+            "connection_string": AZURE_CONNECTION_STRING,
+        }
+    }
+}
