@@ -129,7 +129,7 @@
 .dashboard-center .btn-primary:hover {
   background-color: #66bb6a;
   color: white;
-  transform: scale(1.03);
+  transform: scale(1.01);
 }
 
 .dashboard-center .btn-success {
@@ -140,7 +140,7 @@
 .dashboard-center .btn-success:hover {
   background-color: #388e3c;
   color: #e8f5e9;
-  transform: scale(1.03);
+  transform: scale(1.01);
 }
 
 .dashboard-center .section-title {
@@ -225,7 +225,7 @@
 }
 
 .team-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-3px) scale(1.01);
   box-shadow: 0 8px 16px rgba(0,0,0,0.3);
 }
 

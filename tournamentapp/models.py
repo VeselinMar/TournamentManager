@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.conf import settings
-
+from django.utils.text import slugify
 
 class Tournament(models.Model):
     name = models.CharField(max_length=100)
@@ -27,8 +27,6 @@ class Tournament(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
     
-
-
 class Team(models.Model):
     name = models.CharField(
         max_length=100,

@@ -1,0 +1,206 @@
+/* ==========================
+   Layout
+========================== */
+.spectator-page {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  font-family: sans-serif;
+}
+
+.sponsor-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  background: #e0f2f1;
+  padding: 0.8rem;
+  font-weight: bold;
+}
+
+.sponsor-banner img {
+  max-height: 80px;
+  width: auto;
+  display: block;
+}
+
+.spectator-body {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  flex-grow: 1;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sponsor-column {
+  background: #f1f8f4;
+  padding: 1rem;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.sponsor-column img {
+  max-width: 100%;
+  max-height: 100px;
+  margin: 0.5rem 0;
+  display: block;
+}
+
+.spectator-content {
+  padding: 1rem 2rem;
+  overflow-y: auto;
+}
+
+/* ==========================
+   Titles
+========================== */
+.page-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: #1b5e20;
+}
+
+.current-matches h2,
+.timeline-section h2 {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #2e7d32;
+}
+
+/* ==========================
+   Current Matches
+========================== */
+.current-matches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.current-match-card {
+  background: #e8f5e9;
+  padding: 0.8rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.current-score {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #388e3c;
+}
+
+/* ==========================
+   Timeline Table
+========================== */
+.table-container {
+  max-height: 55vh;
+  overflow-y: auto;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+}
+
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.timeline-table th,
+.timeline-table td {
+  border: 1px solid #c8e6c9;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.timeline-table thead {
+  background: #a5d6a7;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.match-card {
+  background: #f1f8f4;
+  padding: 0.3rem;
+  border-radius: 4px;
+}
+
+.match-card.finished {
+  background: #e0f2f1;
+}
+
+.score {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.btn-score {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: #81c784;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #1b5e20;
+  text-decoration: none;
+}
+
+.btn-score:hover {
+  background: #66bb6a;
+  color: #fff;
+}
+
+/* ==========================
+   Responsive
+========================== */
+@media (max-width: 992px) {
+  .spectator-body {
+    grid-template-columns: 1fr; /* hide side columns */
+  }
+
+  .sponsor-column {
+    display: none;
+  }
+
+  .spectator-content {
+    padding: 1rem;
+  }
+
+  .sponsor-banner img {
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .current-score {
+    font-size: 1.1rem;
+  }
+
+  .btn-score {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .timeline-table th,
+  .timeline-table td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .sponsor-banner img {
+    max-height: 80px;
+  }
+
+  .sponsor-banner {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+}

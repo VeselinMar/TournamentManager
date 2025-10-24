@@ -1,6 +1,8 @@
+@import url("base.css");
 @import url("navbar.css");
 @import url("home.css");
 @import url("landing_page.css");
+@import url("public_home.css");
 @import url("tournament_form.css");
 @import url("team_form.css");
 @import url("leaderboard.css");

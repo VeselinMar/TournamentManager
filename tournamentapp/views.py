@@ -54,6 +54,7 @@ class TournamentPublicView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tournament = self.object
+        context["sponsors"] = tournament.sponsors.all()
 
         today = datetime.today().date()
         matches_today = (
@@ -336,16 +337,17 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
         player_name = request.POST.get('player_name', '').strip()
         minute = request.POST.get('minute', '').strip()
 
-        if player_name:
-            player, _ = Player.objects.get_or_create(name=player_name, team=team)
-            MatchEvent.objects.create(
-                match=self.object,
-                event_type=request.POST.get('event_type'),
-                minute=minute,
-                team=team,
-                player=player
-            )
-        return redirect('match-detail', tournament_id=self.tournament.pk, pk=self.object.pk)
+        # Handled in match_edit.js
+        # if player_name:
+        #     player, _ = Player.objects.get_or_create(name=player_name, team=team)
+        #     MatchEvent.objects.create(
+        #         match=self.object,
+        #         event_type=request.POST.get('event_type'),
+        #         minute=minute,
+        #         team=team,
+        #         player=player
+        #     )
+        # return redirect('public/<slug:slug>/', tournament_id=self.tournament.pk, pk=self.object.pk)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -457,11 +459,25 @@ def create_match_event(request, tournament_id, match_id):
     event_type = request.POST.get('event_type')
     team_side = request.POST.get('team')
     player_id = request.POST.get('player_id')
+    team_id = request.POST.get('team_id')
     minute = request.POST.get('minute', '0')
 
-    team = match.home_team if team_side == 'home' else match.away_team
-    player = get_object_or_404(Player, id=player_id, team=team)
+    if not player_id or not team_id:
+        return JsonResponse({'success': False, 'error': 'Missing player_id or team_id'}, status=400)
 
+    try:
+        team_id = int(team_id)
+    except ValueError:
+        return JsonResponse({'success': False, 'error': 'Invalid team_id'}, status=400)
+
+    # Decide if home or away team was referenced
+    team = match.home_team if team_side == 'home' else match.away_team
+    player = get_object_or_404(Player, id=player_id)
+
+    if player.team.id != team_id:
+        return JsonResponse({'success': False, 'error': 'Player does not belong to this team'}, status=400)
+
+    # Create the event
     event = MatchEvent.objects.create(
         match=match,
         team=team,
@@ -469,12 +485,18 @@ def create_match_event(request, tournament_id, match_id):
         event_type=event_type,
         minute=minute,
     )
+    
+    event.apply_event_effects()
 
-    home_score = match.events.filter(event_type='goal', team=match.home_team).count()
-    home_score += match.events.filter(event_type='own_goal', team=match.away_team).count()
-
-    away_score = match.events.filter(event_type='goal', team=match.away_team).count()
-    away_score += match.events.filter(event_type='own_goal', team=match.home_team).count()
+    # Recalculate scores
+    home_score = (
+        match.events.filter(event_type='goal', team=match.home_team).count() +
+        match.events.filter(event_type='own_goal', team=match.away_team).count()
+    )
+    away_score = (
+        match.events.filter(event_type='goal', team=match.away_team).count() +
+        match.events.filter(event_type='own_goal', team=match.home_team).count()
+    )
 
     return JsonResponse({
         'success': True,
@@ -544,15 +566,21 @@ def remove_match_event(request, tournament_id, event_id):
     event_type = event.event_type
 
     # Reverse consequences
-    if event_type in ['goal', 'own_goal']:
-        if player:
+    if player:
+        if event_type == 'goal':
             player.goals = max(0, player.goals - 1)
             player.save()
-    elif event_type in ['yellow_card', 'red_card']:
-        if player:
-            player.cards = max(0, player.cards - 1)
+        elif event_type == 'own_goal':
+            player.own_goals = max(0, player.own_goals - 1)
+            player.save()
+        elif event_type == 'yellow_card':
+            player.yellow_cards = max(0, player.yellow_cards - 1)
+            player.save()
+        elif event_type == 'red_card':
+            player.red_cards = max(0, player.red_cards - 1)
             player.save()
 
+    # Delete the event
     event.delete()
 
     # Reset match to unfinished state
@@ -561,17 +589,13 @@ def remove_match_event(request, tournament_id, event_id):
     match.away_score = 0
     match.save()
 
-    # Recalculate result and scores from current events
-    match.apply_result()  # This will recompute goals and team points from scratch
-
-    # Updated scores after recalculation
-    updated_home_score = match.home_score
-    updated_away_score = match.away_score
+    # Recalculate match results based on remaining events
+    match.apply_result()  # your existing method to recompute scores
 
     return JsonResponse({
         'success': True,
-        'home_score': updated_home_score,
-        'away_score': updated_away_score,
+        'home_score': match.home_score,
+        'away_score': match.away_score,
     })
 
 @require_POST
