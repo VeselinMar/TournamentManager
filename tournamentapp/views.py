@@ -486,8 +486,6 @@ def create_match_event(request, tournament_id, match_id):
         minute=minute,
     )
     
-    event.apply_event_effects()
-
     # Recalculate scores
     home_score = (
         match.events.filter(event_type='goal', team=match.home_team).count() +

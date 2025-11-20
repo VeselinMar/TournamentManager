@@ -335,14 +335,14 @@ class MatchEvent(models.Model):
     
 
     def clean(self):
-        
         if self.substitute_player and self.substitute_player.team != self.team:
             raise ValidationError("Substitute must be from the same team.")
             
         if self.event_type == 'substitution' and not self.substitute_player:
             raise ValidationError("Substitution must specify a substitute player.")
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+
+        def save(self, *args, **kwargs):
+            super().save(*args, **kwargs)
 
 class GoalManager(models.Manager):
     def get_queryset(self):
