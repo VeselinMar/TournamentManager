@@ -28,7 +28,7 @@
       professional tournament experience right away.
     </p>
     {% if user.is_authenticated %}
-      <h2 class="landing-page__button" href="{% url 'tournament-create' %}">Create a new tournament</h2>
+      <a class="landing-page__button" href="{% url 'tournament-create' %}">Create a new tournament</a>
     {% else %}
     <span>
       If you already have an account:
