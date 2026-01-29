@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Choose name for your Tournament</h2>
+  <h2>Choose a name for your Tournament</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

@@ -56,13 +56,12 @@ class TournamentPublicView(DetailView):
         tournament = self.object
         context["sponsors"] = tournament.sponsors.all()
 
-        today = datetime.today().date()
-        matches_today = (
+        matches = (
             tournament.matches
             .select_related('field', 'home_team', 'away_team')
-            .filter(start_time__date=today)
             .order_by('start_time')
         )
+
 
         field_names = list(
             tournament.fields.order_by('name').values_list('name', flat=True)
