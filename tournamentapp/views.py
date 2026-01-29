@@ -69,7 +69,7 @@ class TournamentPublicView(DetailView):
 
         timeline_dict = defaultdict(lambda: {field: None for field in field_names})
 
-        for match in matches_today:
+        for match in matches:
             time_str = match.start_time.strftime('%H:%M')
             timeline_dict[time_str][match.field.name] = match
 
