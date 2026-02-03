@@ -116,7 +116,7 @@
 }
 
 .timeline-table {
-  background: #2e7d32;
+  background: #388e3c;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -134,7 +134,7 @@
 
 .score {
   font-weight: bold;
-  color: #2e7d32;
+  color: #fff;
 }
 
 .btn-score {
@@ -145,7 +145,7 @@
   border-radius: 4px;
   font-weight: bold;
   font-size: 0.8rem;
-  color: #1b5e20;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -191,6 +191,7 @@
 
   .timeline-table th,
   .timeline-table td {
+    color: #fff;
     padding: 0.4rem;
     font-size: 0.8rem;
   }
