@@ -28,7 +28,7 @@
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated and tournament and tournament.owner == user %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">Tournament</a>
+                            <a class="nav-link" href="{% url 'tournament-detail' tournament.id %}">Tournament</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'leaderboard' tournament.id %}">Leaderboard</a>

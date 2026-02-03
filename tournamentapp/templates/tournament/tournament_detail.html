@@ -1,34 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
 {% if no_tournament %}
   <p>You have no active tournament. <a href="{% url 'tournament-create' %}">Create a tournament now</a>.</p>
 {% else %}
-  <h2>{{ tournament.name }}</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Time</th>
-        {% for field in field_names %}
-          <th>{{ field }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in timeline %}
-        <tr>
-          <td>{{ row.time }}</td>
-          {% for match in row.matches %}
-            <td>
-              {% if match %}
-                {{ match.home_team.name }} vs {{ match.away_team.name }}
-              {% else %}
-                -
-              {% endif %}
-            </td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="spectator-page">
+
+  <header class="sponsor-banner sponsor-top">
+    {% for sponsor in sponsors %}
+      <a href="{{ sponsor.link_url }}" target="_blank">
+        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+      </a>
+    {% empty %}
+      <p>No top sponsors yet</p>
+    {% endfor %}
+  </header>
+
+    <!-- Scrollable central content -->
+    <main class="spectator-content">
+      <h1 class="page-title">🏆 {{ object.name }} 🏆</h1>
+
+      {% if current_matches %}
+        <section class="current-matches">
+          <h2>Current Match{% if current_matches|length > 1 %}es{% endif %}</h2>
+          <div class="current-matches-grid">
+            {% for match in current_matches %}
+              <div class="current-match-card">
+                <h3>{{ match.home_team.name }} vs {{ match.away_team.name }}</h3>
+                <p class="current-score">{{ match.home_score }} - {{ match.away_score }}</p>
+                <p class="field-label">Field: {{ match.field }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {% if timeline %}
+        <section class="timeline-section">
+          <div class="table-container">
+            <table class="timeline-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  {% for field in field_names %}
+                    <th>{{ field }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in timeline %}
+                  <tr>
+                    <td class="time-cell">{{ row.time }}</td>
+                    {% for match in row.matches %}
+                      <td>
+                        {% if match %}
+                          <div class="match-card {% if match.is_finished %}finished{% endif %}">
+                            <strong>{{ match.home_team.name }}</strong> vs <strong>{{ match.away_team.name }}</strong><br>
+                            {% if match.is_finished %}
+                              <span class="score">{{ match.home_score }} - {{ match.away_score }}</span><br>
+                            {% endif %}
+                            {% if user.is_authenticated and tournament.owner == user and not match.is_finished %}
+                              <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Score</a>
+                            {% endif %}
+                          </div>
+                        {% else %}
+                          <span class="no-match">—</span>
+                        {% endif %}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      {% else %}
+        <p class="no-matches">No matches scheduled today.</p>
+      {% endif %}
+    </main>
+
+  <footer class="sponsor-banner sponsor-bottom">
+    {% for sponsor in sponsors %}
+      <a href="{{ sponsor.link_url }}" target="_blank">
+        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
+      </a>
+    {% empty %}
+      <p>No bottom sponsors yet</p>
+    {% endfor %}
+  </footer>
+</div>
 {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/spectator.css' %}">
 {% endblock %}

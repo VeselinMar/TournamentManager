@@ -60,9 +60,6 @@
                             {% if match.is_finished %}
                               <span class="score">{{ match.home_score }} - {{ match.away_score }}</span><br>
                             {% endif %}
-                            {% if user.is_authenticated and tournament.owner == user and not match.is_finished %}
-                              <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Score</a>
-                            {% endif %}
                           </div>
                         {% else %}
                           <span class="no-match">—</span>

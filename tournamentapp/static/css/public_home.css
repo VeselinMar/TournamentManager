@@ -79,7 +79,7 @@
 }
 
 .current-match-card {
-  background: #e8f5e9;
+  background: #2e7d32;
   padding: 0.8rem;
   border-radius: 8px;
   text-align: center;
@@ -116,20 +116,20 @@
 }
 
 .timeline-table {
-  background: #a5d6a7;
+  background: #2e7d32;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
 .match-card {
-  background: #f1f8f4;
+  background: #388e3c;
   padding: 0.3rem;
   border-radius: 4px;
 }
 
 .match-card.finished {
-  background: #e0f2f1;
+  background: #2e7d32;
 }
 
 .score {
@@ -193,6 +193,11 @@
   .timeline-table td {
     padding: 0.4rem;
     font-size: 0.8rem;
+  }
+
+  .td.time-cell {
+    color: #fff;
+    font-size: 1rem;
   }
 
   .sponsor-banner img {
