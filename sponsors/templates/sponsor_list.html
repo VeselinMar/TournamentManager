@@ -1,16 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Banners for {{ banners.first.tournament.name }}</h2>
-<a href="{% url 'sponsor-add' tournament.id %}">Add New Banner</a>
-<ul>
-  {% for banner in banners %}
-    <li>
-      <img src="{{ banner.image.url }}" alt="{{ banner.name }}" style="max-height:50px;">
-      {{ banner.name }} - <a href="{{ banner.link_url }}" target="_blank">{{ banner.link_url }}</a>
-    </li>
-  {% empty %}
-    <li>No banners yet.</li>
-  {% endfor %}
-</ul>
+<div class="list-container">
+  <div class="list-header">
+    <h2>Banners for {{ banners.first.tournament.name }}</h2>
+    <a href="{% url 'sponsor-add' tournament.id %}" class="btn-primary">
+      Add New Banner
+    </a>
+  </div>
+
+  <ul class="banner-list">
+    {% for banner in banners %}
+      <li class="banner-item">
+        <img src="{{ banner.image.url }}" alt="{{ banner.name }}">
+        <div class="banner-info">
+          <strong>{{ banner.name }}</strong>
+          <a href="{{ banner.link_url }}" target="_blank">
+            {{ banner.link_url }}
+          </a>
+        </div>
+      </li>
+    {% empty %}
+      <li class="empty-state">No banners yet.</li>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}
