@@ -66,13 +66,21 @@ TEMPLATES = [
 WSGI_APPLICATION = "myproject.wsgi.application"
 
 # Database
-# Use DATABASE_URL if available (prod), otherwise default to SQLite (dev)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
-}
+DATABASE_URL = config("DATABASE_URL", default=None)
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+
+else:
+
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+            conn_max_age=600,
+        )
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
