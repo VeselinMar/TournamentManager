@@ -28,10 +28,6 @@
 }
 
 /* Inputs */
-.styled-form input[type="text"],
-.styled-form input[type="file"],
-.styled-form input[type="number"],
-.styled-form input[type="email"],
 .styled-form select,
 .styled-form textarea {
   width: 100%;

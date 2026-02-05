@@ -14,13 +14,13 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  background: #e0f2f1;
+  background: transparent;
   padding: 0.8rem;
   font-weight: bold;
 }
 
 .sponsor-banner img {
-  max-height: 80px;
+  max-height: 8em;
   width: auto;
   display: block;
 }
@@ -31,20 +31,6 @@
   flex-grow: 1;
   overflow: hidden;
   background: #fff;
-}
-
-.sponsor-column {
-  background: #f1f8f4;
-  padding: 1rem;
-  text-align: center;
-  overflow-y: auto;
-}
-
-.sponsor-column img {
-  max-width: 100%;
-  max-height: 100px;
-  margin: 0.5rem 0;
-  display: block;
 }
 
 .spectator-content {

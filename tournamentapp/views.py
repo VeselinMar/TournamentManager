@@ -326,8 +326,10 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
         self.tournament_id = kwargs.get('tournament_id')
         self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
         match = self.get_object()
+
         if match.tournament_id != self.tournament.pk:
             return HttpResponseForbidden()
+
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -546,7 +548,7 @@ def finish_match(request, tournament_id, match_id):
     if not match.is_finished:
         match.apply_result()
 
-    return redirect('match-detail', tournament_id=tournament_id, pk=match_id)
+    return redirect('tournament-detail', pk=tournament_id)
 
 @require_http_methods(['DELETE'])
 @login_required
