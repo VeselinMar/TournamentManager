@@ -11,5 +11,5 @@
 @import url("team_detail.css");
 @import url("match_edit.css");
 @import url("fields.css");
-@import url("../../../sponsors/static/sponsor_form.css");
-@import url("../../../sponsors/static/sponsor_list.css");
+@import url("sponsor_form.css");
+@import url("sponsor_list.css");

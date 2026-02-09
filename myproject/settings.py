@@ -2,8 +2,11 @@ from pathlib import Path
 import os
 from decouple import config, Csv
 import dj_database_url
+from PIL import Image
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+Image.MAX_IMAGE_PIXELS = 20_000_000
 
 # Secret key
 SECRET_KEY = config("SECRET_KEY", default="insecure-secret")
@@ -130,6 +133,7 @@ if DEBUG:
     # STATICFILES_DIRS = [BASE_DIR / "static"]
 
 else:
+    AZURE_BLOB_CACHE_CONTROL = "public, max-age=31536000, immutable"
     AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME", default="")
     AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY", default="")
     AZURE_CONNECTION_STRING = config("AZURE_CONNECTION_STRING", default="")
@@ -145,6 +149,7 @@ else:
                 "account_name": AZURE_ACCOUNT_NAME,
                 "account_key": AZURE_ACCOUNT_KEY,
                 "connection_string": AZURE_CONNECTION_STRING,
+                "cache_control": AZURE_BLOB_CACHE_CONTROL,
             },
         },
         "staticfiles": {
@@ -154,6 +159,7 @@ else:
                 "account_name": AZURE_ACCOUNT_NAME,
                 "account_key": AZURE_ACCOUNT_KEY,
                 "connection_string": AZURE_CONNECTION_STRING,
+                "cache_control": AZURE_BLOB_CACHE_CONTROL,
             }
         }
     }

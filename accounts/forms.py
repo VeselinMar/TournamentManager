@@ -15,6 +15,9 @@ class RegisterForm(forms.ModelForm):
     class Meta:
         model = AppUser
         fields = ['email']
+        widgets = {
+            'email': forms.EmailInput(attrs={'autofocus': 'autofocus'}),
+        }
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -34,5 +37,5 @@ class RegisterForm(forms.ModelForm):
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(
         label="Emali",
-        widget=forms.EmailInput()
+        widget=forms.EmailInput(attrs={'autofocus':'autofocus'})
     )

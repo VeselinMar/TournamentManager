@@ -3,11 +3,10 @@
   max-width: 800px;
   margin: 2rem auto;
   padding: 1.5rem;
-  background: #ffffff;
+  background: #388e3c;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-
 /* Header */
 .list-header {
   display: flex;
@@ -15,9 +14,15 @@
   align-items: center;
   margin-bottom: 1.5rem;
 }
-
+.list-header .a {
+  text-decoration: none;
+}
+.list-header .a.btn-primary {
+  color: #1b5e20;
+}
 .list-header h2 {
   margin: 0;
+  color: #a5d6a7;
   font-size: 1.4rem;
 }
 
@@ -43,7 +48,8 @@
 
 /* Image */
 .banner-item img {
-  width: 40px;
+  width: 100%;
+  max-width: 240px;
   height: auto;
   object-fit: contain;
   border-radius: 4px;
@@ -60,7 +66,7 @@
 
 .banner-info a {
   font-size: 0.85rem;
-  color: #2563eb;
+  color: #81c784;
   word-break: break-all;
 }
 
@@ -72,7 +78,7 @@
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: #fff;
 }
 
 /* Mobile */

@@ -4,8 +4,14 @@ body::before {
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: url("/static/imgs/footnail.png");
-    background-size: 150px;
+    background-size: 100px;
+    opacity: 10%;
     mix-blend-mode: multiply;
-    opacity: 0.25;
     z-index: -1;
+}
+
+body {
+    background-color: #c8e6c9;
+    opacity: 99.9%;
+    z-index: -11;
 }

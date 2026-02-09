@@ -5,7 +5,7 @@
   max-width: 700px;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: #33691e; /* dark green container */
+  background-color: #2e7d32; /* dark green container */
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   color: #e8f5e9;
@@ -55,7 +55,7 @@
 ========================== */
 .field-style .field-create-form {
   margin-top: 2rem;
-  background-color: #2e7d32;
+  background-color: #388e3c;
   padding: 1.5rem;
   border-radius: 8px;
 }
@@ -167,6 +167,7 @@
   font-size: 1.1rem;
   font-weight: bold;
   padding: 0.8rem 1.6rem;
+  background-color: #81c784;
 }
 
 /* ==========================

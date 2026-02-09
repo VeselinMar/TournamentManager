@@ -19,9 +19,8 @@
 
     <!-- Scrollable central content -->
     <main class="spectator-content">
-      <h1 class="page-title">🏆 {{ object.name }} 🏆</h1>
-
       {% if current_matches %}
+      <caption class="table-caption">{{ object.name }}</caption>
         <section class="current-matches">
           <h2>Current Match{% if current_matches|length > 1 %}es{% endif %}</h2>
           <div class="current-matches-grid">

@@ -5,7 +5,7 @@
   max-width: 800px;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: #33691e; /* dark green */
+  background-color: #2e7d32; /* dark green */
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   color: #e8f5e9;
@@ -67,7 +67,7 @@
 
 /* Buttons */
 .team-list-style .team-list-container .btn-primary {
-  background-color: #81c784;
+  background-color: #81c784 !important;
   color: #1b5e20;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
