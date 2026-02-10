@@ -9,10 +9,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 Image.MAX_IMAGE_PIXELS = 20_000_000
 
 # Secret key
-SECRET_KEY = config("SECRET_KEY", default="insecure-secret")
+SECRET_KEY = config("SECRET_KEY")
 
 # Debug mode
 DEBUG = config("DEBUG", default=True, cast=bool)
+
+# session security
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
 
 # Allowed hosts
 ALLOWED_HOSTS = config(
@@ -23,28 +29,41 @@ ALLOWED_HOSTS = config(
 
 # Application definition
 INSTALLED_APPS = [
+
+    # django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "storages",
-    "tournamentapp",
-    "accounts",
-    "sponsors",
+    "django.contrib.sites",
+
+    # allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+
+    # third-party apps
     "formtools",
+    "storages",
+
+    # local apps
+    "accounts",
+    "tournamentapp",
+    "sponsors",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "myproject.urls"
@@ -103,17 +122,60 @@ USE_TZ = True
 # MEDIA_URL = "/media/"
 # MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Default PK type
+# ------------------------------------------------------------------------------
+# Database / model defaults
+# ------------------------------------------------------------------------------
+
+# Default PK field type for models
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom user model
 AUTH_USER_MODEL = "accounts.AppUser"
 
-# Authentication redirects
+# ------------------------------------------------------------------------------
+# Sites framework
+# ------------------------------------------------------------------------------
+
+# Required for django-allauth (must match a Site object in the admin)
+SITE_ID = 1
+
+# ------------------------------------------------------------------------------
+# Authentication backends
+# ------------------------------------------------------------------------------
+
+# Authentication backends used by Django
+AUTHENTICATION_BACKENDS = [
+    # Default Django authentication backend
+    "django.contrib.auth.backends.ModelBackend",
+    # django-allauth authentication backend (email-based login, social auth, etc.)
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# ------------------------------------------------------------------------------
+# Login / logout behavior
+# ------------------------------------------------------------------------------
+
+# URL name for the login page
 LOGIN_URL = "login"
+
+# Redirect destination after successful login
 LOGIN_REDIRECT_URL = "/dashboard/"
+
+# Redirect destination after logout
 LOGOUT_REDIRECT_URL = "login"
 
+# ------------------------------------------------------------------------------
+# django-allauth account settings
+# ------------------------------------------------------------------------------
+
+# Use email as the primary authentication method
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+# Email is required for all user accounts
+ACCOUNT_EMAIL_REQUIRED = True
+# Disable username field entirely
+ACCOUNT_USERNAME_REQUIRED = False
+# Email verification behavior: "mandatory", "optional", or "none"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 # storage settings
 if DEBUG:
     STORAGES = {
