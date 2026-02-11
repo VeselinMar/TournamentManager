@@ -155,6 +155,12 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ------------------------------------------------------------------------------
+# Email (disabled for now – using console backend)
+# ------------------------------------------------------------------------------
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "noreply@example.com"
+
+# ------------------------------------------------------------------------------
 # Login / logout behavior
 # ------------------------------------------------------------------------------
 
@@ -173,12 +179,12 @@ LOGOUT_REDIRECT_URL = "login"
 
 # Use email as the primary authentication method
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-# Email is required for all user accounts
+# Email is required for all user accounts(no domain -> no account_email_required)
 ACCOUNT_EMAIL_REQUIRED = True
 # Disable username field entirely
 ACCOUNT_USERNAME_REQUIRED = False
-# Email verification behavior: "mandatory", "optional", or "none"
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# Email verification behavior: "mandatory", "optional", or "none" (no domain -> no account_authentication_method)
+ACCOUNT_EMAIL_VERIFICATION = "none"
 # storage settings
 if DEBUG:
     STORAGES = {
