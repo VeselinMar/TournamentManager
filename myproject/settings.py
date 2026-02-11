@@ -140,7 +140,7 @@ AUTH_USER_MODEL = "accounts.AppUser"
 # ------------------------------------------------------------------------------
 
 # Required for django-allauth (must match a Site object in the admin)
-SITE_ID = 1
+SITE_ID = 2
 
 # ------------------------------------------------------------------------------
 # Authentication backends
