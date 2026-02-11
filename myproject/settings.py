@@ -19,6 +19,8 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
 
 # Allowed hosts
 ALLOWED_HOSTS = config(
