@@ -186,24 +186,6 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 # No email verification
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
-
-# Allow existing users to link social accounts automatically
-SOCIALACCOUNT_AUTO_SIGNUP = True
-
-# Optional: Always allow login using a verified email
-SOCIALACCOUNT_QUERY_EMAIL = True
-
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "APP": {
-            "client_id": config("GOOGLE_CLIENT_ID"),
-            "secret": config("GOOGLE_SECRET"),
-            "key": ""
-        }
-    }
-}
-
 # storage settings
 if DEBUG:
     STORAGES = {
