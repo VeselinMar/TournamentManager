@@ -188,6 +188,12 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 
 ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
 
+# Allow existing users to link social accounts automatically
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Optional: Always allow login using a verified email
+SOCIALACCOUNT_QUERY_EMAIL = True
+
 # storage settings
 if DEBUG:
     STORAGES = {
