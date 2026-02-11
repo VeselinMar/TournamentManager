@@ -194,6 +194,16 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 # Optional: Always allow login using a verified email
 SOCIALACCOUNT_QUERY_EMAIL = True
 
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": config("GOOGLE_CLIENT_ID"),
+            "secret": config("GOOGLE_SECRET"),
+            "key": ""
+        }
+    }
+}
+
 # storage settings
 if DEBUG:
     STORAGES = {
