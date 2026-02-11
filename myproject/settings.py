@@ -177,14 +177,17 @@ LOGOUT_REDIRECT_URL = "login"
 # django-allauth account settings
 # ------------------------------------------------------------------------------
 
-# Use email as the primary authentication method
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-# Email is required for all user accounts(no domain -> no account_email_required)
-ACCOUNT_EMAIL_REQUIRED = True
-# Disable username field entirely
-ACCOUNT_USERNAME_REQUIRED = False
-# Email verification behavior: "mandatory", "optional", or "none" (no domain -> no account_authentication_method)
+# Login method
+ACCOUNT_LOGIN_METHODS = {"email"}
+
+# Signup fields (email required, passwords required)
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+
+# No email verification
 ACCOUNT_EMAIL_VERIFICATION = "none"
+
+ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
+
 # storage settings
 if DEBUG:
     STORAGES = {
