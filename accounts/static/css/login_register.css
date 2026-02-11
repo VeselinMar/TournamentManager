@@ -115,25 +115,25 @@
 
 /* --- Google button --- */
 .google-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.2rem;
-    background-color: #ffffff;
-    color: #444;
-    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    background-color: #fff;
+    color: #555;
     font-weight: bold;
+    border-radius: 999px;
+    border: 1px solid #ddd;
     text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: background-color 0.2s ease;
 }
-.google-btn img {
-    height: 20px;
-}
+
 .google-btn:hover {
-    background-color: #f1f1f1;
-    transform: translateY(-2px);
+    background-color: #f5f5f5;
+}
+
+.google-btn img {
+    height: 24px;
+    width: 24px;
 }
 
 /* --- Responsive --- */
