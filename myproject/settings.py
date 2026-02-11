@@ -165,13 +165,13 @@ DEFAULT_FROM_EMAIL = "noreply@example.com"
 # ------------------------------------------------------------------------------
 
 # URL name for the login page
-LOGIN_URL = "login"
+LOGIN_URL = "custom-login"
 
 # Redirect destination after successful login
 LOGIN_REDIRECT_URL = "/dashboard/"
 
 # Redirect destination after logout
-LOGOUT_REDIRECT_URL = "login"
+LOGOUT_REDIRECT_URL = "custom-login"
 
 # ------------------------------------------------------------------------------
 # django-allauth account settings
