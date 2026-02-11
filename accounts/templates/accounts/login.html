@@ -16,8 +16,13 @@
     <button type="submit">Login</button>
   </form>
   <p>Don't have an account yet? <a href="{% url 'register' %}">Register here</a></p>
-</div>
-<a href="{% provider_login_url 'google' %}">
+
+  <div class="divider">or</div>
+  
+  <a class="google-btn" href="{% provider_login_url 'google' %}">
+    <img src="{% static 'images/google-logo.svg' %}" alt="Google logo">
     Login with Google
-</a>
+  </a>
+</div>
+
 {% endblock %}
