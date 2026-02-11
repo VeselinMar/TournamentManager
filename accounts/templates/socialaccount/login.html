@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="{% static 'css/mylogin.css' %}">
+    <title>Sign in with Google</title>
+  </head>
+  <body class="google-container">
+    <h1>Sign In Via Google</h1>
+    <p>Please use your Google account to continue:</p>
+    <a href="{% url 'socialaccount_login' 'google' %}" class="my-continue">
+      Continue with Google
+    </a>
+  </body>
+</html>

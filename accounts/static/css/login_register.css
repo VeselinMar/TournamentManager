@@ -136,6 +136,19 @@
     width: 24px;
 }
 
+.google-container {
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+}
+
+.my-continue {
+    background-color: #4285F4;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
 /* --- Responsive --- */
 @media (max-width: 500px) {
     .auth-container {
