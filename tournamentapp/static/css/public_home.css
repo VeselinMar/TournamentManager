@@ -14,9 +14,10 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  background: transparent;
+  background: #2e7d32;
   padding: 0.8rem;
   font-weight: bold;
+  margin: 2em, 0, 0, 0;
 }
 
 .sponsor-banner img {
@@ -94,7 +95,7 @@
   max-height: 70vh;
   overflow-y: auto;
   position: relative;
-  border: 11px solid #c8e6c9;
+  border: 11px solid #2e7d32;
   border-radius: 6px;
 }
 .table-container::-webkit-scrollbar {
