@@ -1,11 +1,13 @@
 /* --- Base Form Container --- */
 .auth-container {
+    height: vh;
     max-width: 400px;
-    margin: 80px auto; /* adjust for navbar */
+    margin: 80px auto;
     padding: 30px 35px;
     background-color: #388e3c; /* lighter green card */
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(6px);
     color: #e8f5e9; /* light text */
     font-family: Arial, sans-serif;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -20,7 +22,6 @@
 .auth-container h2 {
     text-align: center;
     font-size: 2rem;
-    margin-bottom: 1.8rem;
     color: #c8e6c9;
 }
 
@@ -38,6 +39,7 @@
 
 .auth-container input {
     padding: 0.7rem 0.9rem;
+    box-sizing: border-box;
     border-radius: 8px;
     border: none;
     font-size: 0.95rem;
@@ -51,6 +53,29 @@
 .auth-container input:focus {
     border: 2px solid #81c784;
     box-shadow: 0 0 6px rgba(129, 199, 132, 0.5);
+}
+
+.auth-container .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: -0.5rem 0 0.5rem 0;
+    color: #ffebee;
+    font-size: 0.85rem;
+}
+
+.auth-container {
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- Buttons --- */
@@ -115,20 +140,24 @@
 
 /* --- Google button --- */
 .google-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
-    background-color: #fff;
-    color: #555;
-    font-weight: bold;
+    justify-content: center;
+    gap: 10px;
+    padding: 0.75rem 1.5rem;
+    background-color: #ffffff;
+    color: #444;
+    font-weight: 500;
     border-radius: 999px;
-    border: 1px solid #ddd;
+    border: 1px solid #dadce0;
     text-decoration: none;
-    transition: background-color 0.2s ease;
+    width: 100%;
+    transition: all 0.2s ease;
 }
 
 .google-btn:hover {
-    background-color: #f5f5f5;
+    background-color: #f7f8f8;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .google-btn img {
@@ -139,14 +168,6 @@
 .google-container {
     text-align: center;
     font-family: 'Roboto', sans-serif;
-}
-
-.my-continue {
-    background-color: #4285F4;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 16px;
 }
 
 /* --- Responsive --- */

@@ -14,7 +14,6 @@ docker==7.1.0
 gunicorn==23.0.0
 idna==3.10
 isodate==0.7.2
-jwt==1.4.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
 packaging==25.0
@@ -22,6 +21,7 @@ pillow==11.3.0
 psycopg==3.2.10
 pycparser==2.23
 Pygments==2.19.2
+PyJWT==2.11.0
 python-decouple==3.8
 python-dotenv==1.1.1
 requests==2.32.4

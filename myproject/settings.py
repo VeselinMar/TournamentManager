@@ -168,14 +168,22 @@ DEFAULT_FROM_EMAIL = "noreply@example.com"
 LOGIN_URL = "custom-login"
 
 # Redirect destination after successful login
-LOGIN_REDIRECT_URL = "/dashboard/"
+LOGIN_REDIRECT_URL = "tournament-create"
 
 # Redirect destination after logout
 LOGOUT_REDIRECT_URL = "custom-login"
 
+# Disable confirmation
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+
 # ------------------------------------------------------------------------------
 # django-allauth account settings
 # ------------------------------------------------------------------------------
+
+# App uses only e-mail and password fields
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USERNAME_REQUIRED = False
 
 # Login method
 ACCOUNT_LOGIN_METHODS = {"email"}
