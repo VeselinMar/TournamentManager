@@ -4,7 +4,7 @@
 .spectator-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 80vh;
   font-family: sans-serif;
 }
 
@@ -14,16 +14,19 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  background: #2e7d32;
+  border-radius: 0.1em;
+  /* background: #2e7d32; */
   padding: 0.8rem;
   font-weight: bold;
-  margin: 2em, 0, 0, 0;
+  margin: em 0 0 0;
 }
 
 .sponsor-banner img {
-  max-height: 4em;
+  height: clamp(2em, 5vw, 4em);
   width: auto;
-  display: block;
+  max-width: 100%;
+  flex: 0 1 auto;
+  object-fit: contain;
 }
 
 .spectator-body {
@@ -35,7 +38,6 @@
 }
 
 .spectator-content {
-  padding: 1rem 2rem;
   overflow-y: auto;
 }
 
@@ -97,6 +99,7 @@
   position: relative;
   border: 11px solid #2e7d32;
   border-radius: 6px;
+  
 }
 .table-container::-webkit-scrollbar {
   width: 8px;
@@ -198,10 +201,6 @@
 
   .sponsor-column {
     display: none;
-  }
-
-  .spectator-content {
-    padding: 1rem;
   }
 
   .sponsor-banner img {

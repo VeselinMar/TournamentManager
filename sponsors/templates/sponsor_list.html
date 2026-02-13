@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="list-container">
@@ -22,6 +23,13 @@
           {% else %}
           <p> No link provided </p>
           {% endif %}
+          <button 
+          data-id="{{ banner.id }}" 
+          data-tournament="{{tournament.id}}" 
+          data-url="{% url 'sponsor-remove' tournament.id banner.id %}"
+          class="delete-banner">
+              Remove Sponsor
+          </button>
         </div>
       </li>
     {% empty %}
@@ -29,4 +37,8 @@
     {% endfor %}
   </ul>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src={% static '/js/delete_sponsor.js' %}> </script>
 {% endblock %}

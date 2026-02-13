@@ -1,5 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, ListView
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 from .models import SponsorBanner
 from .forms import SponsorBannerForm
 from django.views.decorators.http import require_POST, require_http_methods
@@ -57,7 +59,7 @@ def delete_sponsor_banner(request, tournament_id, pk):
     banner = get_object_or_404(SponsorBanner, pk=pk, tournament_id=tournament_id)
 
     # Restrict unauthorized access
-    if field.tournament.owner != request.user:
+    if banner.tournament.owner != request.user:
         return HttpResponseForbidden()
 
     banner.delete()
