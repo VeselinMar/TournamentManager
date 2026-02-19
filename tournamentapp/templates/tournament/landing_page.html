@@ -3,21 +3,6 @@
 {% block content %}
 
 <div class="landing-page-container">
-  <div class="landing-page">
-    <h2 class="landing-page__tournaments">Ongoing Tournaments</h2>
-    <ul class="landing-page__list">
-      {% for tournament in tournaments %}
-        <li class="landing-page__list-item">
-          <a class="landing-page__link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">
-            {{ tournament.name }}
-          </a>
-        </li>
-      {% empty %}
-        <li class="landing-page__list-item">No active tournaments right now.</li>
-      {% endfor %}
-    </ul>
-  </div>
-
   <div class="general">
     <h2>Welcome to Football Tournament Manager</h2>
     <p>
@@ -39,6 +24,21 @@
       <a class="landing-page__button" href="{% url 'register' %}">Register</a>
     </span>
     {% endif %}
+  </div>
+  
+  <div class="landing-page">
+    <h2 class="landing-page__tournaments">Ongoing Tournaments</h2>
+    <ul class="landing-page__list">
+      {% for tournament in tournaments %}
+        <li class="landing-page__list-item">
+          <a class="landing-page__link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">
+            {{ tournament.name }}
+          </a>
+        </li>
+      {% empty %}
+        <li class="landing-page__list-item">No active tournaments right now.</li>
+      {% endfor %}
+    </ul>
   </div>
 </div>
 {% endblock %}

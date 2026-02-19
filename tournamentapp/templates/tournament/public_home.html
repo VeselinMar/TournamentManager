@@ -1,11 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Matchday Overview - {{ object.name }}{% endblock %}
-
 {% block content %}
 <div class="spectator-page">
-
   <header class="sponsor-banner sponsor-top">
     {% for sponsor in sponsors %}
       <a href="{{ sponsor.link_url }}" target="_blank">
@@ -20,7 +17,6 @@
     <!-- Scrollable central content -->
     <main class="spectator-content">
       {% if current_matches %}
-      <caption class="table-caption">{{ object.name }}</caption>
         <section class="current-matches">
           <h2>Current Match{% if current_matches|length > 1 %}es{% endif %}</h2>
           <div class="current-matches-grid">

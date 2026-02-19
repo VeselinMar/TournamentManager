@@ -23,6 +23,17 @@ from formtools.wizard.views import SessionWizardView
 from .utils import handle_batch_lines, create_round_robin_matches
 
 
+def about_view(request):
+    return render(request, "footer/about.html")
+
+
+def contact_view(request):
+    return render(request, "footer/contact.html")
+
+
+def privacy_policy_view(request):
+    return render(request, "footer/privacy_policy.html")
+
 class TournamentCreateView(CreateView, LoginRequiredMixin):
     model = Tournament
     form_class = TournamentCreateForm

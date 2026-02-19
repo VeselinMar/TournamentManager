@@ -4,10 +4,15 @@ from .views import (
     TeamListView, TeamDetailView, TeamCreateView,
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
-    generate_tournament_schedule
+    generate_tournament_schedule, about_view, contact_view, privacy_policy_view
 )
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing-page'),
+
+    # Footer views
+    path("about/", about_view, name="about"),
+    path("contact/", contact_view, name="contact"),
+    path("privacy-policy/", privacy_policy_view, name="privacy-policy"),
 
     # Tournament general
     path('tournament/create/', TournamentCreateView.as_view(), name='tournament-create'),

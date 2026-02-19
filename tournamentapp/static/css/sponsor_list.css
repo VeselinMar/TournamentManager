@@ -14,12 +14,23 @@
   align-items: center;
   margin-bottom: 1.5rem;
 }
-.list-header .a {
-  text-decoration: none;
-}
-.list-header .a.btn-primary {
+
+.list-container .btn-primary {
+  background-color: #81c784 !important;
   color: #1b5e20;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
 }
+
+.list-container .btn-primary:hover {
+  background-color: #66bb6a;
+  color: white;
+  transform: scale(1.03);
+}
+
 .list-header h2 {
   margin: 0;
   color: #a5d6a7;
@@ -48,7 +59,7 @@
 
 /* Image */
 .banner-item img {
-  width: 100%;
+  width: 70%;
   max-width: 240px;
   height: auto;
   object-fit: contain;
