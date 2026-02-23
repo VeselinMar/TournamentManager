@@ -3,6 +3,29 @@
 {% block content %}
 
 <div class="landing-page-container">
+  <div class="general">
+    <h2>Welcome to Football Tournament Manager</h2>
+    <p>
+      Bring your football tournament to life in just a few clicks. Our smart wizard
+      helps you create a tournament page, build schedules, and manage teams with ease.  
+      Round-robin matches are supported, every detail is at your
+      fingertips. Add your sponsors, share the link, and let players and fans enjoy a
+      professional tournament experience right away.
+    </p>
+    {% if user.is_authenticated %}
+      <a class="landing-page__button" href="{% url 'tournament-create' %}">Create a new tournament</a>
+    {% else %}
+    <span>
+      If you already have an account:
+      <a class="landing-page__button" href="{% url 'custom-login' %}">Login</a>
+    </span>
+    <br>
+    <span>Or you can register:
+      <a class="landing-page__button" href="{% url 'register' %}">Register</a>
+    </span>
+    {% endif %}
+  </div>
+  
   <div class="landing-page">
     <h2 class="landing-page__tournaments">Ongoing Tournaments</h2>
     <ul class="landing-page__list">
@@ -16,25 +39,6 @@
         <li class="landing-page__list-item">No active tournaments right now.</li>
       {% endfor %}
     </ul>
-  </div>
-
-  <div class="general">
-    <h2>Welcome to Football Tournament Manager</h2>
-    <p>
-      Bring your football tournament to life in just a few clicks. Our smart wizard
-      helps you create a tournament page, build schedules, and manage teams with ease.  
-      Whether it's knockout drama or round-robin excitement, every detail is at your
-      fingertips. Add your sponsors, share the link, and let players and fans enjoy a
-      professional tournament experience right away.
-    </p>
-    <h2 class="landing-page__actions">Create a new tournament</h2>
-    <span>If you already have an account:
-      <a class="landing-page__button" href="{% url 'login' %}">Login</a>
-    </span>
-    <br>
-    <span>Or you can register:
-      <a class="landing-page__button" href="{% url 'register' %}">Register</a>
-    </span>
   </div>
 </div>
 {% endblock %}

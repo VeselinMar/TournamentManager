@@ -129,27 +129,28 @@ def create_round_robin_matches(
 
 def propagate_match_delay(match, new_start_time):
     """
-    Adjust the start time of `match` and all subsequent matches in the same tournament.
-    
-    Args:
-        match (Match): The match instance that was delayed.
-        new_start_time (datetime): The new start time for the match.
+    Adjust the start time of `match` and all subsequent matches
+    in the same tournament.
     """
-    delay = new_start_time - match.start_time
+
+    old_start_time = match.start_time
+    delay = new_start_time - old_start_time
+
     if delay.total_seconds() == 0:
-        # No delay, nothing to do
         return
 
     with transaction.atomic():
         # Update the delayed match
         match.start_time = new_start_time
-        match.save()
+        match.save(update_fields=["start_time"])
 
-        # Update all future matches in order
-        future_matches = match.tournament.matches.filter(
-            start_time__gt=match.start_time
-        ).order_by('start_time')
+        # Shift future matches based on OLD time
+        future_matches = (
+            match.tournament.matches
+            .filter(start_time__gt=old_start_time)
+            .order_by("start_time")
+        )
 
         for m in future_matches:
             m.start_time += delay
-            m.save()
+            m.save(update_fields=["start_time"])

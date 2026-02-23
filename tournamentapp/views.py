@@ -20,8 +20,17 @@ from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import handle_batch_lines, create_round_robin_matches
+from .utils import handle_batch_lines, create_round_robin_matches, propagate_match_delay
 
+
+def about_view(request):
+    return render(request, "footer/about.html")
+
+def contact_view(request):
+    return render(request, "footer/contact.html")
+
+def privacy_policy_view(request):
+    return render(request, "footer/privacy_policy.html")
 
 class TournamentCreateView(CreateView, LoginRequiredMixin):
     model = Tournament
@@ -56,13 +65,12 @@ class TournamentPublicView(DetailView):
         tournament = self.object
         context["sponsors"] = tournament.sponsors.all()
 
-        today = datetime.today().date()
-        matches_today = (
+        matches = (
             tournament.matches
             .select_related('field', 'home_team', 'away_team')
-            .filter(start_time__date=today)
             .order_by('start_time')
         )
+
 
         field_names = list(
             tournament.fields.order_by('name').values_list('name', flat=True)
@@ -70,7 +78,7 @@ class TournamentPublicView(DetailView):
 
         timeline_dict = defaultdict(lambda: {field: None for field in field_names})
 
-        for match in matches_today:
+        for match in matches:
             time_str = match.start_time.strftime('%H:%M')
             timeline_dict[time_str][match.field.name] = match
 
@@ -327,27 +335,26 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
         self.tournament_id = kwargs.get('tournament_id')
         self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
         match = self.get_object()
+
         if match.tournament_id != self.tournament.pk:
             return HttpResponseForbidden()
+
         return super().dispatch(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        old_start_time = self.get_object().start_time
+        response = super().form_valid(form)
+
+        new_start_time = form.instance.start_time
+
+        if new_start_time != old_start_time:
+            propagate_match_delay(self.object, new_start_time)
+            
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         team = self.object.home_team if request.POST.get('team') == 'home' else self.object.away_team
         player_name = request.POST.get('player_name', '').strip()
         minute = request.POST.get('minute', '').strip()
-
-        # Handled in match_edit.js
-        # if player_name:
-        #     player, _ = Player.objects.get_or_create(name=player_name, team=team)
-        #     MatchEvent.objects.create(
-        #         match=self.object,
-        #         event_type=request.POST.get('event_type'),
-        #         minute=minute,
-        #         team=team,
-        #         player=player
-        #     )
-        # return redirect('public/<slug:slug>/', tournament_id=self.tournament.pk, pk=self.object.pk)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -486,8 +493,6 @@ def create_match_event(request, tournament_id, match_id):
         minute=minute,
     )
     
-    event.apply_event_effects()
-
     # Recalculate scores
     home_score = (
         match.events.filter(event_type='goal', team=match.home_team).count() +
@@ -549,7 +554,7 @@ def finish_match(request, tournament_id, match_id):
     if not match.is_finished:
         match.apply_result()
 
-    return redirect('match-detail', tournament_id=tournament_id, pk=match_id)
+    return redirect('tournament-detail', pk=tournament_id)
 
 @require_http_methods(['DELETE'])
 @login_required
