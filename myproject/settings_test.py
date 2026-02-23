@@ -5,7 +5,6 @@ AZURE_ACCOUNT_NAME = "test"
 AZURE_ACCOUNT_KEY = "test"
 SECRET_KEY = "test-secret-key"
 
-
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]

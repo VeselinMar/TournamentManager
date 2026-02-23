@@ -1,7 +1,11 @@
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, ListView
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 from .models import SponsorBanner
 from .forms import SponsorBannerForm
+from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from tournamentapp.models import Tournament
 
@@ -48,3 +52,15 @@ class SponsorBannerListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['tournament'] = self.get_tournament()
         return context
+
+@require_http_methods(['DELETE'])
+@login_required
+def delete_sponsor_banner(request, tournament_id, pk):
+    banner = get_object_or_404(SponsorBanner, pk=pk, tournament_id=tournament_id)
+
+    # Restrict unauthorized access
+    if banner.tournament.owner != request.user:
+        return HttpResponseForbidden()
+
+    banner.delete()
+    return JsonResponse({'success': True})

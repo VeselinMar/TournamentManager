@@ -1,12 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Matchday Overview - {{ object.name }}{% endblock %}
-
 {% block content %}
 <div class="spectator-page">
-
-  <!-- Fixed sponsor top -->
   <header class="sponsor-banner sponsor-top">
     {% for sponsor in sponsors %}
       <a href="{{ sponsor.link_url }}" target="_blank">
@@ -17,22 +13,9 @@
     {% endfor %}
   </header>
 
-  <div class="spectator-body">
-    <!-- Fixed left sponsors -->
-    <aside class="sponsor-column sponsor-left">
-      {% for sponsor in sponsors %}
-        <a href="{{ sponsor.link_url }}" target="_blank">
-          <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
-        </a>
-      {% empty %}
-        <p>No left sponsors yet</p>
-      {% endfor %}
-    </aside>
 
     <!-- Scrollable central content -->
     <main class="spectator-content">
-      <h1 class="page-title">🏆 {{ object.name }} 🏆</h1>
-
       {% if current_matches %}
         <section class="current-matches">
           <h2>Current Match{% if current_matches|length > 1 %}es{% endif %}</h2>
@@ -72,9 +55,6 @@
                             {% if match.is_finished %}
                               <span class="score">{{ match.home_score }} - {{ match.away_score }}</span><br>
                             {% endif %}
-                            {% if user.is_authenticated and tournament.owner == user and not match.is_finished %}
-                              <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Score</a>
-                            {% endif %}
                           </div>
                         {% else %}
                           <span class="no-match">—</span>
@@ -92,21 +72,8 @@
       {% endif %}
     </main>
 
-    <!-- Fixed right sponsors -->
-    <aside class="sponsor-column sponsor-right">
-    {% for sponsor in sponsors %}
-      <a href="{{ sponsor.link_url }}" target="_blank">
-        <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
-      </a>
-    {% empty %}
-      <p>No right sponsors yet</p>
-    {% endfor %}
-  </aside>
-  </div>
-
-  <!-- Fixed sponsor bottom -->
   <footer class="sponsor-banner sponsor-bottom">
-    {% for sponsor in sponsors %}
+    {% for sponsor in sponsors reversed %}
       <a href="{{ sponsor.link_url }}" target="_blank">
         <img src="{{ sponsor.image.url }}" alt="{{ sponsor.name }}">
       </a>
