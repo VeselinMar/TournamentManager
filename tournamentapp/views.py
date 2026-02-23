@@ -20,16 +20,14 @@ from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import handle_batch_lines, create_round_robin_matches
+from .utils import handle_batch_lines, create_round_robin_matches, propagate_match_delay
 
 
 def about_view(request):
     return render(request, "footer/about.html")
 
-
 def contact_view(request):
     return render(request, "footer/contact.html")
-
 
 def privacy_policy_view(request):
     return render(request, "footer/privacy_policy.html")
@@ -343,23 +341,20 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
 
         return super().dispatch(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        old_start_time = self.get_object().start_time
+        response = super().form_valid(form)
+
+        new_start_time = form.instance.start_time
+
+        if new_start_time != old_start_time:
+            propagate_match_delay(self.object, new_start_time)
+            
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         team = self.object.home_team if request.POST.get('team') == 'home' else self.object.away_team
         player_name = request.POST.get('player_name', '').strip()
         minute = request.POST.get('minute', '').strip()
-
-        # Handled in match_edit.js
-        # if player_name:
-        #     player, _ = Player.objects.get_or_create(name=player_name, team=team)
-        #     MatchEvent.objects.create(
-        #         match=self.object,
-        #         event_type=request.POST.get('event_type'),
-        #         minute=minute,
-        #         team=team,
-        #         player=player
-        #     )
-        # return redirect('public/<slug:slug>/', tournament_id=self.tournament.pk, pk=self.object.pk)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

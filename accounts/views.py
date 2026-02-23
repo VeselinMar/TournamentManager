@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from .forms import RegisterForm, LoginForm
 from .models import AppUser
@@ -13,7 +13,15 @@ class RegisterView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
-        login(self.request, user)
+
+        authenticated_user = authenticate(
+            self.request,
+            username=user.username,
+            password=form.cleaned_data["password1"]
+        )
+
+        login(self.request, authenticated_user)
+
         return redirect(get_post_login_redirect(user))
 
 class UserLoginView(LoginView):
