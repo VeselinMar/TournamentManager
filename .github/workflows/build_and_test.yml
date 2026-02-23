@@ -4,11 +4,15 @@ on:
   pull_request:
     branches: [ "main" ]
 
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
+    env:
+      DJANGO_SETTINGS_MODULE: myproject.settings_test
+      SECRET_KEY: test-secret-key
+      AZURE_CONTAINER: test-container
+
     steps:
     - uses: actions/checkout@v4
 
@@ -21,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Run Tests
       run: |
         python manage.py test
