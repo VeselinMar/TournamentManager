@@ -1,0 +1,11 @@
+[run]
+source = tournamentapp
+omit =
+    */migrations/*
+    */tests/*
+    manage.py
+
+[report]
+fail_under = 70
+show_missing = True
+skip_covered = True
