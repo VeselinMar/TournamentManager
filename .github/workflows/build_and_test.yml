@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.12.3
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12.3'
 
@@ -25,7 +25,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install coverage
 
-    - name: Run Tests
+    - name: Run Tests with coverage
       run: |
-        python manage.py test
+        coverage run manage.py test
+        coverage report
+    - name: Generate HTML Coverage Report
+      run: coverage html
+
+    - name: Upload Coverage Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov

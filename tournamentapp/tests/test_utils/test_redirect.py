@@ -5,13 +5,11 @@ from accounts.utils import get_post_login_redirect
 
 @pytest.mark.django_db
 def test_redirects_to_existing_active_tournament(django_user_model):
-    # Create user
     user = django_user_model.objects.create_user(
         email="testuser@abv.bg",
         password="pass"
     )
 
-    # Create unfinished tournament
     tournament = Tournament.objects.create(
         name="Summer Cup",
         owner=user,
