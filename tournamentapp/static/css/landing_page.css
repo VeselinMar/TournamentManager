@@ -8,6 +8,7 @@
     max-width: 1200px;
     box-sizing: border-box;
     background: #2e7d32;
+    opacity: 85%;
     border-radius: 8px;
     box-shadow: 0 0 12px rgba(0,0,0,0.15);
     color: #fff;
@@ -22,6 +23,7 @@
     padding: 3rem 2.5rem;
     border-radius: 12px;
     background: #388e3c;
+    opacity: 95%;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
