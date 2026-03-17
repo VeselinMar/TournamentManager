@@ -82,4 +82,6 @@ venv.bak/
 # dotenv environment variables file
 .env
 
+db.sqlite3
+
 /staticfiles/
