@@ -7,7 +7,7 @@ from .models import Team, Player, Match, GoalEvent, Field, MatchEvent, Tournamen
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner', 'slug')
-    search_fields = ('owner', )
+    search_fields = ('owner__email', 'name')
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
@@ -35,7 +35,7 @@ class GoalAdmin(admin.ModelAdmin):
 @admin.register(Field)
 class FieldAdmin(admin.ModelAdmin):
     list_display = ('name', 'tournament')
-    search_fields = ('name', 'tournament')
+    search_fields = ('name', 'tournament__name')
 
 @admin.register(MatchEvent)
 class MatchEventAdmin(admin.ModelAdmin):
