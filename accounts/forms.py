@@ -36,6 +36,6 @@ class RegisterForm(forms.ModelForm):
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(
-        label="Emali",
+        label="Email",
         widget=forms.EmailInput(attrs={'autofocus':'autofocus'})
     )

@@ -173,6 +173,11 @@ LOGOUT_REDIRECT_URL = "custom-login"
 # Disable confirmation
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+
 
 # ------------------------------------------------------------------------------
 # django-allauth account settings
