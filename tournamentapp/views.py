@@ -8,7 +8,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.utils.timezone import localtime
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -643,31 +643,31 @@ def field_delete(request, tournament_id, pk):
 
 @login_required
 def generate_tournament_schedule(request, tournament_id):
-    tournament = get_object_or_404(Tournament, pk=tournament_id)
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
 
     if request.method == 'POST':
         form = TournamentScheduleForm(request.POST)
         if form.is_valid():
+            start_date = form.cleaned_data['start_date']
             start_time_input = form.cleaned_data['start_time']
-            game_duration_minutes = form.cleaned_data['game_duration']
-            pause_duration_minutes = form.cleaned_data['pause_duration']
+            pause_duration = timedelta(minutes=form.cleaned_data['pause_duration'])
 
-            # Build a full datetime object for today with the input time
-            start_time = timezone.now().replace(
-                hour=start_time_input.hour,
-                minute=start_time_input.minute,
-                second=0,
-                microsecond=0
+            start_time = timezone.make_aware(
+                datetime.combine(start_date, start_time_input)
             )
 
-            game_duration = timedelta(minutes=game_duration_minutes)
-            pause_duration = timedelta(minutes=pause_duration_minutes)
+            if form.cleaned_data['has_halves']:
+                half = timedelta(minutes=form.cleaned_data['half_duration'])
+                half_break = timedelta(minutes=form.cleaned_data['half_time_break'])
+                total_match_duration = (half * 2) + half_break
+            else:
+                total_match_duration = timedelta(minutes=form.cleaned_data['game_duration'])
 
             try:
                 create_round_robin_matches(
                     tournament=tournament,
                     start_time=start_time,
-                    game_duration=game_duration,
+                    game_duration=total_match_duration,
                     pause_duration=pause_duration
                 )
                 messages.success(request, "Round-robin schedule generated successfully!")

@@ -101,6 +101,9 @@ def create_round_robin_matches(
     Create Match objects for a tournament using round-robin pairings,
     distributing matches across available fields fairly so no team
     has consecutive matches without a break when multiple fields exist.
+
+    game_duration already accounts for halves and half-time break if applicable
+    — the caller is responsible for computing the total match duration.
     """
     fields = list(tournament.fields.all())
     if not fields:
@@ -108,13 +111,12 @@ def create_round_robin_matches(
 
     rounds = generate_round_robin(tournament)
     current_time = start_time
+    slot_duration = game_duration + pause_duration
 
     for round_index, round_matches in enumerate(rounds, start=1):
-        # Split round matches into time slots based on number of fields
         slots = [round_matches[i:i + len(fields)] for i in range(0, len(round_matches), len(fields))]
 
         for slot in slots:
-            # Assign matches to fields in order
             for i, (home, away) in enumerate(slot):
                 field = fields[i % len(fields)]
                 Match.objects.create(
@@ -124,8 +126,7 @@ def create_round_robin_matches(
                     start_time=current_time,
                     field=field
                 )
-            # Increment time after all fields in this slot are used
-            current_time += game_duration + pause_duration
+            current_time += slot_duration
 
 def propagate_match_delay(match, new_start_time):
     """

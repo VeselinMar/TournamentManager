@@ -1,7 +1,7 @@
 import re
 from django import forms
 from django.utils.text import slugify
-from datetime import datetime, time
+from datetime import datetime, time, date
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
 
 class TournamentCreateForm(forms.ModelForm):
@@ -196,18 +196,56 @@ class MatchEventForm(forms.ModelForm):
         return event
 
 class TournamentScheduleForm(forms.Form):
+    start_date = forms.DateField(
+        label="Tournament Date",
+        initial=date.today,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
     start_time = forms.TimeField(
         label="First Match Start Time",
         initial=time(10, 0),
-        widget=forms.TimeInput(format='%H:%M')
+        widget=forms.TimeInput(attrs={'type': 'time'})
+    )
+    has_halves = forms.BooleanField(
+        label="Split into two halves",
+        required=False,
+        initial=False
+    )
+    half_duration = forms.IntegerField(
+        label="Half Duration (minutes)",
+        initial=15,
+        min_value=1,
+        required=False
+    )
+    half_time_break = forms.IntegerField(
+        label="Half-Time Break (minutes)",
+        initial=5,
+        min_value=0,
+        required=False
     )
     game_duration = forms.IntegerField(
         label="Game Duration (minutes)",
         initial=15,
-        min_value=1
+        min_value=1,
+        required=False
     )
     pause_duration = forms.IntegerField(
         label="Pause Between Matches (minutes)",
         initial=5,
         min_value=0
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        has_halves = cleaned_data.get('has_halves')
+
+        if has_halves:
+            if not cleaned_data.get('half_duration'):
+                raise forms.ValidationError("Half duration is required when using halves.")
+            if cleaned_data.get('half_time_break') is None:
+                raise forms.ValidationError("Half-time break is required when using halves.")
+        else:
+            if not cleaned_data.get('game_duration'):
+                raise forms.ValidationError("Game duration is required.")
+
+        return cleaned_data
