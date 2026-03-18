@@ -12,9 +12,11 @@ def test_generate_schedule_success(auth_client, tournament, team, field):
     })
 
     response = auth_client.post(url, {
+        "start_date": "2026-03-20",
         "start_time": "10:00",
+        "has_halves": False,
         "game_duration": 30,
         "pause_duration": 10
     })
-
+    
     assert response.status_code == 302

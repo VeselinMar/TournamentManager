@@ -349,20 +349,16 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
 
         if new_start_time != old_start_time:
             propagate_match_delay(self.object, new_start_time)
-            
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        team = self.object.home_team if request.POST.get('team') == 'home' else self.object.away_team
-        player_name = request.POST.get('player_name', '').strip()
-        minute = request.POST.get('minute', '').strip()
-    
+
+        return response
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = self.object
         context['match_events'] = match.events.all()
         context['tournament'] = self.tournament
         return context
-
+        
 class LeaderboardView(TemplateView):
     template_name = 'matches/leaderboard.html'
 
