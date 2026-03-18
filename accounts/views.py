@@ -4,7 +4,6 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from .forms import RegisterForm, LoginForm
-from .models import AppUser
 from accounts.utils import get_post_login_redirect
 
 class RegisterView(CreateView):
@@ -16,11 +15,15 @@ class RegisterView(CreateView):
 
         authenticated_user = authenticate(
             self.request,
-            username=user.username,
+            username=user.email,
             password=form.cleaned_data["password1"]
         )
 
         login(self.request, authenticated_user)
+
+        if authenticated_user:
+            login(self.request, authenticated_user)
+            return redirect(get_post_login_redirect(user))
 
         return redirect(get_post_login_redirect(user))
 
