@@ -2,11 +2,8 @@ from pathlib import Path
 import os
 from decouple import config, Csv
 import dj_database_url
-from PIL import Image
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-Image.MAX_IMAGE_PIXELS = 20_000_000
 
 # Secret key
 SECRET_KEY = config("SECRET_KEY")

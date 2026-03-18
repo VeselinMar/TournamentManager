@@ -4,3 +4,7 @@ from django.apps import AppConfig
 class SponsorsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'sponsors'
+
+    def ready(self):
+        from PIL import Image
+        Image.MAX_IMAGE_PIXELS = 20_000_000

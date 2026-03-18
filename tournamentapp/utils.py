@@ -145,10 +145,11 @@ def propagate_match_delay(match, new_start_time):
         match.start_time = new_start_time
         match.save(update_fields=["start_time"])
 
-        # Shift future matches based on OLD time
+        # Shift future matches based on OLD time, excluding current match
         future_matches = (
             match.tournament.matches
             .filter(start_time__gt=old_start_time)
+            .exclude(pk=match.pk)
             .order_by("start_time")
         )
 
