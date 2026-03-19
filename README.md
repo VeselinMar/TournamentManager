@@ -110,7 +110,7 @@ The test suite covers model logic, view integration, utility functions, and sche
 
 Every push to `main` triggers the GitHub Actions pipeline which installs dependencies, runs the full test suite, generates a coverage report, and uploads it as an artifact.
 
-![CI](https://github.com/VeselinMar/TournamentManager/actions/workflows/django.yml/badge.svg)
+![CI](https://github.com/VeselinMar/TournamentManager/actions/workflows/build_and_test.yml/badge.svg)
 
 ---
 
