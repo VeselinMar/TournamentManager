@@ -8,61 +8,82 @@
   font-family: sans-serif;
 }
 
+/* ==========================
+   Sponsor Banner
+========================== */
 .sponsor-banner {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
-  border-radius: 0.1em;
-  background: #c8e6c9;
-  padding: 0.8rem;
-  font-weight: bold;
+  gap: 2rem;
+  background: #ffffff;
+  padding: 1.2rem 2rem;
+  border-bottom: 3px solid #2e7d32;
 }
 
 .sponsor-banner img {
-  height: clamp(2em, 5vw, 4em);
+  height: clamp(2.5em, 6vw, 5em);
   width: auto;
-  max-width: 100%;
+  max-width: 180px;
   flex: 0 1 auto;
   object-fit: contain;
+  filter: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* subtle empty state — not an error */
+.sponsor-banner img:hover {
+  transform: scale(1.05);
+  opacity: 0.85;
+}
+
+/* subtle empty state */
 .sponsor-banner p {
-  color: rgba(46, 125, 50, 0.5);
+  color: #aaaaaa;
   font-size: 0.75rem;
   font-style: italic;
   margin: 0;
 }
 
-.spectator-content {
-  overflow-y: auto;
-  padding: 1rem 2rem;
+/* bottom sponsor banner — mirror of top */
+.sponsor-bottom {
+  border-bottom: none;
+  border-top: 3px solid #2e7d32;
 }
 
 /* ==========================
-   Titles
+   Content Area
+========================== */
+.spectator-content {
+  overflow-y: auto;
+  padding: 1.5rem 3rem;
+}
+
+/* ==========================
+   Page Title
 ========================== */
 .page-title {
   text-align: center;
   font-size: 1.8rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
-  color: #ffffff;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-
-.current-matches h2,
-.timeline-section h2 {
-  text-align: center;
-  margin: 1.5rem 0;
-  color: #2e7d32;
+  color: #1b5e20;
+  letter-spacing: 0.03em;
 }
 
 /* ==========================
    Current Matches
 ========================== */
+.current-matches h2 {
+  text-align: center;
+  margin: 1rem 0;
+  color: #2e7d32;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .current-matches-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -71,30 +92,32 @@
 }
 
 .current-match-card {
-  background: #2e7d32;
-  padding: 0.8rem;
+  background: #1b5e20;
+  padding: 1rem;
   border-radius: 8px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  color: #c8e6c9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  color: #ffffff;
+  border-left: 4px solid #81c784;
 }
 
 .current-score {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  color: #c8e6c9;
+  color: #ffffff;
+  margin: 0.3rem 0;
 }
 
 /* ==========================
    Timeline Table
 ========================== */
 .table-container {
-  max-height: 70vh;
+  max-height: 72vh;
   overflow-y: auto;
   position: relative;
-  border: 3px solid #2e7d32;
-  border-radius: 6px;
-  margin: 0 auto;
+  border: 2px solid #2e7d32;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 .table-container::-webkit-scrollbar {
@@ -107,7 +130,7 @@
 }
 
 .table-container::-webkit-scrollbar-track {
-  background-color: #2e7d32;
+  background-color: #e8f5e9;
 }
 
 .timeline-table {
@@ -115,82 +138,105 @@
   border-collapse: collapse;
   font-size: 0.9rem;
   background: #2e7d32;
-  color: #c8e6c9;
-  font-weight: bold;
+  color: #ffffff;
 }
 
-.timeline-table th,
-.timeline-table td {
-  border: 1px solid rgba(200, 230, 201, 0.2);
-  padding: 0.4rem 0.6rem;
-  text-align: center;
-  color: #c8e6c9;
-}
-
-.timeline-table thead th {
+.timeline-table th {
   position: sticky;
   top: 0;
   z-index: 10;
   background: #1b5e20;
-  font-size: 0.95rem;
-  letter-spacing: 0.03em;
+  color: #ffffff;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.7rem 0.5rem;
+  border-bottom: 2px solid #81c784;
 }
 
-.timeline-table .time-cell,
+.timeline-table td {
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.3rem 0.4rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.timeline-table .time-cell {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: #388e3c;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #ffffff;
+  border-right: 2px solid rgba(255,255,255,0.15);
+  min-width: 64px;
+  padding: 0.5rem;
+}
+
 .timeline-table thead th:first-child {
   position: sticky;
   left: 0;
   z-index: 11;
-  background: #388e3c;
-  border-right: 2px solid rgba(200,230,201,0.3);
-  min-width: 60px;
+  background: #1b5e20;
 }
 
+/* ==========================
+   Match Cards
+========================== */
 .match-card {
-  background: #66bb6a;
-  padding: 0.4rem 0.3rem;
-  border-radius: 3px;
+  background: #43a047;
+  padding: 0.5rem 0.4rem;
+  border-radius: 4px;
+  margin: 2px;
+  line-height: 1.4;
 }
 
 .match-card.finished {
-  background: #388e3c;
-  opacity: 0.9;
+  background: #2e7d32;
+  border-left: 3px solid #a5d6a7;
 }
 
 .score {
+  display: block;
   font-weight: bold;
+  font-size: 1.1rem;
   color: #ffffff;
-  font-size: 1rem;
-}
-
-.btn-score {
-  display: inline-block;
-  margin-top: 0.3rem;
-  padding: 0.2rem 0.6rem;
-  background: #1b5e20;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 0.8rem;
-  color: #c8e6c9;
-  text-decoration: none;
-  transition: background 0.2s;
-}
-
-.btn-score:hover {
-  background: #2e7d32;
-  color: #ffffff;
+  margin-top: 0.15rem;
 }
 
 .no-match {
-  color: rgba(200,230,201,0.3);
-  font-size: 1.2rem;
+  color: rgba(255,255,255,0.2);
+  font-size: 1rem;
 }
 
 .no-matches {
   text-align: center;
-  color: #2e7d32;
+  color: #555;
   font-style: italic;
   margin-top: 2rem;
+}
+
+/* ==========================
+   Score Button (owner only)
+========================== */
+.btn-score {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  background: #1b5e20;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.78rem;
+  color: #c8e6c9;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: background 0.2s;
+}
+
+.btn-score:hover {
+  background: #388e3c;
+  color: #ffffff;
 }
 
 /* ==========================
@@ -219,15 +265,15 @@
   .timeline-table th,
   .timeline-table td {
     padding: 0.3rem;
-    font-size: 0.8rem;
-  }
-
-  .sponsor-banner img {
-    max-height: 50px;
+    font-size: 0.78rem;
   }
 
   .sponsor-banner {
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .sponsor-banner img {
+    max-height: 40px;
   }
 }
