@@ -17,6 +17,8 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 
 # Allowed hosts
@@ -136,7 +138,11 @@ AUTH_USER_MODEL = "accounts.AppUser"
 # Sites framework
 # ------------------------------------------------------------------------------
 
-# Required for django-allauth (must match a Site object in the admin)
+# SITE_ID = 2 because Django creates a default Site with id=1 (example.com) during
+# initial migration. A second Site object was manually created in the admin with the
+# correct domain (tournamentmanager.onrender.com) which received id=2.
+# If redeploying from scratch: run migrations, go to /admin/sites/site/, update the
+# existing Site or create a new one with the correct domain, then set SITE_ID to match.
 SITE_ID = 2
 
 # ------------------------------------------------------------------------------
@@ -154,7 +160,10 @@ AUTHENTICATION_BACKENDS = [
 # ------------------------------------------------------------------------------
 # Email (disabled for now – using console backend)
 # ------------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend"
+)
 DEFAULT_FROM_EMAIL = "noreply@example.com"
 
 # ------------------------------------------------------------------------------
