@@ -58,23 +58,21 @@ class MatchCreateForm(forms.ModelForm):
         if self.instance and self.instance.start_time:
             self.initial['start_time'] = self.instance.start_time.strftime('%Y-%m-%dT%H:%M')
         
-        if not self.initial.get('field') and tournament:
-            try:
-                default_field = Field.objects.get(name='Main Field', tournament=tournament)
-                self.fields['field'].initial = default_field.id
-            except Field.DoesNotExist:
-                pass
-        
         self.fields['field'].empty_label = None
 
 class FieldCreateForm(forms.ModelForm):
     class Meta:
         model = Field
-        fields = ['name',]
-    
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        self.tournament = kwargs.pop('tournament', None)
+        super().__init__(*args, **kwargs)
+
     def clean_name(self):
         name = self.cleaned_data['name'].strip().title()
-    
+        if self.tournament and Field.objects.filter(name=name, tournament=self.tournament).exists():
+            raise forms.ValidationError(f'A field named "{name}" already exists.')
         return name
 
 class MatchEditForm(forms.ModelForm):

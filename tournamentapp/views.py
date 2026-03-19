@@ -202,7 +202,7 @@ class TeamCreateView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
                 created_teams, created_players = handle_batch_lines(request, tournament, decoded_lines)
                 messages.success(request, f'{created_teams} team(s) and {created_players} player(s) successfully created.')
             except Exception as e:
-                messages.error(request, f'Error processing CSV file: {str(e)}')
+                messages.error(request, f'Some teams could not be created — they may already exist.')
 
             return redirect('team-create', tournament_id=tournament.pk)
 
@@ -323,14 +323,17 @@ class FieldAddView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
     model = Field
     form_class = FieldCreateForm
     template_name = 'fields/field_create.html'
-    
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tournament'] = self.get_tournament()
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tournament = self.get_tournament()
-
         context['fields'] = Field.objects.filter(tournament=tournament)
         context['tournament'] = tournament
-
         return context
 
     def form_valid(self, form):
@@ -340,7 +343,6 @@ class FieldAddView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        # Redirect back to the same add-field page with the tournament context
         return reverse_lazy('field-create', kwargs={'tournament_id': self.get_tournament().pk})
 
 @require_POST
