@@ -25,7 +25,7 @@
         <ol>
         {% for player in players %}
             <li>
-                {{ player.name }} ({{ player.team.name }}) — {{ player.goals }} goal{{ player.goals|pluralize }}
+                {{ player.name }} ({{ player.team.name }}) — {{ player.goal_count }} goal{{ player.goal_count|pluralize }}
             </li>
         {% endfor %}
         </ol>

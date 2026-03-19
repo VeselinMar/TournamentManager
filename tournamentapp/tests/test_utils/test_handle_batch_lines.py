@@ -3,7 +3,7 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory
 
 from tournamentapp.models import Tournament, Team, Player
-from tournamentapp.utils import handle_batch_lines
+from tournamentapp.services import handle_batch_lines
 from tournamentapp.forms import TeamCreateForm
 
 @pytest.mark.django_db

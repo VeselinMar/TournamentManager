@@ -16,8 +16,8 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'team', 'goals', 'yellow_cards', 'red_cards', 'is_allowed_to_play')
-    list_filter = ('team', 'is_allowed_to_play')
+    list_display = ('name', 'team',)
+    list_filter = ('team',)
     search_fields = ('name',)
 
 @admin.register(Match)

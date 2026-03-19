@@ -4,7 +4,7 @@
 .spectator-page {
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  min-height: 80vh;
   font-family: sans-serif;
 }
 
@@ -18,7 +18,6 @@
   background: #c8e6c9;
   padding: 0.8rem;
   font-weight: bold;
-  margin: em 0 0 0;
 }
 
 .sponsor-banner img {
@@ -29,35 +28,29 @@
   object-fit: contain;
 }
 
-.spectator-body {
-  display: grid;
-  grid-template-columns: 200px 1fr 200px;
-  flex-grow: 1;
-  overflow: hidden;
-  background: #c8e6c9;
+/* subtle empty state — not an error */
+.sponsor-banner p {
+  color: rgba(46, 125, 50, 0.5);
+  font-size: 0.75rem;
+  font-style: italic;
+  margin: 0;
 }
 
 .spectator-content {
   overflow-y: auto;
+  padding: 1rem 2rem;
 }
 
 /* ==========================
    Titles
 ========================== */
-.table-caption {
-  position: sticky;
-  top: 0;
-  z-index: 12;
-  background: #c8e6c9;
-  font-size: 1.4rem;
+.page-title {
+  text-align: center;
+  font-size: 1.8rem;
   font-weight: bold;
-  padding: 0.75rem;
-  border-bottom: 2px solid #c8e6c9;
-  text-align: left;
-}
-
-.timeline-table thead th {
-  top: 3.2rem;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
 .current-matches h2,
@@ -74,6 +67,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .current-match-card {
@@ -82,12 +76,13 @@
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  color: #c8e6c9;
 }
 
 .current-score {
   font-size: 1.3rem;
   font-weight: bold;
-  color: #388e3c;
+  color: #c8e6c9;
 }
 
 /* ==========================
@@ -97,17 +92,17 @@
   max-height: 70vh;
   overflow-y: auto;
   position: relative;
-  border: 11px solid #2e7d32;
+  border: 3px solid #2e7d32;
   border-radius: 6px;
-  
+  margin: 0 auto;
 }
+
 .table-container::-webkit-scrollbar {
   width: 8px;
 }
 
 .table-container::-webkit-scrollbar-thumb {
   background-color: #81c784;
-  border: 0.7px solid;
   border-radius: 4px;
 }
 
@@ -119,32 +114,26 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  background: #2e7d32;
+  color: #c8e6c9;
+  font-weight: bold;
 }
 
 .timeline-table th,
 .timeline-table td {
-  border: 0.2rem ridge #c8e6c9;
-  padding: 0.1rem;
+  border: 1px solid rgba(200, 230, 201, 0.2);
+  padding: 0.4rem 0.6rem;
   text-align: center;
   color: #c8e6c9;
-  font-weight: bold;
 }
 
 .timeline-table thead th {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #2e7d32;
-}
-
-.timeline-table {
-  background: #2e7d32;
-  color:#c8e6c9;
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  opacity: 85%;
+  background: #1b5e20;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
 }
 
 .timeline-table .time-cell,
@@ -152,65 +141,70 @@
   position: sticky;
   left: 0;
   z-index: 11;
-  background: #66bb6a;
-  border-right: 2px solid #ddd;
+  background: #388e3c;
+  border-right: 2px solid rgba(200,230,201,0.3);
+  min-width: 60px;
 }
 
 .match-card {
   background: #66bb6a;
-  padding: 0.3rem;
-  opacity: 95%;
+  padding: 0.4rem 0.3rem;
+  border-radius: 3px;
 }
 
 .match-card.finished {
   background: #388e3c;
-  opacity: 95%;
-
+  opacity: 0.9;
 }
 
 .score {
   font-weight: bold;
-  color: #c8e6c9;
+  color: #ffffff;
+  font-size: 1rem;
 }
 
 .btn-score {
   display: inline-block;
   margin-top: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  background: #81c784;
+  padding: 0.2rem 0.6rem;
+  background: #1b5e20;
   border-radius: 4px;
   font-weight: bold;
   font-size: 0.8rem;
   color: #c8e6c9;
   text-decoration: none;
+  transition: background 0.2s;
 }
 
 .btn-score:hover {
-  background: #66bb6a;
-  color: #c8e6c9;
+  background: #2e7d32;
+  color: #ffffff;
+}
+
+.no-match {
+  color: rgba(200,230,201,0.3);
+  font-size: 1.2rem;
+}
+
+.no-matches {
+  text-align: center;
+  color: #2e7d32;
+  font-style: italic;
+  margin-top: 2rem;
 }
 
 /* ==========================
    Responsive
 ========================== */
 @media (max-width: 992px) {
-
-  .spectator-body {
-    grid-template-columns: 1fr;
-  }
-
-  .sponsor-column {
-    display: none;
-  }
-
-  .sponsor-banner img {
-    max-height: 60px;
+  .spectator-content {
+    padding: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .page-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .current-score {
@@ -224,18 +218,12 @@
 
   .timeline-table th,
   .timeline-table td {
-    color: #c8e6c9;
-    padding: 0.4rem;
+    padding: 0.3rem;
     font-size: 0.8rem;
   }
 
-  .td.time-cell {
-    color: #c8e6c9;
-    font-size: 1rem;
-  }
-
   .sponsor-banner img {
-    max-height: 60px;
+    max-height: 50px;
   }
 
   .sponsor-banner {

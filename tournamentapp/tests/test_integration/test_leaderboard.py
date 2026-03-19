@@ -9,46 +9,39 @@ class LeaderboardIntegrationTests(TestCase):
     def setUp(self):
         self.client = Client()
 
-        # Create User
         self.user = AppUser.objects.create(
             email="testuser@abv.bg",
             password="password1234"
         )
+        
+        self.client.force_login(self.user)
 
-        # Create Tournament
         self.tournament = Tournament.objects.create(
             name="Musterment",
             owner=self.user
         )
-
-        # Create Teams
         self.team1 = Team.objects.create(
-            name="Team 1", 
+            name="Team 1",
             tournament_points=6,
             tournament=self.tournament
-            )
+        )
         self.team2 = Team.objects.create(
-            name="Team 2", 
+            name="Team 2",
             tournament_points=6,
             tournament=self.tournament
-            )
+        )
         self.team3 = Team.objects.create(
-            name="Team 3", 
+            name="Team 3",
             tournament_points=3,
             tournament=self.tournament
-            )
-
-        # Create Field
+        )
         self.field = Field.objects.create(
             name="Field A",
-            tournament = self.tournament,
+            tournament=self.tournament,
             owner=self.user
-            )
+        )
 
-        # Create Player with goals
-        self.player = Player.objects.create(name="Player A", team=self.team1, goals=5)
-
-        # Create Match between tied teams for tie-breaker
+        # Match must be created before player events
         self.match = Match.objects.create(
             home_team=self.team1,
             away_team=self.team2,
@@ -58,7 +51,17 @@ class LeaderboardIntegrationTests(TestCase):
             tournament=self.tournament,
         )
 
-        # Add goals (tie-breaker logic: Team 1 scores more in head-to-head)
+        # Create player and their goal events
+        self.player = Player.objects.create(name="Player A", team=self.team1)
+        for i in range(5):
+            MatchEvent.objects.create(
+                match=self.match,
+                event_type='goal',
+                team=self.team1,
+                player=self.player
+            )
+
+        # Add tie-breaker goals
         MatchEvent.objects.create(match=self.match, event_type='goal', team=self.team1)
         MatchEvent.objects.create(match=self.match, event_type='goal', team=self.team1)
         MatchEvent.objects.create(match=self.match, event_type='goal', team=self.team2)

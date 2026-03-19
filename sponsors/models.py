@@ -2,11 +2,9 @@ from django.db import models
 from tournamentapp.models import Tournament
 from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
-from PIL import Image
-from PIL import UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
-import os
-import uuid
+import os, uuid
 
 
 class SponsorBanner(models.Model):
@@ -49,28 +47,27 @@ class SponsorBanner(models.Model):
     def process_image(self, image_field):
         try:
             with Image.open(image_field) as img:
-                img.verify()
+                img.load()
+            
+                if img.width > self.OUTPUT_MAX_WIDTH or img.height > self.OUTPUT_MAX_HEIGHT:
+                    img.thumbnail(
+                        (self.OUTPUT_MAX_WIDTH, self.OUTPUT_MAX_HEIGHT),
+                        Image.Resampling.LANCZOS
+                    )
+
+                buffer = BytesIO()
+                use_lossless = image_field.name.lower().endswith(".png")
+                img.save(
+                    buffer,
+                    format="WEBP",
+                    quality=self.WEBP_QUALITY,
+                    lossless=use_lossless,
+                    method=6,
+                    optimize=True
+                )
+        
         except UnidentifiedImageError:
             raise ValidationError("Uploaded file is not a valid image")
-            
-        with Image.open(image_field) as img:
-            
-            if img.width > self.OUTPUT_MAX_WIDTH or img.height > self.OUTPUT_MAX_HEIGHT:
-                img.thumbnail(
-                    (self.OUTPUT_MAX_WIDTH, self.OUTPUT_MAX_HEIGHT),
-                    Image.Resampling.LANCZOS
-                )
-
-            buffer = BytesIO()
-            use_lossless = image_field.name.lower().endswith(".png")
-            img.save(
-                buffer,
-                format="WEBP",
-                quality=self.WEBP_QUALITY,
-                lossless=use_lossless,
-                method=6,
-                optimize=True
-            )
 
         base_name = os.path.splitext(os.path.basename(image_field.name))[0]
         new_name = f"sponsors/{base_name}-{uuid.uuid4().hex}.webp"

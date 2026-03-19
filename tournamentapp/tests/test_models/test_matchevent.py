@@ -85,9 +85,14 @@ class MatchEventTests(TestCase):
         self.assertEqual(str(goal), f"GOAL: {self.player1} for {self.team1} in {self.match}")
 
     def test_goal_cannot_be_assigned_to_suspended_player(self):
-        suspended = Player.objects.create(name="Suspended", team=self.team1, red_cards=1)
-        suspended.save()
-        self.assertFalse(suspended.is_allowed_to_play)
+        suspended = Player.objects.create(name="Suspended", team=self.team1)
+        MatchEvent.objects.create(
+            match=self.match,
+            event_type='red_card',
+            team=self.team1,
+            player=suspended,
+            minute=10
+        )
         with self.assertRaises(ValidationError):
             GoalEvent.objects.create(
                 match=self.match,

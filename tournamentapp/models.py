@@ -24,7 +24,16 @@ class Tournament(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+
+            while self.__class__.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            self.slug = slug
+
         super().save(*args, **kwargs)
     
 class Team(models.Model):
@@ -79,8 +88,7 @@ class Player(models.Model):
         verbose_name="Player Name",
         blank=False,
         null=False,
-        )
-
+    )
     team = models.ForeignKey(
         Team,
         on_delete=models.CASCADE,
@@ -89,33 +97,7 @@ class Player(models.Model):
         help_text="Select the team this player belongs to.",
         blank=False,
         null=False,
-        )
-
-    goals = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Goals Scored",
-        help_text="Total goals scored by the player."
-        )
-
-    own_goals = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Own Goals",
-        help_text="Total own goals scored by the player.")
-    
-    yellow_cards = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Yellow Cards",
-        help_text="Total yellow cards received by the player."
-        )
-
-    red_cards = models.PositiveIntegerField(
-        default=0
-        )
-        
-    is_allowed_to_play = models.BooleanField(
-        default=True,
-        verbose_name="Allowed to Play",
-        help_text="Indicates if the player is allowed to play in the next match.")
+    )
 
     class Meta:
         unique_together = ('name', 'team')
@@ -125,13 +107,20 @@ class Player(models.Model):
     def __str__(self):
         return f"Player: {self.name} (Team: {self.team.name})"
 
-    def update_eligibility(self):
-        """Player who has a red card is forced to sit out the next match."""
-        self.is_allowed_to_play = not (self.red_cards >= 1 or self.yellow_cards >= 2)
-    
-    def save(self, *args, **kwargs):
-        self.update_eligibility()
-        super().save(*args, **kwargs)
+    def goals(self):
+        return self.match_events.filter(event_type='goal').count()
+
+    def own_goals(self):
+        return self.match_events.filter(event_type='own_goal').count()
+
+    def yellow_cards(self):
+        return self.match_events.filter(event_type='yellow_card').count()
+
+    def red_cards(self):
+        return self.match_events.filter(event_type='red_card').count()
+
+    def is_suspended(self):
+        return self.yellow_cards() >= 2 or self.red_cards() >= 1
 
 class Field(models.Model):
     name = models.CharField(
@@ -191,39 +180,6 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name}"
-
-    def apply_result(self):
-        if self.is_finished:
-            return
-
-        # Calculate goals for each team
-        home_goals = self.events.filter(event_type='goal', team=self.home_team).count()
-        home_goals += self.events.filter(event_type='own_goal', team=self.away_team).count()
-
-        away_goals = self.events.filter(event_type='goal', team=self.away_team).count()
-        away_goals += self.events.filter(event_type='own_goal', team=self.home_team).count()
-
-        # Set the score fields
-        self.home_score = home_goals
-        self.away_score = away_goals
-
-        for event in self.events.all():
-            event.apply_event_effects()
-
-        # Assign points
-        if home_goals > away_goals:
-            self.home_team.tournament_points += 3
-        elif away_goals > home_goals:
-            self.away_team.tournament_points += 3
-        else:
-            self.home_team.tournament_points += 1
-            self.away_team.tournament_points += 1
-
-        # Save everything
-        self.home_team.save()
-        self.away_team.save()
-        self.is_finished = True
-        self.save()
     
     def clean(self):
         super().clean()
@@ -241,6 +197,36 @@ class Match(models.Model):
         if overlapping.exists():
             raise ValidationError("Another match is already scheduled at this field and time.")
 
+    def apply_result(self):
+        if self.is_finished:
+            return
+
+        # Calculate goals for each team
+        home_goals = self.events.filter(event_type='goal', team=self.home_team).count()
+        home_goals += self.events.filter(event_type='own_goal', team=self.away_team).count()
+
+        away_goals = self.events.filter(event_type='goal', team=self.away_team).count()
+        away_goals += self.events.filter(event_type='own_goal', team=self.home_team).count()
+
+        # Set the score fields
+        self.home_score = home_goals
+        self.away_score = away_goals
+
+        # Assign points
+        if home_goals > away_goals:
+            self.home_team.tournament_points += 3
+        elif away_goals > home_goals:
+            self.away_team.tournament_points += 3
+        else:
+            self.home_team.tournament_points += 1
+            self.away_team.tournament_points += 1
+
+        # Save everything
+        self.home_team.save()
+        self.away_team.save()
+        self.is_finished = True
+        self.save()
+
 class MatchEvent(models.Model):
     EVENT_TYPES = (
         ('goal', 'Goal'),
@@ -254,30 +240,26 @@ class MatchEvent(models.Model):
         Match,
         on_delete=models.CASCADE,
         related_name='events'
-        )
-    
+    )
     event_type = models.CharField(
         max_length=20,
         choices=EVENT_TYPES,
         help_text="Type of event that occurred during the match.",
         verbose_name="Event Type",
-        )
-    
+    )
     minute = models.PositiveIntegerField(
         help_text="Minute in which the event occurred.",
         verbose_name="Minute",
         null=True,
         blank=True,
-        )
-    
+    )
     team = models.ForeignKey(
         Team,
         on_delete=models.CASCADE,
         related_name='match_events',
         help_text="Team involved in the event.",
         verbose_name="Team",
-        )
-    
+    )
     player = models.ForeignKey(
         Player,
         on_delete=models.SET_NULL,
@@ -286,8 +268,7 @@ class MatchEvent(models.Model):
         verbose_name="Player",
         null=True,
         blank=True,
-        )
-    
+    )
     substitute_player = models.ForeignKey(
         Player,
         on_delete=models.SET_NULL,
@@ -296,34 +277,17 @@ class MatchEvent(models.Model):
         related_name='substitute_entries',
         help_text="Only for substitutions"
     )
-    
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Timestamp when the event was created.",
         verbose_name="Created At",
-        )
-    
+    )
+
     class Meta:
         ordering = ['minute', 'created_at']
         verbose_name = "Match Event"
         verbose_name_plural = "Match Events"
 
-    def apply_event_effects(self):
-        if not self.player:
-            return
-
-        if self.event_type == 'goal':
-            self.player.goals += 1
-        elif self.event_type == 'own_goal':
-            self.player.own_goals += 1
-        elif self.event_type == 'yellow_card':
-            self.player.yellow_cards += 1
-        elif self.event_type == 'red_card':
-            self.player.red_cards += 1
-
-        self.player.update_eligibility()
-        self.player.save()
-    
     def __str__(self):
         minute = f"{self.minute}'" if self.minute else "?"
         if self.event_type == 'substitution':
@@ -332,17 +296,12 @@ class MatchEvent(models.Model):
             return f"Own Goal - {self.player} ({self.team}) at {minute}"
         else:
             return f"{self.get_event_type_display()} - {self.player} ({self.team}) at {minute}"
-    
 
     def clean(self):
         if self.substitute_player and self.substitute_player.team != self.team:
             raise ValidationError("Substitute must be from the same team.")
-            
         if self.event_type == 'substitution' and not self.substitute_player:
             raise ValidationError("Substitution must specify a substitute player.")
-
-        def save(self, *args, **kwargs):
-            super().save(*args, **kwargs)
 
 class GoalManager(models.Manager):
     def get_queryset(self):
@@ -357,13 +316,13 @@ class GoalEvent(MatchEvent):
     def save(self, *args, **kwargs):
         self.event_type = 'goal'
         self.clean()
-        if self.player and not self.player.is_allowed_to_play:
+        if self.player and self.player.is_suspended():
             raise ValidationError("Suspended player cannot score.")
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"GOAL: {self.player} for {self.team} in {self.match}"
-    
+
     def clean(self):
         super().clean()
         if self.event_type != 'goal':

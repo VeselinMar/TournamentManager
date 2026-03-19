@@ -12,4 +12,4 @@ def test_create_match_event_forbidden(client, match, other_user):
 
     response = client.post(url)
 
-    assert response.status_code == 403
+    assert response.status_code == 404

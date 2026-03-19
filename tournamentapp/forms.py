@@ -3,19 +3,12 @@ from django import forms
 from django.utils.text import slugify
 from datetime import datetime, time, date
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
+from .utils import recalculate_match_points
 
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
         fields = ['name']
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.slug = slugify(instance.name)
-
-        if commit:
-            instance.save()
-        return instance
 
 class TeamCreateForm(forms.ModelForm):
     class Meta:
@@ -74,10 +67,6 @@ class MatchCreateForm(forms.ModelForm):
         
         self.fields['field'].empty_label = None
 
-    def clean_start_time(self):
-        start_time = self.cleaned_data['start_time']
-        return start_time
-
 class FieldCreateForm(forms.ModelForm):
     class Meta:
         model = Field
@@ -100,6 +89,7 @@ class MatchEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.match = kwargs.get('instance')
         super().__init__(*args, **kwargs)
+
         if self.match:
             self.fields['home_score'].label = self.match.home_team.name
             self.fields['away_score'].label = self.match.away_team.name
@@ -116,33 +106,18 @@ class MatchEditForm(forms.ModelForm):
         if commit:
             match.save()
 
+        recalculate_match_points(
+            match=self.match,
+            new_home_score=match.home_score,
+            new_away_score=match.away_score,
+        )
+
+        match.is_finished = True
+        
+        if commit:
+            match.save()
+
         return match
-
-    def _reverse_previous_points(self):
-        match = self.match
-
-        if match.home_score > match.away_score:
-            match.home_team.tournament_points = max(0, match.home_team.tournament_points - 3)
-        elif match.home_score < match.away_score:
-            match.away_team.tournament_points = max(0, match.away_team.tournament_points - 3)
-        else:
-            match.home_team.tournament_points = max(0, match.home_team.tournament_points - 1)
-            match.away_team.tournament_points = max(0, match.away_team.tournament_points - 1)
-
-        match.home_team.save()
-        match.away_team.save()
-
-    def _apply_match_points(self, match):
-        if match.home_score > match.away_score:
-            match.home_team.tournament_points += 3
-        elif match.home_score < match.away_score:
-            match.away_team.tournament_points += 3
-        else:
-            match.home_team.tournament_points += 1
-            match.away_team.tournament_points += 1
-
-        match.home_team.save()
-        match.away_team.save()
 
 class MatchEventForm(forms.ModelForm):
     player = forms.CharField()
@@ -177,13 +152,21 @@ class MatchEventForm(forms.ModelForm):
             
         player, _ = Player.objects.get_or_create(name=player_name.strip(), team=team_instance)
 
-        cleaned_data['player'] = player 
-        cleaned_data['team'] = team_instance
+        cleaned_data['player_name'] = player_name.strip()
+        cleaned_data['team_instance'] = team_instance
 
         return cleaned_data
 
     def save(self, commit=True):
         event = super().save(commit=False)
+
+        team = self.cleaned_data['team_instance']
+        player_name = self.cleaned_data['player_name']
+
+        player, _ = Player.objects.get_or_create(
+            name = player_name,
+            team = team
+        )
 
         event.match = self.match
         event.player = self.cleaned_data['player']

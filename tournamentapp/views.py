@@ -15,12 +15,14 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404, render
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
 from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm,TournamentScheduleForm
+from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import handle_batch_lines, create_round_robin_matches, propagate_match_delay
+from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline
+from .services import handle_batch_lines
 
 
 def about_view(request):
@@ -32,20 +34,29 @@ def contact_view(request):
 def privacy_policy_view(request):
     return render(request, "footer/privacy_policy.html")
 
-class TournamentCreateView(CreateView, LoginRequiredMixin):
+class TournamentCreateView(LoginRequiredMixin, CreateView):
     model = Tournament
     form_class = TournamentCreateForm
     template_name = 'tournament/tournament_form.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if Tournament.objects.filter(owner=self.request.user).exists():
-            tournament = Tournament.objects.get(owner=self.request.user)
-            return redirect('tournament-detail', pk=tournament.pk)
+        existing = Tournament.objects.filter(owner=request.user).first()
+        if existing:
+            return redirect('tournament-detail', pk=existing.pk)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
-        return super().form_valid(form)
+        
+        response = super().form_valid(form)
+
+        Field.objects.get_or_create(
+            name="Main Field",
+            tournament=self.object,
+            defaults={"owner": self.object.owner}
+        )
+
+        return response
 
     def get_success_url(self):
         return reverse('team-create', kwargs={'tournament_id': self.object.pk})
@@ -56,77 +67,37 @@ class TournamentPublicView(DetailView):
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
 
-    def get_object(self, queryset=None):
-        slug = self.kwargs.get(self.slug_url_kwarg)
-        return get_object_or_404(Tournament, slug=slug)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournament = self.object
+
+        context["sponsors"] = tournament.sponsors.all()
+
+        timeline, field_names = build_timeline(tournament)
+
+        context.update({
+            'timeline': timeline,
+            'field_names': field_names
+        })
+
+        return context
+
+class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
+    model = Tournament
+    template_name = 'tournament/tournament_detail.html'
+    context_object_name = 'tournament'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tournament = self.object
-        context["sponsors"] = tournament.sponsors.all()
 
-        matches = (
-            tournament.matches
-            .select_related('field', 'home_team', 'away_team')
-            .order_by('start_time')
-        )
-
-
-        field_names = list(
-            tournament.fields.order_by('name').values_list('name', flat=True)
-        )
-
-        timeline_dict = defaultdict(lambda: {field: None for field in field_names})
-
-        for match in matches:
-            time_str = match.start_time.strftime('%H:%M')
-            timeline_dict[time_str][match.field.name] = match
-
-        timeline = [
-            {
-                'time': time_str,
-                'matches': [timeline_dict[time_str][field] for field in field_names],
-            }
-            for time_str in sorted(timeline_dict.keys())
-        ]
+        timeline, field_names = build_timeline(tournament)
 
         context.update({
             'timeline': timeline,
             'field_names': field_names,
         })
 
-        return context
-
-class TournamentDetailView(LoginRequiredMixin, TemplateView):
-    template_name = 'tournament/tournament_detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        tournament_id = self.kwargs.get('pk')
-        tournament = get_object_or_404(Tournament, pk=tournament_id, owner=self.request.user)
-
-        matches = Match.objects.filter(tournament=tournament).select_related('field', 'home_team', 'away_team').order_by('start_time')
-        all_field_names = sorted({match.field.name for match in matches})
-        matches_by_time = defaultdict(dict)
-
-        for match in matches:
-            time_key = localtime(match.start_time).strftime("%H:%M")
-            matches_by_time[time_key][match.field.name] = match
-
-        timeline = []
-        for time, field_dict in sorted(matches_by_time.items()):
-            row = {
-                'time': time,
-                'matches': [field_dict.get(fname) for fname in all_field_names]
-            }
-            timeline.append(row)
-
-        context.update({
-            'timeline': timeline,
-            'field_names': all_field_names,
-            'tournament': tournament,
-        })
         return context
 
 class LandingPageView(TemplateView):
@@ -137,54 +108,47 @@ class LandingPageView(TemplateView):
         context['tournaments'] = Tournament.objects.filter(is_finished=False)
         return context
 
-class TeamListView(LoginRequiredMixin, ListView):
+class TeamListView(LoginRequiredMixin, TournamentAccessMixin, ListView):
     model = Team
     template_name = 'teams/team_list.html'
     context_object_name = 'teams'
 
     def get_queryset(self):
-        tournament_id = self.kwargs.get('tournament_id')
-        tournament = get_object_or_404(Tournament, pk=tournament_id, owner=self.request.user)
+        tournament = self.get_tournament()
         return Team.objects.filter(tournament=tournament).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        tournament_id = self.kwargs.get('tournament_id')
-        tournament = get_object_or_404(Tournament, pk=tournament_id, owner=self.request.user)
-        context['tournament'] = tournament
+        context['tournament'] = self.get_tournament
         return context
 
-class TeamDetailView(DetailView):
+class TeamDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):
     model = Team
     template_name = 'teams/team_detail.html'
     context_object_name = 'team'
 
     def get_object(self, queryset=None):
-        tournament_id = self.kwargs.get('tournament_id')
+        tournament = self.get_tournament()
         team_pk = self.kwargs.get('pk')
-
-        tournament = get_object_or_404(Tournament, pk=tournament_id)
-
-        # Get the team belonging to that tournament
-        team = get_object_or_404(Team, pk=team_pk, tournament=tournament)
-
-        return team
+        return get_object_or_404(Team, pk=team_pk, tournament=tournament)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         team = self.object
+        tournament = team.tournament
 
-        # Get matches for the team
+        # Matches for the team
         all_matches = Match.objects.filter(
             Q(home_team=team) | Q(away_team=team)
-        ).order_by('start_time')
+        ).select_related('home_team', 'away_team', 'field').order_by('start_time')
 
-        # Determine finished match results
+        # Finished matches with results
         finished_matches = []
         for match in all_matches.filter(is_finished=True):
             is_home = match.home_team == team
             team_score = match.home_score if is_home else match.away_score
             opponent_score = match.away_score if is_home else match.home_score
+
             if team_score > opponent_score:
                 match.result = 'win'
             elif team_score < opponent_score:
@@ -194,41 +158,35 @@ class TeamDetailView(DetailView):
             match.goal_difference = abs(team_score - opponent_score)
             finished_matches.append(match)
 
-        # Split matches into finished and upcoming
-        context['finished_matches'] = finished_matches
-        context['upcoming_matches'] = all_matches.filter(is_finished=False)
+        upcoming_matches = all_matches.filter(is_finished=False)
 
-        # Get players in the team
-        context['players'] = team.players.all()
-
-        # Also add tournament for context usage
-        context['tournament'] = team.tournament
+        context.update({
+            'finished_matches': finish_match,
+            'upcoming_matches': upcoming_matches,
+            'players': team.players.all(),
+            'tournament': tournament,
+        })
 
         return context
 
-class TeamCreateView(LoginRequiredMixin, CreateView):
+class TeamCreateView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
     model = Team
     form_class = TeamCreateForm
     template_name = 'teams/team_form.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        # Get tournament and check ownership
-        self.tournament_id = kwargs.get('tournament_id')
-        self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
-        return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Pass all teams for this tournament to the template
-        context['tournament'] = self.tournament
-        context['teams'] = self.tournament.teams.all().prefetch_related('player_set')
+        tournament = self.get_tournament()
+        context['tournament'] = tournament
+        context['teams'] = tournament.teams.all().prefetch_related('player_set')
         return context
 
     def get_success_url(self):
-        return reverse('team-list', kwargs={'tournament_id': self.tournament.pk})
+        return reverse('team-list', kwargs={'tournament_id': self.get_tournament.pk})
 
     def post(self, request, *args, **kwargs):
         submit_type = request.POST.get('submit_type')
+        tournament = self.get_tournament()
 
         # ===========================
         # CSV batch upload
@@ -237,16 +195,16 @@ class TeamCreateView(LoginRequiredMixin, CreateView):
             csv_file = request.FILES['csv_file']
             if not csv_file.name.lower().endswith('.csv'):
                 messages.error(request, 'Please upload a valid CSV file.')
-                return redirect('team-create', tournament_id=self.tournament.pk)
+                return redirect('team-create', tournament_id=tournament.pk)
 
             try:
                 decoded_lines = csv_file.read().decode('utf-8').splitlines()
-                created_teams, created_players = handle_batch_lines(request, self.tournament, decoded_lines)
+                created_teams, created_players = handle_batch_lines(request, tournament, decoded_lines)
                 messages.success(request, f'{created_teams} team(s) and {created_players} player(s) successfully created.')
             except Exception as e:
                 messages.error(request, f'Error processing CSV file: {str(e)}')
 
-            return redirect('team-create', tournament_id=self.tournament.pk)
+            return redirect('team-create', tournament_id=tournament.pk)
 
         # ===========================
         # Multi-line textarea input
@@ -255,60 +213,51 @@ class TeamCreateView(LoginRequiredMixin, CreateView):
             multiline_input = request.POST.get('name', '').splitlines()
             if not multiline_input:
                 messages.error(request, 'Please enter at least one team.')
-                return redirect('team-create', tournament_id=self.tournament.pk)
+                return redirect('team-create', tournament_id=tournament.pk)
 
-            created_teams, created_players = handle_batch_lines(request, self.tournament, multiline_input)
+            created_teams, created_players = handle_batch_lines(request, tournament, multiline_input)
             messages.success(request, f'{created_teams} team(s) and {created_players} player(s) successfully created.')
-            return redirect('team-create', tournament_id=self.tournament.pk)
+            return redirect('team-create', tournament_id=tournament.pk)
 
         # ===========================
         # Fallback: default CreateView behavior
         # ===========================
         return super().post(request, *args, **kwargs)
 
-class MatchCreateView(LoginRequiredMixin, CreateView):
+class MatchCreateView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
     model = Match
     form_class = MatchCreateForm
     template_name = 'matches/match_create.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        self.tournament_id = kwargs.get('tournament_id')
-        self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
-        return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['fields'] = Field.objects.filter(tournament=self.tournament)
-        context['tournament'] = self.tournament
+        tournament = self.get_tournament()
+        context['fields'] = Field.objects.filter(tournament=tournament)
+        context['tournament'] = tournament
         return context
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['tournament'] = self.tournament
+        kwargs['tournament'] = self.get_tournament()
         return kwargs
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        form.instance.tournament = self.tournament
+        form.instance.tournament = self.get_tournament()
         return form
     
 
     def get_success_url(self):
-        return reverse('tournament-detail', kwargs={'pk': self.tournament.pk})
+        return reverse('tournament-detail', kwargs={'pk': self.get_tournament().pk})
 
-class MatchDetailView(LoginRequiredMixin, DetailView):
+class MatchDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):
     model = Match
     template_name = 'matches/match_detail.html'
     context_object_name = 'match'
 
-    def dispatch(self, request, *args, **kwargs):
-        self.tournament_id = kwargs.get('tournament_id')
-        self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
-        return super().dispatch(request, *args, **kwargs)
-
     def get_object(self, queryset=None):
         match = super().get_object(queryset)
-        if match.tournament_id != self.tournament.pk:
+        if match.tournament_id != self.get_tournament().pk:
             raise Http404("Match does not belong to this tournament.")
         return match
 
@@ -326,25 +275,22 @@ class MatchDetailView(LoginRequiredMixin, DetailView):
         })
         return context
 
-class MatchEditView(LoginRequiredMixin, UpdateView):
+class MatchEditView(LoginRequiredMixin, TournamentAccessMixin, UpdateView):
     model = Match
     form_class = MatchEditForm
     template_name = 'matches/match_edit.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        self.tournament_id = kwargs.get('tournament_id')
-        self.tournament = get_object_or_404(Tournament, pk=self.tournament_id, owner=request.user)
-        match = self.get_object()
+    def get_object(self, queryset=None):
+        match = super().get_object(queryset)
+        tournament = self.get_tournament()
 
-        if match.tournament_id != self.tournament.pk:
-            return HttpResponseForbidden()
-
-        return super().dispatch(request, *args, **kwargs)
+        if match.tournament_id != tournament.pk:
+            raise Http404("Match does not belong to this tournament.")
+        return match
 
     def form_valid(self, form):
         old_start_time = self.get_object().start_time
         response = super().form_valid(form)
-
         new_start_time = form.instance.start_time
 
         if new_start_time != old_start_time:
@@ -355,107 +301,52 @@ class MatchEditView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = self.object
-        context['match_events'] = match.events.all()
-        context['tournament'] = self.tournament
+        context.update({
+            'match_events': match.events.all(),
+            'tournament': self.get_tournament()
+        })
         return context
         
-class LeaderboardView(TemplateView):
+class LeaderboardView(LoginRequiredMixin, TournamentAccessMixin, TemplateView):
     template_name = 'matches/leaderboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        tournament = self.get_tournament()
 
-        tournament_id = self.kwargs.get('tournament_id')
-        tournament = get_object_or_404(Tournament, id=tournament_id)
-
-        # Top scorers from this tournament only
-        players = Player.objects.filter(
-            team__tournament=tournament,
-            goals__gt=0
-        ).order_by('-goals')[:10]
-        context['players'] = players
-
-        # Get teams from this tournament
-        teams = list(Team.objects.filter(tournament=tournament))
-        points_groups = {}
-
-        for team in teams:
-            points_groups.setdefault(team.tournament_points, []).append(team)
-
-        sorted_teams = []
-
-        for points in sorted(points_groups.keys(), reverse=True):
-            group = points_groups[points]
-
-            if len(group) == 1:
-                sorted_teams.extend(group)
-                continue
-
-            for team in group:
-                opponents = [t for t in group if t != team]
-                mutual_matches = Match.objects.filter(
-                    is_finished=True,
-                    tournament=tournament
-                ).filter(
-                    Q(home_team=team, away_team__in=opponents) |
-                    Q(away_team=team, home_team__in=opponents)
-                )
-
-                goals_for = MatchEvent.objects.filter(
-                    match__in=mutual_matches,
-                    team=team,
-                    event_type='goal'
-                ).count()
-
-                goals_against = MatchEvent.objects.filter(
-                    match__in=mutual_matches,
-                    event_type='goal'
-                ).exclude(team=team).count()
-
-                team.goal_difference_vs_tied = goals_for - goals_against
-
-            group.sort(key=lambda t: (-t.goal_difference_vs_tied, t.name))
-            sorted_teams.extend(group)
-
-        context['teams'] = sorted_teams
+        context['players'] = get_top_scorers(tournament, limit=10)
+        context['teams'] = get_team_standings(tournament)
         context['tournament'] = tournament
         return context
-
-class FieldAddView(LoginRequiredMixin, CreateView):
+        
+class FieldAddView(LoginRequiredMixin, TournamentAccessMixin, CreateView):
     model = Field
     form_class = FieldCreateForm
     template_name = 'fields/field_create.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournament = self.get_tournament()
 
-    def dispatch(self, request, *args, **kwargs):
-        self.tournament = get_object_or_404(Tournament, id=self.kwargs['tournament_id'])
+        context['fields'] = Field.objects.filter(tournament=tournament)
+        context['tournament'] = tournament
 
-        if self.tournament.owner != request.user:
-            return HttpResponseForbidden()
-
-        return super().dispatch(request, *args, **kwargs)
+        return context
 
     def form_valid(self, form):
-        form.instance.tournament = self.tournament
+        tournament = self.get_tournament()
+        form.instance.tournament = tournament
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
         # Redirect back to the same add-field page with the tournament context
-        return reverse_lazy('field-create', kwargs={'tournament_id': self.tournament.id})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['fields'] = Field.objects.filter(tournament=self.tournament)
-        context['tournament'] = self.tournament
-        return context
+        return reverse_lazy('field-create', kwargs={'tournament_id': self.get_tournament().pk})
 
 @require_POST
 @login_required
 def create_match_event(request, tournament_id, match_id):
-    tournament = get_object_or_404(Tournament, id=tournament_id)
-
-    if tournament.owner != request.user:
-        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
+    tournament = get_object_or_404(Tournament, id=tournament_id, owner=request.user)
 
     match = get_object_or_404(Match, id=match_id, tournament=tournament)
 
@@ -516,10 +407,8 @@ def create_match_event(request, tournament_id, match_id):
 @login_required
 def add_player(request, tournament_id, team_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
-    if tournament.owner != request.user:
-        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 
-    team = get_object_or_404(Team, id=team_id, tournament=tournament)
+    team = get_object_or_404(Team, id=team_id, tournament=tournament, owner=request.user)
 
     if request.method == 'POST':
         player_name = request.POST.get('player')
@@ -541,9 +430,7 @@ def add_player(request, tournament_id, team_id):
 @require_POST
 @login_required
 def finish_match(request, tournament_id, match_id):
-    tournament = get_object_or_404(Tournament, id=tournament_id)
-    if tournament.owner != request.user:
-        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
+    tournament = get_object_or_404(Tournament, id=tournament_id, owner=request.user)
 
     match = get_object_or_404(Match, id=match_id, tournament=tournament)
 
@@ -555,12 +442,8 @@ def finish_match(request, tournament_id, match_id):
 @require_http_methods(['DELETE'])
 @login_required
 def remove_match_event(request, tournament_id, event_id):
-    event = get_object_or_404(MatchEvent, id=event_id)
+    event = get_object_or_404(MatchEvent, id=event_id, owner=request.user)
     match = event.match
-
-    # Verify tournament ownership
-    if match.tournament.owner != request.user or match.tournament.id != tournament_id:
-        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 
     player = event.player
     team = event.team
@@ -602,11 +485,7 @@ def remove_match_event(request, tournament_id, event_id):
 @require_POST
 @login_required
 def field_edit(request, tournament_id, pk):
-    field = get_object_or_404(Field, pk=pk, tournament_id=tournament_id)
-
-    # Restrict unauthorized access
-    if field.tournament.owner != request.user:
-        return HttpResponseForbidden()
+    field = get_object_or_404(Field, pk=pk, tournament_id=tournament_id, owner=request.user)
 
     try:
         data = json.loads(request.body)
@@ -624,11 +503,7 @@ def field_edit(request, tournament_id, pk):
 @require_POST
 @login_required
 def field_delete(request, tournament_id, pk):
-    field = get_object_or_404(Field, pk=pk, tournament_id=tournament_id)
-
-    # Restrict unauthorized access
-    if field.tournament.owner != request.user:
-        return HttpResponseForbidden()
+    field = get_object_or_404(Field, pk=pk, tournament_id=tournament_id, owner=request.user)
 
     if field.match_set.exists():
         return JsonResponse({'success': False, 'error': 'Cannot delete field with assigned matches.'})

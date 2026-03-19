@@ -4,6 +4,18 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
 from .models import SponsorBanner
 from .forms import SponsorBannerForm
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from tournamentapp.models import Tournament
+
+
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, UpdateView, ListView
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponseForbidden
+from .models import SponsorBanner
+from .forms import SponsorBannerForm
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin

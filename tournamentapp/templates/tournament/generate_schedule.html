@@ -2,12 +2,33 @@
 {% load static %}
 
 {% block content %}
-<h2>Generate Round-Robin Schedule for "{{ tournament.name }}"</h2>
+<h2>Generate Schedule — {{ tournament.name }}</h2>
 
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    <div>{{ form.start_date.label_tag }} {{ form.start_date }}</div>
+    <div>{{ form.start_time.label_tag }} {{ form.start_time }}</div>
+    <div>{{ form.pause_duration.label_tag }} {{ form.pause_duration }}</div>
+
+    <div>
+        {{ form.has_halves.label_tag }} {{ form.has_halves }}
+    </div>
+
+    <div id="single-game-fields">
+        {{ form.game_duration.label_tag }} {{ form.game_duration }}
+    </div>
+
+    <div id="halves-fields" style="display:none;">
+        {{ form.half_duration.label_tag }} {{ form.half_duration }}
+        {{ form.half_time_break.label_tag }} {{ form.half_time_break }}
+    </div>
+
     <button type="submit" class="btn btn-success">Generate Schedule</button>
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/generate_schedule.js' %}"></script>
 {% endblock %}
