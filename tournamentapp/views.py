@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404, render
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
-from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm,TournamentScheduleForm
+from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm
 from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
@@ -60,6 +60,19 @@ class TournamentCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('team-create', kwargs={'tournament_id': self.object.pk})
+
+class TournamentUpdateView(LoginRequiredMixin, TournamentOwnerMixin, UpdateView):
+    model = Tournament
+    form_class = TournamentUpdateForm
+    template_name = 'tournament/tournament_edit.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tournament'] = self.object
+        return context
+
+    def get_success_url(self):
+        return reverse('tournament-detail', kwargs={'pk': self.object.pk})
 
 class TournamentPublicView(DetailView):
     model = Tournament

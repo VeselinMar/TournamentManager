@@ -21,6 +21,7 @@
       <button class="btn-finish" id="finishBtn">Finish Tournament</button>
     {% endif %}
 
+    <a href="{% url 'tournament-edit' tournament.pk %}" class="btn-edit-tournament">Edit Tournament</a>
     <form method="post" action="{% url 'toggle-tournament-status' tournament.pk %}" id="toggleStatusForm">
       {% csrf_token %}
     </form>

@@ -403,3 +403,22 @@
 #toggleStatusForm {
   display: none;
 }
+
+.btn-edit-tournament {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  background: none;
+  border: 1px solid var(--border, rgba(0,0,0,0.1));
+  color: var(--muted, #555);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-edit-tournament:hover {
+  border-color: var(--text, #1a1a1a);
+  color: var(--text, #1a1a1a);
+}

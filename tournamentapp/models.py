@@ -15,6 +15,12 @@ class Tournament(models.Model):
         unique=True,
         blank=True
     )
+
+    tournament_date = models.DateField(
+        null=True, 
+        blank=True
+    )
+
     is_finished = models.BooleanField(
         default=False,
     )
@@ -23,17 +29,14 @@ class Tournament(models.Model):
         return f"{self.name} ({self.owner.email})"
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            base_slug = slugify(self.name)
-            slug = base_slug
-            counter = 1
-
-            while self.__class__.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-
+        if not self.pk or Tournament.objects.filter(pk=self.pk).exclude(name=self.name).exists():
+            base = slugify(self.name)
+            slug = base
+            n = 1
+            while Tournament.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{n}"
+                n += 1
             self.slug = slug
-
         super().save(*args, **kwargs)
     
 class Team(models.Model):
