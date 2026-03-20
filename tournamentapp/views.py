@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404, render
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
-from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm
+from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm
 from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
@@ -109,6 +109,7 @@ class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView)
         context.update({
             'timeline': timeline,
             'field_names': field_names,
+            'fields': tournament.fields.all(),
         })
 
         return context
@@ -584,3 +585,51 @@ def reset_schedule(request, tournament_id):
     reset_tournament_schedule(tournament)
     messages.success(request, "Schedule has been reset.")
     return redirect('generate-tournament-schedule', tournament_id=tournament.pk)
+
+@require_POST
+@login_required
+def edit_match(request, tournament_id, match_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+
+    form = MatchRescheduleForm(request.POST, tournament=tournament)
+    if form.is_valid():
+        new_time = form.cleaned_data['start_time']
+        new_field = form.cleaned_data['field']
+        propagate = form.cleaned_data['propagate']
+
+        # combine with tournament date or fall back to match's current date
+        base_date = tournament.tournament_date or match.start_time.date()
+        new_start = timezone.make_aware(
+            datetime.combine(base_date, new_time)
+        )
+
+        if propagate:
+            propagate_match_delay(match, new_start)
+        else:
+            match.start_time = new_start
+            match.save(update_fields=['start_time'])
+
+        match.field = new_field
+        match.save(update_fields=['field'])
+
+        messages.success(request, "Match updated.")
+    else:
+        messages.error(request, "Invalid data.")
+
+    return redirect('tournament-detail', pk=tournament_id)
+
+
+@require_POST
+@login_required
+def delete_match(request, tournament_id, match_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    match = get_object_or_404(Match, pk=match_id, tournament=tournament)
+
+    if match.is_finished:
+        messages.error(request, "Cannot delete a finished match.")
+        return redirect('tournament-detail', pk=tournament_id)
+
+    match.delete()
+    messages.success(request, "Match removed.")
+    return redirect('tournament-detail', pk=tournament_id)

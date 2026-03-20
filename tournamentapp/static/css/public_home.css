@@ -439,3 +439,102 @@
   border-color: #c0392b;
   color: #c0392b;
 }
+
+.confirm-box .form-group {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.confirm-box .form-label {
+  color: #c8c8c8 !important;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.btn-match-edit,
+.btn-match-delete {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  margin-left: 0.2rem;
+  line-height: 1;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.btn-match-edit { color: rgba(255,255,255,0.6); }
+.btn-match-edit:hover {
+  border-color: rgba(255,255,255,0.8);
+  color: #ffffff;
+  background: rgba(255,255,255,0.1);
+}
+.btn-match-delete {
+  color: rgba(192,57,43,0.7);
+  border-color: rgba(192,57,43,0.3);
+}
+.btn-match-delete:hover {
+  border-color: #c0392b;
+  color: #ffffff;
+  background: #c0392b;
+}
+
+/* reset inherited global form styles inside modals */
+.confirm-box form,
+.tournament-controls form {
+  background: none !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  transition: none !important;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-box .btn-confirm-yes,
+.confirm-box .btn-confirm-no {
+  display: inline-block !important;
+  padding: 0.5rem 1.5rem !important;
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  line-height: normal !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.confirm-box .btn-confirm-yes {
+  background: #c0392b !important;
+  color: #fff !important;
+  border: none !important;
+  transition: opacity 0.2s !important;
+}
+.confirm-box .btn-confirm-yes:hover { opacity: 0.85 !important; }
+
+.confirm-box .btn-confirm-no {
+  background: none !important;
+  color: #888 !important;
+  border: 1px solid #555 !important;
+  transition: border-color 0.2s, color 0.2s !important;
+}
+.confirm-box .btn-confirm-no:hover {
+  border-color: #888 !important;
+  color: #ccc !important;
+}

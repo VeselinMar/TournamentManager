@@ -131,6 +131,26 @@ class MatchEditForm(forms.ModelForm):
 
         return match
 
+class MatchRescheduleForm(forms.Form):
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time'}),
+        label="Start Time"
+    )
+    field = forms.ModelChoiceField(
+        queryset=Field.objects.none(),
+        label="Field",
+        empty_label=None
+    )
+    propagate = forms.BooleanField(
+        required=False,
+        label="Shift all subsequent matches by the same delay"
+    )
+
+    def __init__(self, *args, **kwargs):
+        tournament = kwargs.pop('tournament')
+        super().__init__(*args, **kwargs)
+        self.fields['field'].queryset = Field.objects.filter(tournament=tournament)
+        
 class MatchEventForm(forms.ModelForm):
     player = forms.CharField()
     team = forms.CharField()
