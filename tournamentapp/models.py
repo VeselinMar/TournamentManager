@@ -21,6 +21,16 @@ class Tournament(models.Model):
         blank=True
     )
 
+    points_for_win = models.PositiveSmallIntegerField(
+        default=3,
+        )
+    points_for_draw = models.PositiveSmallIntegerField(
+        default=1,
+        )
+    points_for_loss = models.PositiveSmallIntegerField(
+        default=0,
+        )
+
     is_finished = models.BooleanField(
         default=False,
     )
@@ -204,6 +214,8 @@ class Match(models.Model):
         if self.is_finished:
             return
 
+        tournament = self.tournament
+
         # Calculate goals for each team
         home_goals = self.events.filter(event_type='goal', team=self.home_team).count()
         home_goals += self.events.filter(event_type='own_goal', team=self.away_team).count()
@@ -217,12 +229,14 @@ class Match(models.Model):
 
         # Assign points
         if home_goals > away_goals:
-            self.home_team.tournament_points += 3
+            self.home_team.tournament_points += tournament.points_for_win
+            self.away_team.tournament_points += tournament.points_for_loss
         elif away_goals > home_goals:
-            self.away_team.tournament_points += 3
+            self.away_team.tournament_points += tournament.points_for_win
+            self.home_team.tournament_points += tournament.points_for_loss
         else:
-            self.home_team.tournament_points += 1
-            self.away_team.tournament_points += 1
+            self.home_team.tournament_points += tournament.points_for_draw
+            self.away_team.tournament_points += tournament.points_for_draw
 
         # Save everything
         self.home_team.save()
