@@ -1,43 +1,89 @@
-name: Build and Test
+name: Build, Test and Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - dev
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
-      DJANGO_SETTINGS_MODULE: myproject.settings_test
+      DJANGO_SETTINGS_MODULE: myproject.settings
       SECRET_KEY: test-secret-key
+      DEBUG: "True"
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/test_db
       AZURE_CONTAINER: test-container
+      ALLOWED_HOSTS: localhost,127.0.0.1
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python 3.12.3
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12.3'
+      - name: Set up Python 3.12.3
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install coverage
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install coverage
 
-    - name: Run Tests with coverage
-      run: |
-        coverage run manage.py test
-        coverage report
-    - name: Generate HTML Coverage Report
-      run: coverage html
+      - name: Run Migrations
+        run: python manage.py migrate --noinput
 
-    - name: Upload Coverage Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: htmlcov
+      - name: Run Tests with Coverage
+        run: |
+          coverage run -m pytest
+          coverage report
+
+      - name: Generate HTML Coverage Report
+        run: coverage html
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov
+
+  merge-to-main:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/dev'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge dev into main
+        run: |
+          git checkout main
+          git merge origin/dev --no-ff -m "Merge dev into main [skip ci]"
+          git push origin main
