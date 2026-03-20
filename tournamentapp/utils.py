@@ -281,3 +281,10 @@ def recalculate_match_points(match, new_home_score, new_away_score):
         home_team.save()
         away_team.save()
 
+def reset_tournament_schedule(tournament):
+    """
+    Delete all matches (cascades to MatchEvent) and reset team points.
+    """
+    with transaction.atomic():
+        tournament.matches.all().delete()
+        tournament.teams.all().update(tournament_points=0)

@@ -21,6 +21,13 @@
       <button class="btn-finish" id="finishBtn">Finish Tournament</button>
     {% endif %}
 
+    {% if tournament.matches.exists %}
+      <button class="btn-reset" id="resetBtn">Reset Schedule</button>
+      <form method="post" action="{% url 'reset-schedule' tournament.pk %}" id="resetForm" style="display:none;">
+        {% csrf_token %}
+      </form>
+    {% endif %}
+
     <a href="{% url 'tournament-edit' tournament.pk %}" class="btn-edit-tournament">Edit Tournament</a>
     <form method="post" action="{% url 'toggle-tournament-status' tournament.pk %}" id="toggleStatusForm">
       {% csrf_token %}
