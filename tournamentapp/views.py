@@ -21,7 +21,7 @@ from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule
+from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule, recalculate_points
 from .services import handle_batch_lines
 
 
@@ -406,6 +406,9 @@ def create_match_event(request, tournament_id, match_id):
         match.events.filter(event_type='own_goal', team=match.home_team).count()
     )
 
+    if match.is_finished:
+        recalculate_points(match)
+
     return JsonResponse({
         'success': True,
         'player_name': player.name,
@@ -458,46 +461,28 @@ def finish_match(request, tournament_id, match_id):
 @require_http_methods(['DELETE'])
 @login_required
 def remove_match_event(request, tournament_id, event_id):
-    event = get_object_or_404(MatchEvent, id=event_id, owner=request.user)
+    event = get_object_or_404(MatchEvent, id=event_id)
     match = event.match
 
-    player = event.player
-    team = event.team
-    event_type = event.event_type
+    if match.tournament.owner != request.user or match.tournament.id != tournament_id:
+        return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 
-    # Reverse consequences
-    if player:
-        if event_type == 'goal':
-            player.goals = max(0, player.goals - 1)
-            player.save()
-        elif event_type == 'own_goal':
-            player.own_goals = max(0, player.own_goals - 1)
-            player.save()
-        elif event_type == 'yellow_card':
-            player.yellow_cards = max(0, player.yellow_cards - 1)
-            player.save()
-        elif event_type == 'red_card':
-            player.red_cards = max(0, player.red_cards - 1)
-            player.save()
-
-    # Delete the event
     event.delete()
 
-    # Reset match to unfinished state
-    match.is_finished = False
-    match.home_score = 0
-    match.away_score = 0
-    match.save()
-
-    # Recalculate match results based on remaining events
-    match.apply_result()  # your existing method to recompute scores
+    if match.is_finished:
+        recalculate_points(match)
+    else:
+        match.home_score = 0
+        match.away_score = 0
+        match.save()
+        match.apply_result()
 
     return JsonResponse({
         'success': True,
         'home_score': match.home_score,
         'away_score': match.away_score,
     })
-
+    
 @require_POST
 @login_required
 def field_edit(request, tournament_id, pk):

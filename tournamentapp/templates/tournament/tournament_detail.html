@@ -2,16 +2,18 @@
 {% load static %}
 
 {% block match_actions %}
-  {% if not match.is_finished and not tournament.is_finished %}
-    <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Score</a>
-  {% endif %}
-  <button class="btn-match-edit"
-          data-match-id="{{ match.pk }}"
-          data-start-time="{{ match.start_time|time:'H:i' }}"
-          data-field-id="{{ match.field.pk }}"
-          data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✏</button>
-
-  {% if not match.is_finished %}
+  {% if match.is_finished %}
+    <span class="score">{{ match.home_score }} - {{ match.away_score }}</span>
+    <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Edit Result</a>
+  {% else %}
+    {% if not tournament.is_finished %}
+      <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Score</a>
+    {% endif %}
+    <button class="btn-match-edit"
+            data-match-id="{{ match.pk }}"
+            data-start-time="{{ match.start_time|time:'H:i' }}"
+            data-field-id="{{ match.field.pk }}"
+            data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✏</button>
     <button class="btn-match-delete"
             data-match-id="{{ match.pk }}"
             data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✕</button>
