@@ -21,7 +21,7 @@ def test_handle_batch_lines_creates_teams_and_players(django_user_model):
     messages_storage = FallbackStorage(request)
     setattr(request, '_messages', messages_storage)
 
-    tournament = Tournament.objects.create(name="Test Tournament", owner_id=1, is_finished=False)
+    tournament = Tournament.objects.create(name="Test Tournament", owner=user, is_finished=False)
 
     lines = [
         "Alpha",
@@ -59,7 +59,7 @@ def test_handle_batch_lines_skips_invalid_player_names(django_user_model):
     messages_storage = FallbackStorage(request)
     setattr(request, '_messages', messages_storage)
 
-    tournament = Tournament.objects.create(name="T", owner_id=1, is_finished=False)
+    tournament = Tournament.objects.create(name="T", owner=user, is_finished=False)
     lines = ["Alpha", "-", "Beta"]
 
     created_teams, created_players = handle_batch_lines(request, tournament, lines)
