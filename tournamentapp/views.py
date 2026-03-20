@@ -21,7 +21,7 @@ from django.db.models import Q, Count
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline
+from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule
 from .services import handle_batch_lines
 
 
@@ -576,3 +576,11 @@ def toggle_tournament_status(request, pk):
     tournament.is_finished = not tournament.is_finished
     tournament.save(update_fields=['is_finished'])
     return redirect('tournament-detail', pk=pk)
+
+@require_POST
+@login_required
+def reset_schedule(request, tournament_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    reset_tournament_schedule(tournament)
+    messages.success(request, "Schedule has been reset.")
+    return redirect('generate-tournament-schedule', tournament_id=tournament.pk)

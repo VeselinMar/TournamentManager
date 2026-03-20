@@ -422,3 +422,20 @@
   border-color: var(--text, #1a1a1a);
   color: var(--text, #1a1a1a);
 }
+
+.btn-reset {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  background: none;
+  border: 1px solid var(--muted, #555);
+  color: var(--muted, #555);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-reset:hover {
+  border-color: #c0392b;
+  color: #c0392b;
+}
