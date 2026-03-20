@@ -8,15 +8,57 @@ from .utils import recalculate_match_points
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name']
+        fields = ['name', 'points_for_win', 'points_for_draw']
+        labels = {
+            'points_for_win': 'Points for win',
+            'points_for_draw': 'Points for draw',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        win = cleaned_data.get('points_for_win')
+        draw = cleaned_data.get('points_for_draw')
+        if win is not None and draw is not None and win <= draw:
+            raise forms.ValidationError(
+                "Points for win must be greater than points for draw."
+            )
+        return cleaned_data
 
 class TournamentUpdateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date']
+        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw']
+        labels = {
+            'points_for_win': 'Points for win',
+            'points_for_draw': 'Points for draw',
+        }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # lock points fields if scored matches exist
+        if self.instance and self.instance.pk:
+            if self.instance.matches.filter(is_finished=True).exists():
+                self.fields['points_for_win'].disabled = True
+                self.fields['points_for_draw'].disabled = True
+                self.fields['points_for_win'].help_text = (
+                    "Cannot be changed after matches have been scored."
+                )
+                self.fields['points_for_draw'].help_text = (
+                    "Cannot be changed after matches have been scored."
+                )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        win = cleaned_data.get('points_for_win')
+        draw = cleaned_data.get('points_for_draw')
+        if win is not None and draw is not None and win <= draw:
+            raise forms.ValidationError(
+                "Points for win must be greater than points for draw."
+            )
+        return cleaned_data
 
     def clean_name(self):
         name = self.cleaned_data['name'].strip()

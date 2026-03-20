@@ -11,6 +11,8 @@ SECRET_KEY = config("SECRET_KEY")
 # Debug mode
 DEBUG = config("DEBUG", default=True, cast=bool)
 
+FORMS_URLFIELD_ASSUME_HTTPS = True
+
 # session security
 if not DEBUG:
     SESSION_COOKIE_SECURE = True

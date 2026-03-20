@@ -290,17 +290,20 @@ def reset_tournament_schedule(tournament):
         tournament.teams.all().update(tournament_points=0)
 
 def recalculate_points(match):
+    tournament = match.tournament
     home = match.home_team.__class__.objects.get(pk=match.home_team.pk)
     away = match.away_team.__class__.objects.get(pk=match.away_team.pk)
 
     # reverse old points based on stored score
     if match.home_score > match.away_score:
-        home.tournament_points = max(0, home.tournament_points - 3)
+        home.tournament_points = max(0, home.tournament_points - tournament.points_for_win)
+        away.tournament_points = max(0, away.tournament_points - tournament.points_for_loss)
     elif match.away_score > match.home_score:
-        away.tournament_points = max(0, away.tournament_points - 3)
+        away.tournament_points = max(0, away.tournament_points - tournament.points_for_win)
+        home.tournament_points = max(0, home.tournament_points - tournament.points_for_loss)
     else:
-        home.tournament_points = max(0, home.tournament_points - 1)
-        away.tournament_points = max(0, away.tournament_points - 1)
+        home.tournament_points = max(0, home.tournament_points - tournament.points_for_draw)
+        away.tournament_points = max(0, away.tournament_points - tournament.points_for_draw)
 
     # recalculate new score from events
     home_goals = (
@@ -314,12 +317,14 @@ def recalculate_points(match):
 
     # apply new points
     if home_goals > away_goals:
-        home.tournament_points += 3
+        home.tournament_points += tournament.points_for_win
+        away.tournament_points += tournament.points_for_loss
     elif away_goals > home_goals:
-        away.tournament_points += 3
+        away.tournament_points += tournament.points_for_win
+        home.tournament_points += tournament.points_for_loss
     else:
-        home.tournament_points += 1
-        away.tournament_points += 1
+        home.tournament_points += tournament.points_for_draw
+        away.tournament_points += tournament.points_for_draw
 
     home.save()
     away.save()
