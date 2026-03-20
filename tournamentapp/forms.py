@@ -10,6 +10,20 @@ class TournamentCreateForm(forms.ModelForm):
         model = Tournament
         fields = ['name']
 
+class TournamentUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ['name', 'tournament_date']
+        widgets = {
+            'tournament_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        if not name:
+            raise forms.ValidationError("Tournament name cannot be empty.")
+        return name
+        
 class TeamCreateForm(forms.ModelForm):
     class Meta:
         model = Team
