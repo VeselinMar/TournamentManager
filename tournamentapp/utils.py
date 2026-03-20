@@ -288,3 +288,42 @@ def reset_tournament_schedule(tournament):
     with transaction.atomic():
         tournament.matches.all().delete()
         tournament.teams.all().update(tournament_points=0)
+
+def recalculate_points(match):
+    home = match.home_team.__class__.objects.get(pk=match.home_team.pk)
+    away = match.away_team.__class__.objects.get(pk=match.away_team.pk)
+
+    # reverse old points based on stored score
+    if match.home_score > match.away_score:
+        home.tournament_points = max(0, home.tournament_points - 3)
+    elif match.away_score > match.home_score:
+        away.tournament_points = max(0, away.tournament_points - 3)
+    else:
+        home.tournament_points = max(0, home.tournament_points - 1)
+        away.tournament_points = max(0, away.tournament_points - 1)
+
+    # recalculate new score from events
+    home_goals = (
+        match.events.filter(event_type='goal', team=home).count() +
+        match.events.filter(event_type='own_goal', team=away).count()
+    )
+    away_goals = (
+        match.events.filter(event_type='goal', team=away).count() +
+        match.events.filter(event_type='own_goal', team=home).count()
+    )
+
+    # apply new points
+    if home_goals > away_goals:
+        home.tournament_points += 3
+    elif away_goals > home_goals:
+        away.tournament_points += 3
+    else:
+        home.tournament_points += 1
+        away.tournament_points += 1
+
+    home.save()
+    away.save()
+
+    match.home_score = home_goals
+    match.away_score = away_goals
+    match.save(update_fields=['home_score', 'away_score'])
