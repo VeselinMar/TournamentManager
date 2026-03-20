@@ -8,7 +8,7 @@ def test_generate_round_robin_even_teams(django_user_model):
         email="testuser@abv.bg",
         password="pass"
     )
-    tournament = Tournament.objects.create(name="T", owner_id=1)
+    tournament = Tournament.objects.create(name="T", owner=user)
     teams = [Team.objects.create(name=f"Team{i}", tournament=tournament) for i in range(4)]
 
     rounds = generate_round_robin(tournament)
@@ -27,7 +27,7 @@ def test_generate_round_robin_odd_teams(django_user_model):
         email="testuser@abv.bg",
         password="pass"
     )
-    tournament = Tournament.objects.create(name="T", owner_id=1)
+    tournament = Tournament.objects.create(name="T", owner=user)
     teams = [Team.objects.create(name=f"Team{i}", tournament=tournament) for i in range(3)]
 
     rounds = generate_round_robin(tournament)

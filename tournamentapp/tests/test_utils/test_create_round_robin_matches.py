@@ -11,7 +11,7 @@ def test_create_round_robin_matches_assigns_fields_and_times(django_user_model):
         email="testuser@abv.bg",
         password="pass"
     )
-    tournament = Tournament.objects.create(name="T", owner_id=1)
+    tournament = Tournament.objects.create(name="T", owner=user)
     teams = [Team.objects.create(name=f"Team{i}", tournament=tournament) for i in range(4)]
     # Create fields
     field1 = Field.objects.create(name="Field 1", tournament=tournament, owner=tournament.owner)
