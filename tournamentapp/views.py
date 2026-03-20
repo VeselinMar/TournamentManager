@@ -555,3 +555,11 @@ def generate_tournament_schedule(request, tournament_id):
         'form': form,
         'tournament': tournament
     })
+
+@require_POST
+@login_required
+def toggle_tournament_status(request, pk):
+    tournament = get_object_or_404(Tournament, pk=pk, owner=request.user)
+    tournament.is_finished = not tournament.is_finished
+    tournament.save(update_fields=['is_finished'])
+    return redirect('tournament-detail', pk=pk)

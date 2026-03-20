@@ -4,7 +4,7 @@ from .views import (
     TeamListView, TeamDetailView, TeamCreateView,
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
-    generate_tournament_schedule, about_view, contact_view, privacy_policy_view
+    generate_tournament_schedule, about_view, contact_view, privacy_policy_view, toggle_tournament_status
 )
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing-page'),
@@ -19,6 +19,7 @@ urlpatterns = [
     path('tournament/<int:pk>/', TournamentDetailView.as_view(), name='tournament-detail'),
     path('public/<slug:slug>/', TournamentPublicView.as_view(), name='public-tournament-leaderboard'),
     path('tournament/<int:tournament_id>/generate-schedule/', generate_tournament_schedule, name='generate-tournament-schedule'),
+    path('tournament/<int:pk>/toggle-status/', toggle_tournament_status, name='toggle-tournament-status'),
 
     # Teams (tournament-specific)
     path('tournament/<int:tournament_id>/teams/', TeamListView.as_view(), name='team-list'),

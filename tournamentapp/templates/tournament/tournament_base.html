@@ -19,6 +19,11 @@
     {% if tournament.name %}
       <h1 class="page-title">{{ tournament.name }}</h1>
     {% endif %}
+    {% if tournament.is_finished %}
+      <span class="status-badge finished">✓ Finished</span>
+    {% else %}
+      <span class="status-badge live">● Live</span>
+    {% endif %}
 
     {% if current_matches %}
       <section class="current-matches">
