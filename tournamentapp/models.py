@@ -5,6 +5,14 @@ from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 
 class Tournament(models.Model):
+    ROUND_ROBIN = 'round_robin'
+    KNOCKOUT = 'knockout'
+
+    FORMAT_CHOICES = [
+        (ROUND_ROBIN, 'Round Robin'),
+        # (KNOCKOUT, 'Knockout'),
+    ]
+
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -16,32 +24,22 @@ class Tournament(models.Model):
         unique=True,
         blank=True
     )
+    tournament_date = models.DateField(null=True, blank=True)
 
-    tournament_date = models.DateField(
-        null=True, 
-        blank=True
-    )
-
-    points_for_win = models.PositiveSmallIntegerField(
-        default=3,
-    )
-
-    points_for_draw = models.PositiveSmallIntegerField(
-        default=1,
-    )
-
-    points_for_loss = models.PositiveSmallIntegerField(
-        default=0,
-    )
-
+    points_for_win = models.PositiveSmallIntegerField(default=3)
+    points_for_draw = models.PositiveSmallIntegerField(default=1)
+    points_for_loss = models.PositiveSmallIntegerField(default=0)
     yellow_cards_for_suspension = models.PositiveSmallIntegerField(
         default=2,
         validators=[MinValueValidator(1)]
-
     )
+    is_finished = models.BooleanField(default=False)
 
-    is_finished = models.BooleanField(
-        default=False,
+    format = models.CharField(
+        max_length=20,
+        choices=FORMAT_CHOICES,
+        default=ROUND_ROBIN,
+        help_text="Tournament format. Only 'round_robin' is implemented currently."
     )
 
     def __str__(self):
