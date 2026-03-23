@@ -8,11 +8,15 @@ from .utils import recalculate_match_points
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
+        fields = ['name', 'tournament_date', 'format', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
-            'yellow_cards_for_suspension': "Yellow cards for suspension"
+            'yellow_cards_for_suspension': 'Yellow cards for suspension',
+            'format': 'Tournament Format',
+        }
+        widgets = {
+            'tournament_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def clean(self):
