@@ -94,6 +94,23 @@
   text-decoration: none;
 }
 
+.suspension-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c0392b;
+  border: 1px solid rgba(192,57,43,0.4);
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.yellow-card-count,
+.red-card-count {
+  font-size: 0.8rem;
+  margin-left: 0.4rem;
+}
+
 /* ==========================
    Responsive Adjustments
 ========================== */

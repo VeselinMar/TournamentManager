@@ -180,3 +180,38 @@
 #away-player-list::-webkit-scrollbar-track {
     background-color: #2e7d32;
 }
+
+.player-muted {
+  opacity: 0.6;
+}
+
+.suspension-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: #c0392b;
+  letter-spacing: 0.05em;
+}
+
+.games-sat-out {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 0.3rem;
+}
+
+.btn-unmute {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  cursor: pointer;
+  margin-left: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-unmute:hover {
+  background: var(--accent);
+  color: #fff;
+}

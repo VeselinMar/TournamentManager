@@ -11,6 +11,7 @@ def test_rename_tournament(auth_client, tournament):
         'tournament_date': '',
         'points_for_win': 3,
         'points_for_draw': 1,
+        'yellow_cards_for_suspension': 2,
     })
     assert response.status_code == 302
     tournament.refresh_from_db()
@@ -30,7 +31,8 @@ def test_rename_slug_collision(auth_client, tournament, django_user_model):
         {'name': 'New Name', 
         'tournament_date': '',
         'points_for_win': 3,
-        'points_for_draw': 1
+        'points_for_draw': 1,
+        'yellow_cards_for_suspension': 2,
         })
     assert response.status_code == 302
     tournament.refresh_from_db()
@@ -48,7 +50,8 @@ def test_edit_tournament_requires_owner(client, tournament, django_user_model):
         'name': 'Hacked',
         'tournament_date': '',
         'points_for_win': 3,
-        'points_for_draw': 1
+        'points_for_draw': 1,
+        'yellow_cards_for_suspension': 2,
     })
     assert response.status_code == 404
     tournament.refresh_from_db()
@@ -61,7 +64,8 @@ def test_reschedule_tournament(auth_client, tournament):
     {'name': tournament.name,
      'tournament_date': '2026-06-15',
      'points_for_win': 3,
-     'points_for_draw': 0
+     'points_for_draw': 0,
+     'yellow_cards_for_suspension': 2,
      })
     assert response.status_code == 302
     tournament.refresh_from_db()

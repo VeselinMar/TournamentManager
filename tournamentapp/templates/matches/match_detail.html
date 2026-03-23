@@ -1,33 +1,81 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="container mt-4">
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Match Details</title>
-</head>
-<body>
-    <h1>{{ match.home_team.name }} vs {{ match.away_team.name }}</h1>
-    <p>Start Time: {{ match.start_time }}</p>
-    <p>Field: {{ match.field }}</p>
-    <p>Status: {% if match.is_finished %}Finished{% else %}In Progress{% endif %}</p>
-    <p>Score: {{ match.home_score }} - {{ match.away_score }}</p>
-
-    <hr>
-
-    <h2>Goals</h2>
-    {% if goals %}
-        <ul>
-            {% for goal in goals %}
-                <li>{{ goal.player.name }} ({{ goal.player.team.name }})</li>
-            {% endfor %}
-        </ul>
+  <div class="match-detail-header">
+    <h1 class="match-detail-title">
+      {{ match.home_team.name }} <span class="vs">vs</span> {{ match.away_team.name }}
+    </h1>
+    {% if match.is_finished %}
+      <div class="match-detail-score">{{ match.home_score }} — {{ match.away_score }}</div>
+      <span class="status-badge finished">✓ Finished</span>
     {% else %}
-        <p>No goals recorded.</p>
+      <span class="status-badge live">● Live</span>
     {% endif %}
+  </div>
 
-    <hr>
-    <a href="{% url 'public-tournament-leaderboard' tournament.slug %}">Back to Home</a>
-</body>
-</html>
+  <div class="match-detail-meta">
+    <span>🕐 {{ match.start_time|date:"M d, Y H:i" }}</span>
+    <span>📍 {{ match.field.name }}</span>
+    {% if match.notes %}
+      <span class="match-label">{{ match.notes }}</span>
+    {% endif %}
+  </div>
+
+  <hr class="match-detail-divider">
+
+  <div class="match-detail-events">
+    <div class="match-detail-team">
+      <h3>{{ match.home_team.name }}</h3>
+      <ul class="event-list">
+        {% for event in match.events.all %}
+          {% if event.team == match.home_team %}
+            <li class="event-item">
+              {% if event.event_type == 'goal' %}⚽
+              {% elif event.event_type == 'own_goal' %}❗
+              {% elif event.event_type == 'yellow_card' %}🟨
+              {% elif event.event_type == 'red_card' %}🟥
+              {% endif %}
+              {{ event.player.name }} <span class="event-minute">{{ event.minute }}'</span>
+            </li>
+          {% endif %}
+        {% empty %}
+          <li class="event-empty">No events</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="match-detail-team">
+      <h3>{{ match.away_team.name }}</h3>
+      <ul class="event-list">
+        {% for event in match.events.all %}
+          {% if event.team == match.away_team %}
+            <li class="event-item">
+              {% if event.event_type == 'goal' %}⚽
+              {% elif event.event_type == 'own_goal' %}❗
+              {% elif event.event_type == 'yellow_card' %}🟨
+              {% elif event.event_type == 'red_card' %}🟥
+              {% endif %}
+              {{ event.player.name }} <span class="event-minute">{{ event.minute }}'</span>
+            </li>
+          {% endif %}
+        {% empty %}
+          <li class="event-empty">No events</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <hr class="match-detail-divider">
+
+  <div class="match-detail-actions">
+    <a href="{% url 'tournament-detail' tournament.pk %}" class="btn-ghost">← Back to Tournament</a>
+    {% if match.is_finished %}
+      <a href="{% url 'match-edit' tournament.pk match.pk %}" class="btn-score">Edit Result</a>
+    {% elif not tournament.is_finished %}
+      <a href="{% url 'match-edit' tournament.pk match.pk %}" class="btn-score">Score</a>
+    {% endif %}
+  </div>
+
+</div>
 {% endblock %}

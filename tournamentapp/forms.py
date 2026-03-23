@@ -8,10 +8,11 @@ from .utils import recalculate_match_points
 class TournamentCreateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'points_for_win', 'points_for_draw']
+        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
+            'yellow_cards_for_suspension': "Yellow cards for suspension"
         }
 
     def clean(self):
@@ -22,15 +23,19 @@ class TournamentCreateForm(forms.ModelForm):
             raise forms.ValidationError(
                 "Points for win must be greater than points for draw."
             )
+        threshold = cleaned_data.get('yellow_cards_for_suspension')
+        if threshold is not None and threshold < 1:
+            raise forms.ValidationError("Suspension threshold must be at least 1.")
         return cleaned_data
 
 class TournamentUpdateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw']
+        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
+            'yellow_cards_for_suspension': "Yellow cards for suspension"
         }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
@@ -43,17 +48,21 @@ class TournamentUpdateForm(forms.ModelForm):
             if self.instance.matches.filter(is_finished=True).exists():
                 self.fields['points_for_win'].disabled = True
                 self.fields['points_for_draw'].disabled = True
+                self.fields['yellow_cards_for_suspension'].disabled = True
                 self.fields['points_for_win'].help_text = (
                     "Cannot be changed after matches have been scored."
                 )
                 self.fields['points_for_draw'].help_text = (
                     "Cannot be changed after matches have been scored."
                 )
+                self.fields['yellow_cards_for_suspension'].help_text = (
+                    "Cannot be changed after matches have been scored."
+                )
 
     def clean(self):
         cleaned_data = super().clean()
         win = cleaned_data.get('points_for_win')
-        draw = cleaned_data.get('points_for_draw')
+        draw = cleaned_data.get('points_for_draw')  
         if win is not None and draw is not None and win <= draw:
             raise forms.ValidationError(
                 "Points for win must be greater than points for draw."
