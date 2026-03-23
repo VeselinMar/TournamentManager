@@ -1,37 +1,52 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container team-detail-container">
-    <h1 class="page-title">{{ team.name }}</h1>
+  <h1 class="page-title">{{ team.name }}</h1>
 
-    <h2 class="matches-title">Finished Matches</h2>
-    {% if finished_matches %}
-        <ul class="match-list">
-            {% for match in finished_matches %}
-                <li class="match-item match-{{ match.result }}">
-                    <a href="{% url 'match-detail' tournament.id match.id %}" class="match-link">
-                        {{ match.home_team.name }} vs {{ match.away_team.name }} —
-                        {{ match.start_time|date:"M d, Y H:i" }} <br>
-                        Result: {{ match.home_score }} - {{ match.away_score }} |
-                        Goal Difference: {{ match.goal_difference }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No finished matches for this team.</p>
-    {% endif %}
-
-    <h2 class="players">Players</h2>
-    {% if players %}
-    <ul class="player-list">
-        {% for player in players %}
-            <li class="player-stats">
-                {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
-            </li>
-        {% endfor %}
+  <h2 class="matches-title">Finished Matches</h2>
+  {% if finished_matches %}
+    <ul class="match-list">
+      {% for match in finished_matches %}
+        <li class="match-item match-{{ match.result }}">
+          <a href="{% url 'match-detail' tournament.id match.id %}" class="match-link">
+            {{ match.home_team.name }} vs {{ match.away_team.name }} —
+            {{ match.start_time|date:"M d, Y H:i" }}<br>
+            Result: {{ match.home_score }} - {{ match.away_score }} |
+            Goal Difference: {{ match.goal_difference }}
+          </a>
+        </li>
+      {% endfor %}
     </ul>
-    {% else %}
-        <p></p>
-    {% endif %}
+  {% else %}
+    <p>No finished matches for this team.</p>
+  {% endif %}
 
+  <h2 class="players">Players</h2>
+  {% if players %}
+    <ul class="player-list">
+      {% for player in players %}
+        <li class="player-stats">
+          {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
+          {% if player.is_muted %}
+            <span class="suspension-badge">⚠ Suspended</span>
+            <span class="games-sat-out">({{ player.games_sat_out }} game{{ player.games_sat_out|pluralize }} served)</span>
+            <form method="post" action="{% url 'toggle-player-mute' tournament.id player.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-unmute">Lift Suspension</button>
+            </form>
+          {% else %}
+            {% if player.yellow_cards > 0 %}
+              <span class="yellow-card-count">🟨 {{ player.yellow_cards }}</span>
+            {% endif %}
+            {% if player.red_cards > 0 %}
+              <span class="red-card-count">🟥 {{ player.red_cards }}</span>
+            {% endif %}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No players in this team.</p>
+  {% endif %}
+</div>
 {% endblock %}

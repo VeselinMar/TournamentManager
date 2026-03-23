@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator
 
 class Tournament(models.Model):
     name = models.CharField(max_length=100)
@@ -23,13 +24,21 @@ class Tournament(models.Model):
 
     points_for_win = models.PositiveSmallIntegerField(
         default=3,
-        )
+    )
+
     points_for_draw = models.PositiveSmallIntegerField(
         default=1,
-        )
+    )
+
     points_for_loss = models.PositiveSmallIntegerField(
         default=0,
-        )
+    )
+
+    yellow_cards_for_suspension = models.PositiveSmallIntegerField(
+        default=2,
+        validators=[MinValueValidator(1)]
+
+    )
 
     is_finished = models.BooleanField(
         default=False,
@@ -101,7 +110,7 @@ class Player(models.Model):
         verbose_name="Player Name",
         blank=False,
         null=False,
-    )
+        )
     team = models.ForeignKey(
         Team,
         on_delete=models.CASCADE,
@@ -110,7 +119,15 @@ class Player(models.Model):
         help_text="Select the team this player belongs to.",
         blank=False,
         null=False,
-    )
+        )
+
+    is_muted = models.BooleanField(
+        default=False,
+        )
+    games_sat_out = models.PositiveSmallIntegerField(
+        default=0,
+        )
+
 
     class Meta:
         unique_together = ('name', 'team')
@@ -133,7 +150,13 @@ class Player(models.Model):
         return self.match_events.filter(event_type='red_card').count()
 
     def is_suspended(self):
-        return self.yellow_cards() >= 2 or self.red_cards() >= 1
+        return self.is_muted or self.yellow_cards() >= self.team.tournament.yellow_cards_for_suspension or self.red_cards() >= 1
+        
+    def unmute(self):
+        self.is_muted = False
+        self.games_sat_out = 0
+        self.match_events.filter(event_type__in=['yellow_card', 'red_card']).delete()
+        self.save(update_fields=['is_muted', 'games_sat_out'])
 
 class Field(models.Model):
     name = models.CharField(

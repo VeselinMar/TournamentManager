@@ -17,7 +17,7 @@ from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournamen
 from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm
 from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
@@ -175,7 +175,7 @@ class TeamDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):
         upcoming_matches = all_matches.filter(is_finished=False)
 
         context.update({
-            'finished_matches': finish_match,
+            'finished_matches': finished_matches,
             'upcoming_matches': upcoming_matches,
             'players': team.players.all(),
             'tournament': tournament,
@@ -279,13 +279,16 @@ class MatchDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):
         context = super().get_context_data(**kwargs)
         match = self.object
 
-        home_goals = GoalEvent.objects.filter(match=match, team=match.home_team).count()
-        away_goals = GoalEvent.objects.filter(match=match, team=match.away_team).count()
+        home_goals = match.events.filter(event_type='goal', team=match.home_team).count()
+        home_goals += match.events.filter(event_type='own_goal', team=match.away_team).count()
+
+        away_goals = match.events.filter(event_type='goal', team=match.away_team).count()
+        away_goals += match.events.filter(event_type='own_goal', team=match.home_team).count()
 
         context.update({
             'home_goals': home_goals,
             'away_goals': away_goals,
-            'tournament': self.tournament,
+            'tournament': self.get_tournament(),
         })
         return context
 
@@ -387,6 +390,9 @@ def create_match_event(request, tournament_id, match_id):
     if player.team.id != team_id:
         return JsonResponse({'success': False, 'error': 'Player does not belong to this team'}, status=400)
 
+    if event_type == 'goal' and player.is_muted:
+        return JsonResponse({'success': False, 'error': 'Player is suspended and cannot score.'}, status=400)
+
     # Create the event
     event = MatchEvent.objects.create(
         match=match,
@@ -395,7 +401,15 @@ def create_match_event(request, tournament_id, match_id):
         event_type=event_type,
         minute=minute,
     )
-    
+    if event_type == 'yellow_card':
+        if player.yellow_cards() >= match.tournament.yellow_cards_for_suspension:
+            player.is_muted = True
+            player.save(update_fields=['is_muted'])
+    elif event_type == 'red_card':
+        player.is_muted = True
+        player.save(update_fields=['is_muted'])
+
+        
     # Recalculate scores
     home_score = (
         match.events.filter(event_type='goal', team=match.home_team).count() +
@@ -455,7 +469,11 @@ def finish_match(request, tournament_id, match_id):
 
     if not match.is_finished:
         match.apply_result()
-
+        # increment games_sat_out for muted players on both teams
+        for team in [match.home_team, match.away_team]:
+            team.players.filter(is_muted=True).update(
+                games_sat_out=F('games_sat_out') + 1
+            )
     return redirect('tournament-detail', pk=tournament_id)
 
 @require_http_methods(['DELETE'])
@@ -618,3 +636,15 @@ def delete_match(request, tournament_id, match_id):
     match.delete()
     messages.success(request, "Match removed.")
     return redirect('tournament-detail', pk=tournament_id)
+
+@require_POST
+@login_required
+def toggle_player_mute(request, tournament_id, player_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    player = get_object_or_404(Player, pk=player_id, team__tournament=tournament)
+    if player.is_muted:
+        player.unmute()
+    else:
+        player.is_muted = True
+        player.save(update_fields=['is_muted'])
+    return redirect('team-detail', tournament_id=tournament_id, pk=player.team.pk)

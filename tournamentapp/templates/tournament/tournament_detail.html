@@ -6,7 +6,6 @@
 
 {% block match_actions %}
   {% if match.is_finished %}
-    <span class="score">{{ match.home_score }} - {{ match.away_score }}</span>
     <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Edit Result</a>
   {% else %}
     {% if not tournament.is_finished %}
