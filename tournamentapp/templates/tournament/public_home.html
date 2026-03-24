@@ -1,1 +1,36 @@
 {% extends 'tournament/tournament_base.html' %}
+
+{% block extra_content %}
+  {% if show_vendors and has_active_vendors %}
+    <section class="public-vendors">
+      <h2>Food & Drinks</h2>
+      {% for vendor in tournament.vendors.all %}
+        {% if vendor.is_active %}
+          <div class="vendor-card">
+            <strong>{{ vendor.name }}</strong>
+            {% if vendor.category %} — {{ vendor.category }}{% endif %}
+            {% if vendor.venue_location %} @ {{ vendor.venue_location }}{% endif %}
+            {% if vendor.description %}<p>{{ vendor.description }}</p>{% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  {% if show_side_events and has_active_side_events %}
+    <section class="public-programme">
+      <h2>Programme</h2>
+      {% for event in tournament.side_events.all %}
+        {% if event.is_active %}
+          <div class="programme-card">
+            <strong>{{ event.name }}</strong>
+            — {{ event.start_time|date:"H:i" }}
+            {% if event.end_time %} → {{ event.end_time|date:"H:i" }}{% endif %}
+            {% if event.location %} @ {{ event.location }}{% endif %}
+            {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endblock %}

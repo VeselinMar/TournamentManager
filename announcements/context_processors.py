@@ -8,6 +8,14 @@ def active_announcements(request):
     if not tournament_id:
         return {}
     now = timezone.now()
+    try:
+        from tournamentapp.models import Tournament
+        tournament = Tournament.objects.get(pk=tournament_id)
+        if not tournament.show_announcements:
+            return {'active_announcements': []}
+    except Tournament.DoesNotExist:
+        return {}
+
     announcements = Announcement.objects.filter(
         tournament_id=tournament_id,
         is_active=True,

@@ -25,6 +25,10 @@ class Tournament(models.Model):
         blank=True
     )
     tournament_date = models.DateField(null=True, blank=True)
+    show_leaderboard = models.BooleanField(default=True)
+    show_vendors = models.BooleanField(default=True)
+    show_side_events = models.BooleanField(default=True)
+    show_announcements = models.BooleanField(default=True)
 
     points_for_win = models.PositiveSmallIntegerField(default=3)
     points_for_draw = models.PositiveSmallIntegerField(default=1)

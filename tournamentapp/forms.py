@@ -35,11 +35,15 @@ class TournamentCreateForm(forms.ModelForm):
 class TournamentUpdateForm(forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
+        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
-            'yellow_cards_for_suspension': "Yellow cards for suspension"
+            'yellow_cards_for_suspension': "Yellow cards for suspension",
+            'show_leaderboard': 'Show leaderboard on public page',
+            'show_vendors': 'Show vendors on public page',
+            'show_side_events': 'Show programme on public page',
+            'show_announcements': 'Show announcements on public page',
         }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
