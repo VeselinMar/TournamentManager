@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Vendors — {{ tournament.name }}</h1>
+  <a href="{% url 'vendor-create' tournament.id %}" class="btn-primary">Add Vendor</a>
+  <ul class="mt-3">
+    {% for vendor in vendors %}
+      <li>
+        <strong>{{ vendor.name }}</strong>
+        {% if not vendor.is_active %}<span>(inactive)</span>{% endif %}
+        — {{ vendor.category }}
+        <a href="{% url 'vendor-edit' tournament.id vendor.pk %}">Edit</a>
+        <a href="{% url 'vendor-delete' tournament.id vendor.pk %}">Delete</a>
+      </li>
+    {% empty %}
+      <li>No vendors yet.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'tournament-detail' tournament.pk %}" class="btn-ghost mt-3">← Back</a>
+</div>
+{% endblock %}
