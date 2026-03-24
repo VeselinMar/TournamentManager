@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Programme — {{ tournament.name }}</h1>
+  <a href="{% url 'sideevent-create' tournament.id %}" class="btn-primary">Add Event</a>
+  <ul class="mt-3">
+    {% for event in side_events %}
+      <li>
+        <strong>{{ event.name }}</strong>
+        {% if not event.is_active %}<span>(inactive)</span>{% endif %}
+        — {{ event.start_time|date:"M d, H:i" }}
+        {% if event.end_time %} → {{ event.end_time|date:"H:i" }}{% endif %}
+        {% if event.location %} @ {{ event.location }}{% endif %}
+        <a href="{% url 'sideevent-edit' tournament.id event.pk %}">Edit</a>
+        <a href="{% url 'sideevent-delete' tournament.id event.pk %}">Delete</a>
+      </li>
+    {% empty %}
+      <li>No events yet.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'tournament-detail' tournament.pk %}" class="btn-ghost mt-3">← Back</a>
+</div>
+{% endblock %}
