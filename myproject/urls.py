@@ -8,7 +8,8 @@ urlpatterns = [
     path('', include('tournamentapp.urls')),
     path('accounts/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')),
-    path('sponsors/', include('sponsors.urls'))
+    path('sponsors/', include('sponsors.urls')),
+    path('', include('vendors.urls')),
 ]
 
 
