@@ -87,6 +87,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "tournamentapp.context_processors.current_tournament",
+                'announcements.context_processors.active_announcements',
             ],
         },
     },

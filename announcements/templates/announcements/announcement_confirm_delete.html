@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Delete this announcement?</h1>
+  <p>{{ object.message|truncatechars:100 }}</p>
+  <p>This cannot be undone.</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn-finish">Delete</button>
+    <a href="{% url 'announcement-list' tournament.id %}" class="btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}
