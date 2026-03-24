@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Event</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn-primary">Save</button>
+    <a href="{% url 'sideevent-list' tournament.id %}" class="btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}

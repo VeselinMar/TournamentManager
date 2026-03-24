@@ -34,6 +34,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'vendor-list' tournament.id %}">Vendors</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sideevent-list' tournament.id %}">Programme</a>
+                        </li>
                         {% if not tournament.is_finished %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'team-list' tournament.id %}">Teams</a>
