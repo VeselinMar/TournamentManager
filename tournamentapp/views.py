@@ -90,7 +90,13 @@ class TournamentPublicView(DetailView):
 
         context.update({
             'timeline': timeline,
-            'field_names': field_names
+            'field_names': field_names,
+            'show_leaderboard': tournament.show_leaderboard,
+            'show_vendors': tournament.show_vendors,
+            'show_side_events': tournament.show_side_events,
+            'show_announcements': tournament.show_announcements,
+            'has_active_vendors': tournament.vendors.filter(is_active=True).exists(),
+            'has_active_side_events': tournament.side_events.filter(is_active=True).exists(),            
         })
 
         return context
