@@ -13,36 +13,24 @@ class ScheduleAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(Tournament, slug=slug)
-        timeline, field_names = build_timeline(tournament)
+        tournament = get_object_or_404(Tournament, slug__iexact=slug)
+        matches_qs = Match.objects.filter(tournament=tournament).order_by('start_time')
 
-        # build serializable timeline rows
-        rows = []
-        for row in timeline:
-            rows.append({
-                'time': row['time'],
-                'matches': [
-                    {
-                        'id': m.pk,
-                        'home_team': m.home_team.name,
-                        'away_team': m.away_team.name,
-                        'field': m.field.name,
-                        'start_time': m.start_time,
-                        'home_score': m.home_score,
-                        'away_score': m.away_score,
-                        'is_finished': m.is_finished,
-                    } if m else None
-                    for m in row['matches']
-                ]
-            })
+        matches = [
+            {
+                'id': m.pk,
+                'home_team': m.home_team.name,
+                'away_team': m.away_team.name,
+                'field': m.field.name,
+                'start_time': m.start_time.isoformat(),
+                'home_score': m.home_score,
+                'away_score': m.away_score,
+                'is_finished': m.is_finished,
+            }
+            for m in matches_qs
+        ]
 
-        data = {
-            'field_names': field_names,
-            'timeline': rows,
-        }
-
-        serializer = ScheduleSerializer(data)
-        return Response(serializer.data)
+        return Response(matches)
 
 class LeaderboardAPIView(APIView):
     permission_classes = [AllowAny]
