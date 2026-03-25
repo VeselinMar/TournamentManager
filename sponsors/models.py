@@ -32,6 +32,9 @@ class SponsorBanner(models.Model):
         upload_to="sponsors/",
         help_text="Upload sponsor banner image"
     )
+    uploaded_at = models.DateTimeField(
+        auto_now_add = True
+    )
     # image Consts
     OUTPUT_MAX_HEIGHT = 600
     OUTPUT_MAX_WIDTH = 1600
@@ -76,10 +79,6 @@ class SponsorBanner(models.Model):
             buffer.getvalue(),
             name=new_name
         )
-
-    uploaded_at = models.DateTimeField(
-        auto_now_add = True
-    )
     
     class Meta:
         ordering = ["-uploaded_at"]
