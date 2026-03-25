@@ -13,7 +13,12 @@ urlpatterns = [
     path('', include('vendors.urls')),
     path('', include('programme.urls')),
     path('', include('announcements.urls')),
-    path('api/', include('tournamentapp.api.urls')),
+    path('api/', include([
+        path('', include('tournamentapp.api.urls')),
+        path('', include('vendors.api.urls')),
+        path('', include('programme.api.urls')),
+        path('', include('announcements.api.urls')),
+    ])),
 ]
 
 
