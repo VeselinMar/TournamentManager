@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from tournamentapp.models import Tournament, Match
-from .serializers import ScheduleSerializer, LeaderboardSerializer
+from .serializers import ScheduleSerializer, LeaderboardSerializer, TournamentMetaSerializer
 from tournamentapp.utils import build_timeline, get_team_standings, get_top_scorers
 
 
@@ -106,4 +106,12 @@ class LeaderboardAPIView(APIView):
         }
 
         serializer = LeaderboardSerializer(data)
+        return Response(serializer.data)
+
+class TournamentMetaAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        tournament = get_object_or_404(Tournament, slug=slug)
+        serializer = TournamentMetaSerializer(tournament)
         return Response(serializer.data)

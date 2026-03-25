@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from tournamentapp.models import Match, Field
+from tournamentapp.models import Match, Field, Tournament
 
 
 class MatchSerializer(serializers.ModelSerializer):
@@ -45,3 +45,25 @@ class TeamStandingSerializer(serializers.Serializer):
 class LeaderboardSerializer(serializers.Serializer):
     standings = TeamStandingSerializer(many=True)
     top_scorers = TopScorerSerializer(many=True)
+
+class TournamentMetaSerializer(serializers.ModelSerializer):
+    is_finished = serializers.BooleanField()
+    sponsors = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tournament
+        fields = [
+            'name', 'slug', 'is_finished', 'tournament_date',
+            'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements',
+            'sponsors'
+        ]
+
+    def get_sponsors(self, obj):
+        return [
+            {
+                'name': s.name,
+                'image_url': s.image.url if s.image else None,
+                'link_url': s.link_url,
+            }
+            for s in obj.sponsors.all()
+        ]
