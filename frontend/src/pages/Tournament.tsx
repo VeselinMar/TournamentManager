@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useParams, useLocation } from "react-router-dom";
 import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
+import AnnouncementBanner from "../components/AnnouncementBanner";
 
 export default function TournamentPage() {
   const params = useParams<{ slug: string }>();
-  const slug = params.slug!.toLowerCase(); // normalize slug
+  const slug = params.slug!.toLowerCase();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const location = useLocation(); // for highlighting active tab
+  const location = useLocation();
 
   useEffect(() => {
     getTournament(slug)
@@ -28,6 +29,7 @@ export default function TournamentPage() {
 
   // Build visible tabs from booleans
   const tabs = [
+    { name: "Schedule", path: "schedule" },
     tournament.show_leaderboard && { name: "Leaderboard", path: "leaderboard" },
     tournament.show_vendors && { name: "Vendors", path: "vendors" },
     tournament.show_side_events && { name: "Side Events", path: "events" },
@@ -38,6 +40,7 @@ export default function TournamentPage() {
     <div>
       {/* Header */}
       <header>
+        <AnnouncementBanner slug={ tournament.slug }/>
         <h1>{tournament.name}</h1>
         <span>Status: {tournament.is_finished ? "Finished" : "In Progress"}</span>
         <span>Date: {tournament.tournament_date}</span>
