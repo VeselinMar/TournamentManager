@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "rest_framework",
 
     # allauth
     "allauth",
@@ -94,6 +95,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "myproject.wsgi.application"
+
+# DjangoREST
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+    ],
+}
 
 # Database
 DATABASE_URL = config("DATABASE_URL", default=None)
