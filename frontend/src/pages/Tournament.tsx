@@ -1,17 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, useParams, useLocation } from "react-router-dom";
+import { useNavigate, Outlet, useParams } from "react-router-dom";
 import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
-import Header from "../components/schedule/Header"
+import Header from "../components/Header"
+import Navbar from "../components/Navbar"
 
 export default function TournamentPage() {
+  const navigate = useNavigate();
   const params = useParams<{ slug: string }>();
   const slug = params.slug!.toLowerCase();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const location = useLocation();
+  const sections = ["Schedule", "Leaderboard", "Vendors", "Side Events"]
+  const handleSectionSelect = (section: string) => {
+    const pathMap: Record<string, string> = {
+      "Schedule": "schedule",
+      "Leaderboard": "leaderboard",
+      "Vendors": "vendors",
+      "Side Events": "side-events",
+    };
+    navigate(pathMap[section]);
+  };
 
   useEffect(() => {
     getTournament(slug)
@@ -27,30 +37,10 @@ export default function TournamentPage() {
   if (error) return <div>{error}</div>;
   if (!tournament) return <div>No tournament found</div>;
 
-  const tabs = [
-    { name: "Schedule", path: "schedule" },
-    tournament.show_leaderboard && { name: "Leaderboard", path: "leaderboard" },
-    tournament.show_vendors && { name: "Vendors", path: "vendors" },
-    tournament.show_side_events && { name: "Side Events", path: "events" },
-  ].filter(Boolean) as { name: string; path: string }[];
-
   return (
     <div>
       <Header name={tournament.name} isFinished={tournament.is_finished} />
-
-      <nav style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.path}
-            to={tab.path}
-            style={{
-              fontWeight: location.pathname.endsWith(tab.path) ? "bold" : "normal",
-            }}
-          >
-            {tab.name}
-          </Link>
-        ))}
-      </nav>
+      <Navbar sections={sections} onSelect={handleSectionSelect} />
 
       <main style={{ marginTop: "2rem" }}>
         <Outlet />

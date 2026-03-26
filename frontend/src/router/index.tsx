@@ -39,7 +39,7 @@ const router = createBrowserRouter([
       { path: "schedule", element: <ScheduleWrapper /> },
       { path: "leaderboard", element: <LeaderboardWrapper /> },
       { path: "vendors", element: <VendorsWrapper /> },
-      { path: "events", element: <EventsWrapper /> },
+      { path: "side-events", element: <EventsWrapper /> },
     ],
   },
 ]);
