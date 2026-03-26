@@ -18,7 +18,6 @@ export default function AnnouncementBanner({ slug }: Props) {
 
       const now = new Date();
 
-      // find most recent active announcement
       const active = res.data
         .filter((a) => a.is_active)
         .filter((a) => new Date(a.starts_at) <= now && new Date(a.ends_at) >= now)
@@ -29,7 +28,7 @@ export default function AnnouncementBanner({ slug }: Props) {
         )[0];
 
       setAnnouncement(active || null);
-      setDismissed(false); // reset if new announcement appears
+      setDismissed(false);
     } catch (err) {
       console.error(err);
     }
@@ -37,7 +36,7 @@ export default function AnnouncementBanner({ slug }: Props) {
 
   useEffect(() => {
     fetchAnnouncements();
-    const interval = setInterval(fetchAnnouncements, 15000); // 15s polling
+    const interval = setInterval(fetchAnnouncements, 150000);
     return () => clearInterval(interval);
   }, [slug]);
 
