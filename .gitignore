@@ -85,3 +85,25 @@ venv.bak/
 db.sqlite3
 
 /staticfiles/
+
+# React / Vite / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# TypeScript
+frontend/*.tsbuildinfo
+
+# IDE (if not already ignored)
+.vscode/
+.idea/
+
+frontend/dist
