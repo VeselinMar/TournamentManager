@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+import datetime
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from tournamentapp.models import Tournament, Match
@@ -14,24 +15,48 @@ class ScheduleAPIView(APIView):
 
     def get(self, request, slug):
         tournament = get_object_or_404(Tournament, slug__iexact=slug)
-        matches_qs = Match.objects.filter(tournament=tournament).order_by('start_time')
+        timeline, field_names = build_timeline(tournament)
 
-        matches = [
-            {
-                'id': m.pk,
-                'home_team': m.home_team.name,
-                'away_team': m.away_team.name,
-                'field': m.field.name,
-                'start_time': m.start_time.isoformat(),
-                'home_score': m.home_score,
-                'away_score': m.away_score,
-                'is_finished': m.is_finished,
-            }
-            for m in matches_qs
-        ]
+        rows = []
+        for row in timeline:
+            rows.append({
+                "time": row["time"],
+                "matches": [
+                    {
+                        "id": m.pk,
+                        "home_team": m.home_team.name,
+                        "away_team": m.away_team.name,
+                        "field": m.field.name,
+                        "start_time": m.start_time.isoformat(),
+                        "home_score": m.home_score,
+                        "away_score": m.away_score,
+                        "is_finished": m.is_finished,
+                    } if m else None
+                    for m in row["matches"]
+                ]
+            })
 
-        return Response(matches)
+        current_matches = Match.objects.filter(
+            tournament=tournament,
+            is_finished=False,
+        )
 
+        return Response({
+            "field_names": field_names,
+            "timeline": rows,
+            "current_matches": [
+                {
+                    "id": m.pk,
+                    "home_team": m.home_team.name,
+                    "away_team": m.away_team.name,
+                    "field": m.field.name,
+                    "home_score": m.home_score,
+                    "away_score": m.away_score,
+                }
+                for m in current_matches
+            ]
+        })
+        
 class LeaderboardAPIView(APIView):
     permission_classes = [AllowAny]
 

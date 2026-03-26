@@ -1,0 +1,28 @@
+.container {
+  padding: 16px;
+}
+
+.title {
+  margin-bottom: 16px;
+}
+
+.card {
+  height: 100%;
+}
+
+.time {
+  font-weight: 600;
+}
+
+.score {
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.finished {
+  color: green;
+}
+
+.notFinished {
+  color: gray;
+}

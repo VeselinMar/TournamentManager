@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useParams, useLocation } from "react-router-dom";
 import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
-import AnnouncementBanner from "../components/AnnouncementBanner";
+import Header from "../components/schedule/Header"
 
 export default function TournamentPage() {
   const params = useParams<{ slug: string }>();
@@ -27,26 +27,17 @@ export default function TournamentPage() {
   if (error) return <div>{error}</div>;
   if (!tournament) return <div>No tournament found</div>;
 
-  // Build visible tabs from booleans
   const tabs = [
     { name: "Schedule", path: "schedule" },
     tournament.show_leaderboard && { name: "Leaderboard", path: "leaderboard" },
     tournament.show_vendors && { name: "Vendors", path: "vendors" },
     tournament.show_side_events && { name: "Side Events", path: "events" },
-    // tournament.show_announcements && { name: "Announcements", path: "announcements" },
   ].filter(Boolean) as { name: string; path: string }[];
 
   return (
     <div>
-      {/* Header */}
-      <header>
-        <AnnouncementBanner slug={ tournament.slug }/>
-        <h1>{tournament.name}</h1>
-        <span>Status: {tournament.is_finished ? "Finished" : "In Progress"}</span>
-        <span>Date: {tournament.tournament_date}</span>
-      </header>
+      <Header name={tournament.name} isFinished={tournament.is_finished} />
 
-      {/* Tabs Navigation */}
       <nav style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
         {tabs.map((tab) => (
           <Link
@@ -61,7 +52,6 @@ export default function TournamentPage() {
         ))}
       </nav>
 
-      {/* Nested view */}
       <main style={{ marginTop: "2rem" }}>
         <Outlet />
       </main>
