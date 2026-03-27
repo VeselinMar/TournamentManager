@@ -12,15 +12,8 @@ export default function TournamentPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const sections = ["Schedule", "Leaderboard", "Vendors", "Side Events"]
-  const handleSectionSelect = (section: string) => {
-    const pathMap: Record<string, string> = {
-      "Schedule": "schedule",
-      "Leaderboard": "leaderboard",
-      "Vendors": "vendors",
-      "Side Events": "side-events",
-    };
-    navigate(pathMap[section]);
+  const handleSectionSelect = (path: string) => {
+    navigate(path);
   };
 
   useEffect(() => {
@@ -36,6 +29,22 @@ export default function TournamentPage() {
   if (loading) return <div>Loading tournament...</div>;
   if (error) return <div>{error}</div>;
   if (!tournament) return <div>No tournament found</div>;
+
+  const sections = [
+    { label: "Schedule", path: "schedule" },
+    tournament.show_leaderboard && {
+      label: "Leaderboard",
+      path: "leaderboard",
+    },
+    tournament.show_vendors && {
+      label: "Vendors",
+      path: "vendors",
+    },
+    tournament.show_side_events && {
+      label: "Side Events",
+      path: "side-events",
+    },
+  ].filter(Boolean) as { label: string; path: string }[];
 
   return (
     <div>
