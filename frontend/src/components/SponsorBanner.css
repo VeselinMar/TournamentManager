@@ -1,0 +1,36 @@
+.sponsor-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+
+  padding: 1rem 2rem;
+
+  background: #f4f7f5; /* soft neutral */
+  border-bottom: 2px solid #d7e5dc;
+}
+
+.sponsor-bottom {
+  border-bottom: none;
+  border-top: 2px solid #d7e5dc;
+}
+
+.sponsor-banner img {
+  height: clamp(2.5em, 5vw, 4em);
+  max-width: 160px;
+  object-fit: contain;
+
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.sponsor-banner img:hover {
+  transform: scale(1.05);
+  opacity: 0.85;
+}
+
+.sponsor-banner p {
+  color: #888;
+  font-size: 0.8rem;
+  font-style: italic;
+}
