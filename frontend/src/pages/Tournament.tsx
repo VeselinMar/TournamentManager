@@ -4,6 +4,7 @@ import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
 import Header from "../components/Header"
 import Navbar from "../components/Navbar"
+import SponsorBanner from "../components/SponsorBanner"
 
 export default function TournamentPage() {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ export default function TournamentPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const handleSectionSelect = (path: string) => {
-    navigate(path);
+  const handleSectionSelect = (section: string) => {
+    navigate(`/${slug}/${section}`);
   };
 
   useEffect(() => {
@@ -49,11 +50,16 @@ export default function TournamentPage() {
   return (
     <div>
       <Header name={tournament.name} isFinished={tournament.is_finished} />
+
+      <SponsorBanner sponsors={tournament.sponsors} position="top" />
+
       <Navbar sections={sections} onSelect={handleSectionSelect} />
 
       <main style={{ marginTop: "2rem" }}>
         <Outlet />
       </main>
+
+      <SponsorBanner sponsors={tournament.sponsors} position="bottom" />
     </div>
   );
 }
