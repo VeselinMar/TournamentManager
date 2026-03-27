@@ -4,7 +4,7 @@ import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
 import Header from "../components/Header"
 import Navbar from "../components/Navbar"
-import SponsorBanner from "../components/SponsorBanner"
+import SponsorCarousel from "../components/SponsorCarousel"
 
 export default function TournamentPage() {
   const navigate = useNavigate();
@@ -51,15 +51,15 @@ export default function TournamentPage() {
     <div>
       <Header name={tournament.name} isFinished={tournament.is_finished} />
 
-      <SponsorBanner sponsors={tournament.sponsors} position="top" />
+      <SponsorCarousel sponsors={tournament.sponsors} position="top" />
 
       <Navbar sections={sections} onSelect={handleSectionSelect} />
 
-      <main style={{ marginTop: "2rem" }}>
+      <main style={{ marginTop: "1rem" }}>
         <Outlet />
       </main>
 
-      <SponsorBanner sponsors={tournament.sponsors} position="bottom" />
+      <SponsorCarousel sponsors={tournament.sponsors} position="bottom"  />
     </div>
   );
 }
