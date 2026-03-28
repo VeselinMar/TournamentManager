@@ -4,7 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/static/spa/',
+  base: '/spa/',
 
   build: {
     outDir: path.resolve(__dirname, '../tournamentapp/static/spa'),
