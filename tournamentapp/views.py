@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 from django import forms
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -105,7 +106,7 @@ class SpaView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+        logger = logging.getLogger(__name__)
         try:
             manifest_path = settings.BASE_DIR / 'vite-manifest.json'
             
@@ -122,7 +123,6 @@ class SpaView(TemplateView):
                 'js': f'spa/{js_file}' if js_file else '',
                 'css': [f'spa/{css}' for css in css_files]
             })
-            
         except Exception as e:
             logger.exception(f"Error loading manifest: {e}")
             context.update({'slug': self.kwargs.get('slug', ''), 'js': '', 'css': []})
