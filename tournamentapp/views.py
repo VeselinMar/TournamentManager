@@ -21,7 +21,7 @@ from django.db.models import Q, Count, F
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule, recalculate_points
+from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule, recalculate_points, get_vite_asset
 from .services import handle_batch_lines
 
 
@@ -74,30 +74,42 @@ class TournamentUpdateView(LoginRequiredMixin, TournamentOwnerMixin, UpdateView)
     def get_success_url(self):
         return reverse('tournament-detail', kwargs={'pk': self.object.pk})
 
-class TournamentPublicView(DetailView):
-    model = Tournament
-    template_name = 'tournament/public_home.html'
-    slug_field = 'slug'
-    slug_url_kwarg = 'slug'
+# class TournamentPublicView(DetailView):
+#     model = Tournament
+#     template_name = 'tournament/public_home.html'
+#     slug_field = 'slug'
+#     slug_url_kwarg = 'slug'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         tournament = self.object
+
+#         context["sponsors"] = tournament.sponsors.all()
+
+#         timeline, field_names = build_timeline(tournament)
+
+#         context.update({
+#             'timeline': timeline,
+#             'field_names': field_names,
+#             'show_leaderboard': tournament.show_leaderboard,
+#             'show_vendors': tournament.show_vendors,
+#             'show_side_events': tournament.show_side_events,
+#             'show_announcements': tournament.show_announcements,
+#             'has_active_vendors': tournament.vendors.filter(is_active=True).exists(),
+#             'has_active_side_events': tournament.side_events.filter(is_active=True).exists(),            
+#         })
+
+#         return context
+class SpaView(TemplateView):
+    template_name = "spa.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        tournament = self.object
+        asset = get_vite_asset("index.html")
 
-        context["sponsors"] = tournament.sponsors.all()
-
-        timeline, field_names = build_timeline(tournament)
-
-        context.update({
-            'timeline': timeline,
-            'field_names': field_names,
-            'show_leaderboard': tournament.show_leaderboard,
-            'show_vendors': tournament.show_vendors,
-            'show_side_events': tournament.show_side_events,
-            'show_announcements': tournament.show_announcements,
-            'has_active_vendors': tournament.vendors.filter(is_active=True).exists(),
-            'has_active_side_events': tournament.side_events.filter(is_active=True).exists(),            
-        })
+        context["js"] = asset["file"]
+        context["css"] = asset.get("css", [])
+        context["slug"] = self.kwargs["slug"]
 
         return context
 

@@ -1,11 +1,11 @@
 from django.urls import path
 from .views import (
-    TournamentCreateView, TournamentPublicView, TournamentDetailView, TournamentUpdateView, LandingPageView,
+    TournamentCreateView, TournamentDetailView, TournamentUpdateView, LandingPageView,
     TeamListView, TeamDetailView, TeamCreateView,
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
     generate_tournament_schedule, about_view, contact_view, privacy_policy_view, toggle_tournament_status,
-    reset_schedule, edit_match, delete_match, toggle_player_mute
+    reset_schedule, edit_match, delete_match, toggle_player_mute, SpaView
 )
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing-page'),
@@ -19,7 +19,9 @@ urlpatterns = [
     path('tournament/create/', TournamentCreateView.as_view(), name='tournament-create'),
     path('tournament/<int:pk>/edit/', TournamentUpdateView.as_view(), name='tournament-edit'),
     path('tournament/<int:pk>/', TournamentDetailView.as_view(), name='tournament-detail'),
-    path('public/<slug:slug>/', TournamentPublicView.as_view(), name='public-tournament-leaderboard'),
+    path('public/<slug:slug>/', SpaView.as_view(), name='public-tournament-leaderboard'),
+    path('public/<slug:slug>/<path:path>', SpaView.as_view()),
+    # path('public/<slug:slug>/', TournamentPublicView.as_view(), name='public-tournament-leaderboard'),
     path('tournament/<int:tournament_id>/generate-schedule/', generate_tournament_schedule, name='generate-tournament-schedule'),
     path('tournament/<int:tournament_id>/reset-schedule/', reset_schedule, name='reset-schedule'),
     path('tournament/<int:pk>/toggle-status/', toggle_tournament_status, name='toggle-tournament-status'),

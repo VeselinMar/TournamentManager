@@ -7,6 +7,9 @@ from collections import defaultdict
 from datetime import timedelta
 from typing import List, Tuple
 from .models import Team, Player, Tournament, Match, Field, MatchEvent
+import json
+from django.conf import settings
+from pathlib import Path
 
 
 def generate_round_robin(tournament: Tournament) -> List[List[Tuple[Team, Team]]]:
@@ -332,3 +335,11 @@ def recalculate_points(match):
     match.home_score = home_goals
     match.away_score = away_goals
     match.save(update_fields=['home_score', 'away_score'])
+
+def get_vite_asset(asset_name):
+    manifest_path = Path(settings.BASE_DIR) / "tournamentapp/static//spa/.vite/manifest.json"
+
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    return manifest[asset_name]

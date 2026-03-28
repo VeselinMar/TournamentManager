@@ -1,9 +1,10 @@
-import { createBrowserRouter, RouterProvider, useParams } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import TournamentPage from "../pages/Tournament";
 import Schedule from "../pages/Schedule";
 import Leaderboard from "../pages/Leaderboard";
 import Vendors from "../pages/Vendors";
 import Events from "../pages/Events";
+import { useParams } from "react-router-dom";
 
 function ScheduleWrapper() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,20 +30,24 @@ function EventsWrapper() {
   return <Events slug={slug} />;
 }
 
-
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: "/:slug",
+      element: <TournamentPage />,
+      children: [
+        { index: true, element: <ScheduleWrapper /> },
+        { path: "schedule", element: <ScheduleWrapper /> },
+        { path: "leaderboard", element: <LeaderboardWrapper /> },
+        { path: "vendors", element: <VendorsWrapper /> },
+        { path: "side-events", element: <EventsWrapper /> },
+      ],
+    },
+  ],
   {
-    path: "/:slug",
-    element: <TournamentPage />,
-    children: [
-      { index: true, element: <ScheduleWrapper />},
-      { path: "schedule", element: <ScheduleWrapper /> },
-      { path: "leaderboard", element: <LeaderboardWrapper /> },
-      { path: "vendors", element: <VendorsWrapper /> },
-      { path: "side-events", element: <EventsWrapper /> },
-    ],
-  },
-]);
+    basename: "/public",
+  }
+);
 
 export default function AppRouter() {
   return <RouterProvider router={router} />;
