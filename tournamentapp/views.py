@@ -107,7 +107,7 @@ class SpaView(TemplateView):
         context = super().get_context_data(**kwargs)
         
         try:
-            manifest_path = Path(__file__).resolve().parent / 'static' / 'spa' / '.vite' / 'manifest.json'
+            manifest_path = settings.BASE_DIR / 'vite-manifest.json'
             
             with open(manifest_path, 'r') as f:
                 manifest = json.load(f)
