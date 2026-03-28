@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 from django import forms
+from django.conf import settings
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, DetailView, ListView
