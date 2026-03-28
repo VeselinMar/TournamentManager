@@ -105,12 +105,23 @@ class SpaView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        asset = get_vite_asset("index.html")
-
-        context["js"] = asset["file"]
-        context["css"] = asset.get("css", [])
-        context["slug"] = self.kwargs["slug"]
-
+        
+        if settings.DEBUG:
+            manifest_path = Path(__file__).resolve().parent / 'static' / 'spa' / '.vite' / 'manifest.json'
+        else:
+            manifest_path = settings.STATIC_ROOT / 'spa' / '.vite' / 'manifest.json'
+        
+        with open(manifest_path, 'r') as f:
+            manifest = json.load(f)
+        
+        entry = manifest.get('index.html', {})
+        
+        context.update({
+            'slug': self.kwargs.get('slug', ''),
+            'js': entry.get('file', ''),
+            'css': entry.get('css', [])
+        })
+        
         return context
 
 class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
