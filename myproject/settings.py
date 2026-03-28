@@ -254,6 +254,8 @@ else:
     AZURE_CONTAINER = config("AZURE_CONTAINER", default="")
     AZURE_CONTAINER_STATIC = "static"
     AZURE_CONTAINER_MEDIA = "media"
+    STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER_STATIC}/'
+
 
     STORAGES = {
         "default": {

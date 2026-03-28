@@ -1,13 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
   {% for css_file in css %}
-    <link rel="stylesheet" href="{{ css_file }}">
+    <link rel="stylesheet" href="{% static css_file %}">
   {% endfor %}
 </head>
 <body>
   <div id="root" data-slug="{{ slug }}"></div>
-
-  <script type="module" src="{{ js }}"></script>
+  <script type="module" src="{% static js %}"></script>
 </body>
 </html>

@@ -106,11 +106,26 @@ class SpaView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        context.update({
-            'slug': self.kwargs.get('slug', ''),
-            'js': '/static/spa/assets/index-DT1isG7C.js',
-            'css': ['/static/spa/assets/index-DoQPE76g.css']
-        })
+        try:
+            manifest_path = Path(__file__).resolve().parent / 'static' / 'spa' / '.vite' / 'manifest.json'
+            
+            with open(manifest_path, 'r') as f:
+                manifest = json.load(f)
+            
+            entry = manifest.get('index.html', {})
+            
+            js_file = entry.get('file', '')
+            css_files = entry.get('css', [])
+            
+            context.update({
+                'slug': self.kwargs.get('slug', ''),
+                'js': f'spa/{js_file}' if js_file else '',
+                'css': [f'spa/{css}' for css in css_files]
+            })
+            
+        except Exception as e:
+            logger.exception(f"Error loading manifest: {e}")
+            context.update({'slug': self.kwargs.get('slug', ''), 'js': '', 'css': []})
         
         return context
 
