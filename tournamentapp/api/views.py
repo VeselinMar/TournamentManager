@@ -39,7 +39,7 @@ class ScheduleAPIView(APIView):
         current_matches = Match.objects.filter(
             tournament=tournament,
             is_finished=False,
-        )
+        ).select_related('field', 'home_team', 'away_team')
 
         return Response({
             "field_names": field_names,
@@ -68,6 +68,10 @@ class LeaderboardAPIView(APIView):
                 {'detail': 'Leaderboard is not public for this tournament.'},
                 status=status.HTTP_404_NOT_FOUND
             )
+        finished_matches = Match.objects.filter(
+            tournament=tournament,
+            is_finished=True
+        ).select_relater("home_team", "away_team")
 
         teams = get_team_standings(tournament)
         top_scorers = get_top_scorers(tournament)
@@ -125,6 +129,6 @@ class TournamentMetaAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(Tournament, slug=slug)
+        tournament = get_object_or_404(Tournament, slug=slug).prefetch_related("sponsors").get(slug=slug)
         serializer = TournamentMetaSerializer(tournament)
         return Response(serializer.data)
