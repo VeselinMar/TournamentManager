@@ -2,10 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-import datetime
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from tournamentapp.models import Tournament, Match
+from django.db.models import Q, Prefetch
+from tournamentapp.models import Tournament, Match, Team, Player
 from .serializers import ScheduleSerializer, LeaderboardSerializer, TournamentMetaSerializer
 from tournamentapp.utils import build_timeline, get_team_standings, get_top_scorers
 
@@ -15,6 +14,7 @@ class ScheduleAPIView(APIView):
 
     def get(self, request, slug):
         tournament = get_object_or_404(Tournament, slug__iexact=slug)
+
         timeline, field_names = build_timeline(tournament)
 
         rows = []
@@ -38,8 +38,8 @@ class ScheduleAPIView(APIView):
 
         current_matches = Match.objects.filter(
             tournament=tournament,
-            is_finished=False,
-        )
+            is_finished=False
+        ).select_related('field', 'home_team', 'away_team')
 
         return Response({
             "field_names": field_names,
@@ -56,12 +56,16 @@ class ScheduleAPIView(APIView):
                 for m in current_matches
             ]
         })
-        
+
+
 class LeaderboardAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(Tournament, slug=slug)
+        tournament = get_object_or_404(Tournament.objects.prefetch_related(
+            Prefetch('matches', queryset=Match.objects.filter(is_finished=True)
+                     .select_related('home_team', 'away_team'))
+        ), slug=slug)
 
         if not tournament.show_leaderboard:
             return Response(
@@ -69,20 +73,20 @@ class LeaderboardAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        finished_matches = tournament.matches.all()
+
         teams = get_team_standings(tournament)
         top_scorers = get_top_scorers(tournament)
 
         standings = []
         for team in teams:
-            finished = Match.objects.filter(
-                tournament=tournament,
-                is_finished=True
-            ).filter(
-                Q(home_team=team) | Q(away_team=team)
-            )
+            team_matches = [
+                m for m in finished_matches
+                if m.home_team_id == team.id or m.away_team_id == team.id
+            ]
 
             wins = draws = losses = goals_for = goals_against = 0
-            for m in finished:
+            for m in team_matches:
                 is_home = m.home_team_id == team.id
                 gf = m.home_score if is_home else m.away_score
                 ga = m.away_score if is_home else m.home_score
@@ -121,10 +125,14 @@ class LeaderboardAPIView(APIView):
         serializer = LeaderboardSerializer(data)
         return Response(serializer.data)
 
+
 class TournamentMetaAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(Tournament, slug=slug)
+        tournament = get_object_or_404(
+            Tournament.objects.prefetch_related("sponsors"),
+            slug=slug
+        )
         serializer = TournamentMetaSerializer(tournament)
         return Response(serializer.data)
