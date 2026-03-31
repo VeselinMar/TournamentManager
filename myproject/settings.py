@@ -77,6 +77,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://eventmanager-ep2v.onrender.com"
+]
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     'https://eventmanager-ep2v.onrender.com'
