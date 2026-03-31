@@ -13,13 +13,21 @@ RUN apt-get update && \
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
 
-COPY . .
+COPY frontend/package.json frontend/package-lock.json ./frontend/
+
+RUN cd frontend && npm ci
+
+COPY ..
+
+RUN cd frontend && npm run build
+
+RUN cp tournamentapp/static/spa/.vite/manifest.json ./vite-manifest.json || true
 
 EXPOSE 10000
 
 CMD sh -c "\
     python manage.py migrate --noinput && \
     python manage.py collectstatic --noinput && \
-    gunicorn --bind 0.0.0.0:10000 myproject.wsgi:application"
+    gunicorn myproject.wsgi:application --bind 0.0.0.0:10000 --workers 3 --threads 2 --timeout 60"
