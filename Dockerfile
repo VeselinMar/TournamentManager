@@ -19,7 +19,7 @@ COPY frontend/package.json frontend/package-lock.json ./frontend/
 
 RUN cd frontend && npm ci
 
-COPY ..
+COPY . .
 
 RUN cd frontend && npm run build
 
