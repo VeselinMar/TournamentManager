@@ -1,9 +1,6 @@
 {% extends 'tournament/tournament_base.html' %}
 {% load static %}
 
-{% block sponsor_top %}{% endblock %}
-{% block sponsor_bottom %}{% endblock %}
-
 {% block match_actions %}
   {% if match.is_finished %}
     <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">Edit Result</a>
