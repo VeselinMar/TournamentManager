@@ -231,54 +231,54 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # storage settings
-# if DEBUG:
-#     STORAGES = {
-#         "default": {
-#             "BACKEND": "django.core.files.storage.FileSystemStorage",
-#         },
-#         "staticfiles": {
-#             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-#         },
-#     }
-
-#     MEDIA_URL = "/media/"
-#     MEDIA_ROOT = BASE_DIR / "media"
-
-#     STATIC_URL = "/static/"
-#     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-#     # STATICFILES_DIRS = [BASE_DIR / "static"]
-
-# else:
-AZURE_BLOB_CACHE_CONTROL = "public, max-age=31536000, immutable"
-AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME", default="")
-AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY", default="")
-AZURE_CONNECTION_STRING = config("AZURE_CONNECTION_STRING", default="")
-AZURE_CONTAINER = config("AZURE_CONTAINER", default="")
-AZURE_CONTAINER_STATIC = "static"
-AZURE_CONTAINER_MEDIA = "media"
-STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER_STATIC}/'
-
-
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.azure_storage.AzureStorage",
-        "OPTIONS": {
-            "azure_container": AZURE_CONTAINER,
-            "account_name": AZURE_ACCOUNT_NAME,
-            "account_key": AZURE_ACCOUNT_KEY,
-            "connection_string": AZURE_CONNECTION_STRING,
-            "cache_control": AZURE_BLOB_CACHE_CONTROL,
+if DEBUG:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.azure_storage.AzureStorage",
-        "OPTIONS": {
-            "azure_container": AZURE_CONTAINER_STATIC,
-            "account_name": AZURE_ACCOUNT_NAME,
-            "account_key": AZURE_ACCOUNT_KEY,
-            "connection_string": AZURE_CONNECTION_STRING,
-            "cache_control": AZURE_BLOB_CACHE_CONTROL,
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+    STATIC_URL = "/static/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    # STATICFILES_DIRS = [BASE_DIR / "static"]
+
+else:
+    AZURE_BLOB_CACHE_CONTROL = "public, max-age=31536000, immutable"
+    AZURE_ACCOUNT_NAME = config("AZURE_ACCOUNT_NAME", default="")
+    AZURE_ACCOUNT_KEY = config("AZURE_ACCOUNT_KEY", default="")
+    AZURE_CONNECTION_STRING = config("AZURE_CONNECTION_STRING", default="")
+    AZURE_CONTAINER = config("AZURE_CONTAINER", default="")
+    AZURE_CONTAINER_STATIC = "static"
+    AZURE_CONTAINER_MEDIA = "media"
+    STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER_STATIC}/'
+
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "azure_container": AZURE_CONTAINER,
+                "account_name": AZURE_ACCOUNT_NAME,
+                "account_key": AZURE_ACCOUNT_KEY,
+                "connection_string": AZURE_CONNECTION_STRING,
+                "cache_control": AZURE_BLOB_CACHE_CONTROL,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "azure_container": AZURE_CONTAINER_STATIC,
+                "account_name": AZURE_ACCOUNT_NAME,
+                "account_key": AZURE_ACCOUNT_KEY,
+                "connection_string": AZURE_CONNECTION_STRING,
+                "cache_control": AZURE_BLOB_CACHE_CONTROL,
+            }
         }
     }
-}
 

@@ -2,7 +2,7 @@ import logging
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, ListView
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseServerError
+from django.http import JsonResponse, HttpResponseForbidden
 from .models import SponsorBanner
 from .forms import SponsorBannerForm
 from django.views.decorators.http import require_http_methods
@@ -30,49 +30,22 @@ class SponsorBannerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVie
     template_name = 'sponsor_form.html'
 
     def test_func(self):
-        try:
-            tournament = self.get_tournament()
-            return self.request.user == tournament.owner
-        except Exception as e:
-            logger.exception("Error checking user permissions in test_func")
-            return False
+        tournament = self.get_tournament()
+        return self.request.user == tournament.owner
 
     def get_tournament(self):
-        try:
-            return Tournament.objects.get(pk=self.kwargs['tournament_id'])
-        except Tournament.DoesNotExist:
-            logger.exception(f"Tournament with id {self.kwargs.get('tournament_id')} does not exist")
-            raise
+        return Tournament.objects.get(pk=self.kwargs['tournament_id'])
 
     def get_initial(self):
-        try:
-            return {'tournament': self.get_tournament()}
-        except Exception as e:
-            logger.exception("Error getting initial form data")
-            return {}
+        return {'tournament': self.get_tournament()}
 
     def get_success_url(self):
-        try:
-            return reverse_lazy('sponsor-list', kwargs={'tournament_id': self.kwargs['tournament_id']})
-        except Exception as e:
-            logger.exception("Error determining success URL")
-            return '/'
+        return reverse_lazy('sponsor-list', kwargs={'tournament_id': self.kwargs['tournament_id']})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:
-            context['tournament'] = self.get_tournament()
-        except Exception as e:
-            logger.exception("Error adding tournament to context")
-            context['tournament'] = None
+        context['tournament'] = self.get_tournament()
         return context
-
-    def form_valid(self, form):
-        try:
-            return super().form_valid(form)
-        except Exception as e:
-            logger.exception("Error saving SponsorBanner form")
-            return HttpResponseServerError("An unexpected error occurred. Check logs.")
 
 class SponsorBannerListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = SponsorBanner
