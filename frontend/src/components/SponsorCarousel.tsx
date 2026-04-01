@@ -9,108 +9,156 @@ type Sponsor = {
 interface Props {
   sponsors: Sponsor[];
   position?: "top" | "bottom";
-  speed?: number; // pixels per second
+  speed?: number;
 }
 
 export default function SponsorCarousel({
   sponsors,
   position = "top",
-  speed = 60,
+  speed = 30,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [trackWidth, setTrackWidth] = useState(0);
-  const [visibleSponsors, setVisibleSponsors] = useState<Sponsor[]>([]);
+
+  const [offset, setOffset] = useState(0);
+  const [direction, setDirection] = useState(
+    position === "top" ? -1 : 1
+  );
+  const [paused, setPaused] = useState(false);
+
+  const [dimensions, setDimensions] = useState({
+    containerWidth: 0,
+    trackWidth: 0,
+  });
+
+  // Measure sizes
+  useEffect(() => {
+    const measure = () => {
+      if (!containerRef.current || !trackRef.current) return;
+
+      setDimensions({
+        containerWidth: containerRef.current.offsetWidth,
+        trackWidth: trackRef.current.scrollWidth,
+      });
+    };
+
+    measure();
+
+    const resizeObserver = new ResizeObserver(measure);
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
+    if (trackRef.current) resizeObserver.observe(trackRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [sponsors]);
+
+  // ✅ Set INITIAL position correctly (runs when dimensions ready)
+  useEffect(() => {
+    const { containerWidth, trackWidth } = dimensions;
+    if (trackWidth === 0) return;
+
+    const maxLeft = containerWidth - trackWidth;
+
+    if (position === "top") {
+      setOffset(0);          // start right
+      setDirection(-1);      // move left
+    } else {
+      setOffset(maxLeft);    // start left
+      setDirection(1);       // move right
+    }
+  }, [dimensions, position]);
+
+  useEffect(() => {
+    let frame: number;
+    let lastTime = performance.now();
+
+    const animate = (time: number) => {
+      if (paused) {
+        frame = requestAnimationFrame(animate);
+        return;
+      }
+
+      const delta = (time - lastTime) / 1000;
+      lastTime = time;
+
+      const { containerWidth, trackWidth } = dimensions;
+
+      if (trackWidth <= containerWidth) return;
+
+      setOffset((prev) => {
+        const { containerWidth, trackWidth } = dimensions;
+        const maxLeft = containerWidth - trackWidth;
+
+        // Distance to edges
+        const distanceToRight = Math.abs(prev);
+        const distanceToLeft = Math.abs(prev - maxLeft);
+
+        const edgeThreshold = 40; // px → start slowing down
+
+        // Normalize easing (0 → 1)
+        const easeRight = Math.min(distanceToRight / edgeThreshold, 1);
+        const easeLeft = Math.min(distanceToLeft / edgeThreshold, 1);
+        
+        const smooth = (t: number) => t * t * (3 - 2 * t);
+
+        // Pick correct easing depending on direction
+        const easingFactor =
+          direction === -1 ? smooth(easeRight) : smooth(easeLeft);
+
+        // Apply easing curve (smooth)
+        const easedSpeed =
+          speed * (0.2 + 0.8 * easingFactor); 
+
+        let next = prev + direction * easedSpeed * delta;
+
+        // Bounce right edge
+        if (next >= 0) {
+          next = 0;
+          setDirection(1 * -1);
+        }
+
+        // Bounce left edge
+        if (next <= maxLeft) {
+          next = maxLeft;
+          setDirection(-1 * -1);
+        }
+
+        return next;
+      });
+
+      frame = requestAnimationFrame(animate);
+    };
+
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [direction, speed, paused, dimensions]);
 
   if (!sponsors || sponsors.length === 0) {
     return <div>Loading sponsors...</div>;
   }
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const containerWidth = containerRef.current.offsetWidth;
-
-    // Temporary div to measure width
-    const tempDiv = document.createElement("div");
-    tempDiv.style.display = "inline-flex";
-    tempDiv.style.visibility = "hidden";
-    tempDiv.style.position = "absolute";
-    tempDiv.style.top = "0";
-    tempDiv.style.left = "0";
-    document.body.appendChild(tempDiv);
-
-    sponsors.forEach((s) => {
-      const a = document.createElement("a");
-      a.style.flexShrink = "0";
-      a.style.marginRight = "20px";
-      const img = document.createElement("img");
-      img.src = s.image_url || "";
-      img.alt = s.name;
-      img.style.height = "60px";
-      img.style.width = "auto";
-      img.style.objectFit = "contain";
-      a.appendChild(img);
-      tempDiv.appendChild(a);
-    });
-
-    let currentSponsors = [...sponsors];
-    let totalWidth = tempDiv.offsetWidth;
-
-    // Duplicate sponsors until track is at least twice container width
-    while (totalWidth < containerWidth * 2) {
-      currentSponsors = [...currentSponsors, ...sponsors];
-      tempDiv.innerHTML = "";
-      currentSponsors.forEach((s) => {
-        const a = document.createElement("a");
-        a.style.flexShrink = "0";
-        a.style.marginRight = "20px";
-        const img = document.createElement("img");
-        img.src = s.image_url || "";
-        img.alt = s.name;
-        img.style.height = "60px";
-        img.style.width = "auto";
-        img.style.objectFit = "contain";
-        a.appendChild(img);
-        tempDiv.appendChild(a);
-      });
-      totalWidth = tempDiv.offsetWidth;
-      if (currentSponsors.length > sponsors.length * 20) break;
-    }
-
-    document.body.removeChild(tempDiv);
-    setVisibleSponsors(currentSponsors);
-    setTrackWidth(totalWidth);
-  }, [sponsors]);
-
-  const animationDuration = trackWidth / speed;
-
   return (
     <div
       ref={containerRef}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
       style={{
         overflow: "hidden",
         width: "100%",
         position: "relative",
-        marginTop: position === "top" ? 0 : undefined,
-        marginBottom: position === "bottom" ? 0 : undefined,
+        padding: "10px 0",
       }}
     >
       <div
         ref={trackRef}
         style={{
-          display: "inline-flex",
+          display: "flex",
           alignItems: "center",
           gap: "20px",
-          marginTop: "10px",
-          marginBottom: "10px",
-          animationName: "scroll",
-          animationTimingFunction: "linear",
-          animationIterationCount: "infinite",
-          animationDuration: `${animationDuration}s`,
-          whiteSpace: "nowrap",
+          transform: `translateX(${offset}px)`,
+          willChange: "transform",
         }}
       >
-        {visibleSponsors.map((s, i) => (
+        {sponsors.map((s, i) => (
           <a
             key={`sponsor-${i}`}
             href={s.link_url}
@@ -135,16 +183,6 @@ export default function SponsorCarousel({
           </a>
         ))}
       </div>
-
-      {/* Inline keyframes */}
-      <style>
-        {`
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}
-      </style>
     </div>
   );
 }
