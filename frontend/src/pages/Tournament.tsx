@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet, useParams } from "react-router-dom";
 import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
-import Header from "../components/Header"
-import Navbar from "../components/Navbar"
-import SponsorCarousel from "../components/SponsorCarousel"
+import Header from "../components/Header";
+import Navbar from "../components/Navbar";
+import SponsorCarousel from "../components/SponsorCarousel";
 
 export default function TournamentPage() {
   const navigate = useNavigate();
@@ -13,6 +13,11 @@ export default function TournamentPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Refs for dynamic height calculation
+  const topRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
   const handleSectionSelect = (section: string) => {
     navigate(`/${slug}/${section}`);
   };
@@ -33,33 +38,35 @@ export default function TournamentPage() {
 
   const sections = [
     { label: "Schedule", path: "schedule" },
-    tournament.show_leaderboard && {
-      label: "Leaderboard",
-      path: "leaderboard",
-    },
-    tournament.show_vendors && {
-      label: "Vendors",
-      path: "vendors",
-    },
-    tournament.show_side_events && {
-      label: "Side Events",
-      path: "side-events",
-    },
+    tournament.show_leaderboard && { label: "Leaderboard", path: "leaderboard" },
+    tournament.show_vendors && { label: "Vendors", path: "vendors" },
+    tournament.show_side_events && { label: "Side Events", path: "side-events" },
   ].filter(Boolean) as { label: string; path: string }[];
 
   return (
-    <div>
-      <Header name={tournament.name} isFinished={tournament.is_finished} />
+    <div style={{ display: "flex", flexDirection: "column", height: "97vh" }}>
+      <div ref={topRef}>
+        <Header name={tournament.name} isFinished={tournament.is_finished} />
+        <SponsorCarousel sponsors={tournament.sponsors} position="top" />
+        <Navbar sections={sections} onSelect={handleSectionSelect} />
+      </div>
 
-      <SponsorCarousel sponsors={tournament.sponsors} position="top" />
-
-      <Navbar sections={sections} onSelect={handleSectionSelect} />
-
-      <main style={{ marginTop: "1rem" }}>
-        <Outlet />
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          overflow: "hidden",
+          padding: "0.5rem",
+        }}
+      >
+        <Outlet context={{ topRef, bottomRef }} />
       </main>
 
-      <SponsorCarousel sponsors={tournament.sponsors} position="bottom"  />
+      <div ref={bottomRef}>
+        <SponsorCarousel sponsors={tournament.sponsors} position="bottom" />
+      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/spa/',
+  base: '/',
 
   build: {
     outDir: path.resolve(__dirname, '../tournamentapp/static/spa'),
@@ -19,6 +19,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        
     },
   },
-});
+},
+},);
