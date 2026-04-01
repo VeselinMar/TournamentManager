@@ -30,6 +30,8 @@ function EventsWrapper() {
   return <Events slug={slug} />;
 }
 
+const basename = import.meta.env.DEV ? "/" : "/public";
+
 const router = createBrowserRouter(
   [
     {
@@ -45,7 +47,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    basename: "/public",
+    basename
   }
 );
 
