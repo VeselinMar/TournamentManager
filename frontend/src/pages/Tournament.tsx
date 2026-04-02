@@ -14,7 +14,6 @@ export default function TournamentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs for dynamic height calculation
   const topRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +43,7 @@ export default function TournamentPage() {
   ].filter(Boolean) as { label: string; path: string }[];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "97vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
       <div ref={topRef}>
         <Header name={tournament.name} isFinished={tournament.is_finished} />
         <SponsorCarousel sponsors={tournament.sponsors} position="top" />
@@ -57,7 +56,7 @@ export default function TournamentPage() {
           display: "flex",
           justifyContent: "center",
           alignItems: "flex-start",
-          overflow: "hidden",
+          overflow: "auto",
           padding: "0.5rem",
         }}
       >
