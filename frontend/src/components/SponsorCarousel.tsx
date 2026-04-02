@@ -31,25 +31,30 @@ export default function SponsorCarousel({
     trackWidth: 0,
   });
 
-  // Measure sizes
-  useEffect(() => {
-    const measure = () => {
-      if (!containerRef.current || !trackRef.current) return;
+useEffect(() => {
+  const measure = () => {
+    if (!containerRef.current || !trackRef.current) return;
 
-      setDimensions({
-        containerWidth: containerRef.current.offsetWidth,
-        trackWidth: trackRef.current.scrollWidth,
-      });
-    };
+    setDimensions({
+      containerWidth: containerRef.current.offsetWidth,
+      trackWidth: trackRef.current.scrollWidth,
+    });
+  };
 
-    measure();
+  const idleId = requestIdleCallback(measure);
 
-    const resizeObserver = new ResizeObserver(measure);
-    if (containerRef.current) resizeObserver.observe(containerRef.current);
-    if (trackRef.current) resizeObserver.observe(trackRef.current);
+  const resizeObserver = new ResizeObserver(() => {
+    requestIdleCallback(measure);
+  });
 
-    return () => resizeObserver.disconnect();
-  }, [sponsors]);
+  if (containerRef.current) resizeObserver.observe(containerRef.current);
+  if (trackRef.current) resizeObserver.observe(trackRef.current);
+
+  return () => {
+    cancelIdleCallback(idleId);
+    resizeObserver.disconnect();
+  };
+}, [sponsors]);
 
   // ✅ Set INITIAL position correctly (runs when dimensions ready)
   useEffect(() => {
@@ -59,11 +64,11 @@ export default function SponsorCarousel({
     const maxLeft = containerWidth - trackWidth;
 
     if (position === "top") {
-      setOffset(0);          // start right
-      setDirection(-1);      // move left
+      setOffset(0);
+      setDirection(-1);
     } else {
-      setOffset(maxLeft);    // start left
-      setDirection(1);       // move right
+      setOffset(maxLeft);
+      setDirection(1);
     }
   }, [dimensions, position]);
 
