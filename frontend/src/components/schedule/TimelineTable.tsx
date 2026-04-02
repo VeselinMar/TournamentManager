@@ -31,14 +31,17 @@ export default function TimelineTable({
   useEffect(() => {
     if (!tableRef.current || timeline.length === 0) return;
 
-    const rowIndex = timeline.findIndex((row) =>
-      row.matches?.some((m) => m && !m.is_finished)
-    );
+    const id = requestIdleCallback(() => {
+      const rowIndex = timeline.findIndex((row) =>
+        row.matches?.some((m) => m && !m.is_finished)
+      );
+      if (rowIndex >= 0) {
+        const rowElem = tableRef.current!.rows[rowIndex + 1]; // +1 for header
+        rowElem?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
 
-    if (rowIndex >= 0) {
-      const rowElem = tableRef.current.rows[rowIndex + 1]; // +1 for header
-      rowElem?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    return () => cancelIdleCallback(id);
   }, [timeline]);
 
   if (!timeline.length) return <div>Loading timeline...</div>;
