@@ -10,7 +10,20 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '../tournamentapp/static/spa'),
     emptyOutDir: true,
     manifest: true,
+    cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      }
+    }
   },
+
+  css: {
+    modules: {
+      localsConvention: 'camelCase'
+    }
+  },
+
   server: {
     port: 5173,
     proxy: {
@@ -23,8 +36,7 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
-        
+      },
     },
   },
-},
-},);
+})
