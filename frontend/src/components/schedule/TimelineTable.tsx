@@ -148,7 +148,7 @@ export default function TimelineTable({
               >
                 {row.time}
               </td>
-              {(row.matches || []).map((match, fIdx) => (
+              {(row.matches ?? []).filter(Boolean).map((match, fIdx) => (
                 <td
                   key={fIdx}
                   style={{
