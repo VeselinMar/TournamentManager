@@ -78,7 +78,7 @@ export default function TimelineTable({
         style={{
           width: "100%",
           borderCollapse: "collapse",
-          fontSize: "clamp(0.9rem, 1vw, 1.3rem",
+          fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
           background: "#8fbc8f",
           color: "#1b1b1b",
         }}
@@ -94,7 +94,7 @@ export default function TimelineTable({
                 backgroundColor: "#556b2f",
                 color: "#fff",
                 fontWeight: 700,
-                fontSize: "clamp(0.9rem, 1vw, 1.3rem",
+                fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
                 textTransform: "uppercase",
                 textAlign: "center",
                 padding: "8px",
@@ -139,7 +139,7 @@ export default function TimelineTable({
                   zIndex: 5,
                   backgroundColor: "#6b8e23",
                   fontWeight: "bold",
-                  fontSize: "clamp(0.9rem, 1vw, 1.3rem",
+                  fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
                   color: "#fff",
                   border: "2px solid rgba(0,0,0,0.15)",
                   minWidth: 64,
@@ -175,7 +175,7 @@ export default function TimelineTable({
                       <div
                         style={{
                           fontWeight: 500,
-                          fontSize: "clamp(0.9rem, 1vw, 1.3rem",
+                          fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
                           color: "#1b3a00",
                           marginTop: 2,
                         }}
@@ -187,7 +187,7 @@ export default function TimelineTable({
                         <div
                           style={{
                             fontWeight: 700,
-                            fontSize: "clamp(0.9rem, 1vw, 1.3rem",
+                            fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
                             color: "#1b3a00",
                             marginTop: 2,
                           }}
@@ -197,7 +197,7 @@ export default function TimelineTable({
                       )}
                     </div>
                   ) : (
-                    <div style={{ color: "rgba(0,0,0,0.2)", fontSize: "clamp(0.9rem, 1vw, 1.3rem", }}>
+                    <div style={{ color: "rgba(0,0,0,0.2)", fontSize: "clamp(0.9rem, 1vw, 1.3rem)", }}>
                       —
                     </div>
                   )}
