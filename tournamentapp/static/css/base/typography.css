@@ -1,0 +1,59 @@
+/* ==========================
+   Base Typography
+========================== */
+
+/* Body */
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+/* Page-specific title utility */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: var(--space-5);
+  color: var(--color-text);
+}
+
+/* Paragraphs */
+p {
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}

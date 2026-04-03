@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="team-dashboard">
+<div class="dashboard-wrapper container">
 
-  <div class="dashboard-left">
-    <h2>How to Add Teams and Players</h2>
+  <aside class="dashboard-left section">
+    <h2 class="section-title">How to Add Teams and Players</h2>
     <p>You can add teams in two ways:</p>
     <ol>
       <li>Type or paste team names in the textarea. Use a dash (-) to add players below a team.</li>
@@ -20,9 +20,9 @@ Team B
 - Player 3
 - Player 4
     </pre>
-  </div>
+  </aside>
 
-  <div class="dashboard-center container team-form-container">
+  <main class="dashboard-center section">
     <h1 class="page-title">Add Team</h1>
 
     {% if messages %}
@@ -33,38 +33,38 @@ Team B
       </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" class="form form-single">
+    <form method="post" enctype="multipart/form-data" class="form-component form-single">
       {% csrf_token %}
       <div class="form-group">
-        <label class="form-label">Team Name:</label>
+        <label>Team Name:</label>
         <textarea name="name" rows="4" placeholder="Enter one team name per line." class="form-input"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Add Teams</button>
+      <button type="submit" class="button-primary">Add Teams</button>
     </form>
 
-    <form method="post" enctype="multipart/form-data" class="form form-batch">
+    <form method="post" enctype="multipart/form-data" class="form-component form-batch">
       {% csrf_token %}
       <div class="form-group">
-        <label for="csv_file" class="form-label">CSV File:</label>
+        <label for="csv_file">CSV File:</label>
         <input type="file" name="csv_file" id="csv_file" class="form-input" accept=".csv" required>
       </div>
-      <button type="submit" name="submit_type" value="batch" class="btn btn-success">Upload Teams</button>
+      <button type="submit" name="submit_type" value="batch" class="button-success">Upload Teams</button>
     </form>
 
-    <div class="next-step">
+    <div class="next-step card">
       <h2 class="section-title">Next Step: Add Fields</h2>
       <p>After adding your teams, proceed to create the fields where matches will take place.</p>
-      <a href="{% url 'field-create' tournament_id=tournament.pk %}" class="btn btn-secondary">Add Fields</a>
+      <a href="{% url 'field-create' tournament_id=tournament.pk %}" class="button-secondary">Add Fields</a>
     </div>
-  </div>
+  </main>
 
-  <div class="dashboard-right">
+  <aside class="dashboard-right section">
     {% if tournament %}
     <h2 class="section-title">Teams</h2>
     <div class="teams-scroll">
       <div class="teams-columns">
         {% for team in tournament.teams.all %}
-          <div class="team-card">
+          <div class="card card-hover">
             <a href="{% url 'team-detail' tournament_id=tournament.pk pk=team.pk %}" class="team-link">
               <h3>{{ team.name }}</h3>
             </a>
@@ -82,7 +82,7 @@ Team B
       </div>
     </div>
     {% endif %}
-  </div>
+  </aside>
 
 </div>
 {% endblock %}

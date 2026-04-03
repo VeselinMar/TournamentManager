@@ -1,11 +1,15 @@
 {% extends 'base.html' %}
-{% block content %}
 
-<form method="post" class="match-form">
+{% block content %}
+<div class="container page-wrapper">
+
+  <h1 class="page-title">Create Match</h1>
+
+  <form method="post" class="form-component">
     {% csrf_token %}
 
     {% if form.non_field_errors %}
-      <div class="form-error non-field-errors">
+      <div class="form-error">
         {% for error in form.non_field_errors %}
           <p>{{ error }}</p>
         {% endfor %}
@@ -14,19 +18,26 @@
 
     {% for field in form %}
       <div class="form-group">
-        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+
         {{ field }}
+
         {% if field.help_text %}
-          <small class="form-help">{{ field.help_text }}</small>
+          <div class="form-help">{{ field.help_text }}</div>
         {% endif %}
+
         {% for error in field.errors %}
           <div class="form-error">{{ error }}</div>
         {% endfor %}
       </div>
     {% endfor %}
 
-    <button type="submit" class="btn btn-submit">Create Match</button>
-</form>
+    <button type="submit" class="button-primary">
+      Create Match
+    </button>
+  </form>
+
+</div>
 
 <datalist id="field-options">
   {% for field_obj in fields %}

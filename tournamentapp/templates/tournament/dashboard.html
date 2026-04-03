@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tournament Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <h1 class="page-title text-center">{{ tournament.name }} Dashboard</h1>
+
+  <!-- Dashboard Cards -->
+  <div class="dashboard-cards">
+
+    <!-- Teams -->
+    <div class="dashboard-card">
+      <h3>Teams</h3>
+      <p>Manage tournament teams, add players, or view team details.</p>
+      <a href="{% url 'team-list' tournament.id %}" class="btn-dashboard">View Teams</a>
+      <a href="{% url 'team-create' tournament.id %}" class="btn-dashboard">Add Team</a>
+    </div>
+
+    <!-- Matches -->
+    <div class="dashboard-card">
+      <h3>Matches</h3>
+      <p>Create matches, update results, and view leaderboard.</p>
+      <a href="{% url 'match-create' tournament.id %}" class="btn-dashboard">Add Match</a>
+      <a href="{% url 'leaderboard' tournament.id %}" class="btn-dashboard">Leaderboard</a>
+    </div>
+
+    <!-- Fields -->
+    <div class="dashboard-card">
+      <h3>Fields</h3>
+      <p>Add or edit fields where matches take place.</p>
+      <a href="{% url 'field-create' tournament.id %}" class="btn-dashboard">Edit Fields</a>
+    </div>
+
+    <!-- Sponsors -->
+    <div class="dashboard-card">
+      <h3>Sponsors</h3>
+      <p>View and manage tournament banners.</p>
+      <a href="{% url 'sponsor-list' tournament.id %}" class="btn-dashboard">Manage Banners</a>
+      <a href="{% url 'sponsor-add' tournament.id %}" class="btn-dashboard">Add Banner</a>
+    </div>
+
+    <!-- Announcements -->
+    <div class="dashboard-card">
+      <h3>Announcements</h3>
+      <p>Post updates and communicate with players or attendees.</p>
+      <a href="{% url 'announcement-list' tournament.id %}" class="btn-dashboard">View Announcements</a>
+      <a href="{% url 'announcement-create' tournament.id %}" class="btn-dashboard">Add Announcement</a>
+    </div>
+
+    <!-- Vendors -->
+    <div class="dashboard-card">
+      <h3>Vendors</h3>
+      <p>View and manage tournament vendors.</p>
+      <a href="{% url 'vendor-list' tournament.id %}" class="btn-dashboard">View Vendors</a>
+      <a href="{% url 'vendor-create' tournament.id %}" class="btn-dashboard">Add Vendors</a>
+    </div>
+
+    <!-- Side Events -->
+    <div class="dashboard-card">
+      <h3>Program</h3>
+      <p>View and manage tournament program.</p>
+      <a href="{% url 'vendor-list' tournament.id %}" class="btn-dashboard">View Program</a>
+      <a href="{% url 'vendor-create' tournament.id %}" class="btn-dashboard">Add Events</a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

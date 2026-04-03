@@ -1,0 +1,35 @@
+/* Event buttons */
+.event-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.event-btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: var(--color-bg-alt);
+}
+
+.event-btn.goal { background: #e8f5e9; }
+.event-btn.yellow { background: #fff8e1; }
+.event-btn.red { background: #ffebee; }
+.event-btn.own { background: #f3e5f5; }
+
+/* Rows */
+.player-row {
+  margin-bottom: var(--space-2);
+}
+
+.event-log-item {
+  margin-bottom: var(--space-2);
+}
+
+/* Utility */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

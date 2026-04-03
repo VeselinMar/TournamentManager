@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const tournamentId = wrapper.dataset.tournamentId;
   const matchId = wrapper.dataset.matchId;
 
-  const scoreDisplay = wrapper.querySelector("h2:nth-child(2)");
+  const scoreDisplay = wrapper.querySelector(".match-score");
   const eventLog = document.querySelector("#match-events-log ul");
 
   function getCSRFToken() {

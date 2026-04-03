@@ -1,52 +1,72 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="container team-detail-container">
+
   <h1 class="page-title">{{ team.name }}</h1>
 
-  <h2 class="matches-title">Finished Matches</h2>
-  {% if finished_matches %}
-    <ul class="match-list">
-      {% for match in finished_matches %}
-        <li class="match-item match-{{ match.result }}">
-          <a href="{% url 'match-detail' tournament.id match.id %}" class="match-link">
-            {{ match.home_team.name }} vs {{ match.away_team.name }} —
-            {{ match.start_time|date:"M d, Y H:i" }}<br>
-            Result: {{ match.home_score }} - {{ match.away_score }} |
-            Goal Difference: {{ match.goal_difference }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No finished matches for this team.</p>
-  {% endif %}
+  <div class="team-detail-columns d-flex gap-3">
 
-  <h2 class="players">Players</h2>
-  {% if players %}
-    <ul class="player-list">
-      {% for player in players %}
-        <li class="player-stats">
-          {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
-          {% if player.is_muted %}
-            <span class="suspension-badge">⚠ Suspended</span>
-            <span class="games-sat-out">({{ player.games_sat_out }} game{{ player.games_sat_out|pluralize }} served)</span>
-            <form method="post" action="{% url 'toggle-player-mute' tournament.id player.id %}">
-              {% csrf_token %}
-              <button type="submit" class="btn-unmute">Lift Suspension</button>
-            </form>
-          {% else %}
-            {% if player.yellow_cards > 0 %}
-              <span class="yellow-card-count">🟨 {{ player.yellow_cards }}</span>
-            {% endif %}
-            {% if player.red_cards > 0 %}
-              <span class="red-card-count">🟥 {{ player.red_cards }}</span>
-            {% endif %}
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No players in this team.</p>
-  {% endif %}
+    <!-- Left Column: Finished Matches -->
+    <div class="team-detail-left flex-1">
+      <h2 class="section-title">Finished Matches</h2>
+      {% if finished_matches %}
+        <ul class="list-vertical-gap">
+          {% for match in finished_matches %}
+            <li class="card 
+                       {% if match.result == 'win' %}card-match-win{% elif match.result == 'loss' %}card-match-loss{% else %}card-match-draw{% endif %}">
+              <a href="{% url 'match-detail' tournament.id match.id %}" class="card-link">
+                {{ match.home_team.name }} vs {{ match.away_team.name }} — 
+                {{ match.start_time|date:"M d, Y H:i" }}<br>
+                Result: {{ match.home_score }} - {{ match.away_score }} |
+                Goal Difference: {{ match.goal_difference }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No finished matches for this team.</p>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Players -->
+    <div class="team-detail-right flex-1">
+      <h2 class="section-title">Players</h2>
+      {% if players %}
+        <ul class="list-vertical-gap">
+          {% for player in players %}
+            <li class="card card-player">
+              <div class="d-flex justify-content-between align-items-center">
+                <span>
+                  {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
+                  {% if player.is_muted %}
+                    <span class="badge badge-warning">Suspended</span>
+                    <span class="text-muted">({{ player.games_sat_out }} game{{ player.games_sat_out|pluralize }})</span>
+                  {% else %}
+                    {% if player.yellow_cards > 0 %}
+                      <span class="badge badge-yellow">🟨 {{ player.yellow_cards }}</span>
+                    {% endif %}
+                    {% if player.red_cards > 0 %}
+                      <span class="badge badge-red">🟥 {{ player.red_cards }}</span>
+                    {% endif %}
+                  {% endif %}
+                </span>
+                {% if player.is_muted %}
+                  <form method="post" action="{% url 'toggle-player-mute' tournament.id player.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button-primary btn-sm">Lift Suspension</button>
+                  </form>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No players in this team.</p>
+      {% endif %}
+    </div>
+
+  </div>
 </div>
+
 {% endblock %}

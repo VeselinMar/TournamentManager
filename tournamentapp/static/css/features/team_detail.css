@@ -1,0 +1,55 @@
+/* ==========================
+   Team Detail - Two Column Layout
+========================== */
+.team-detail-container {
+  max-width: 1000px;
+  margin: 3rem auto;
+  padding: 2rem;
+}
+
+.team-detail-columns {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.team-detail-left,
+.team-detail-right {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Cards color modifiers for match results */
+.card-match-win { 
+  background-color: #d0f0c0;
+  border-left: 5px solid #4caf50;
+  color: #1b5e20;
+}
+
+.card-match-loss { 
+  background-color: #ffcccc;
+  border-left: 5px solid #e53935;
+  color: #b71c1c;
+}
+
+.card-match-draw { 
+  background-color: #fff9c4;
+  border-left: 5px solid #fdd835;
+  color: #665c00;
+}
+
+.card-player { background-color: var(--color-surface); }
+
+/* List spacing utility */
+.list-vertical-gap { display: flex; flex-direction: column; gap: 0.8rem; padding-left: 0; list-style: none; }
+
+/* Badges */
+.badge { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: var(--radius); }
+.badge-warning { background-color: #ffcccb; color: #c0392b; }
+.badge-yellow { background-color: #fff59d; color: #fbc02d; }
+.badge-red { background-color: #ef5350; color: #fff; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .team-detail-columns { flex-direction: column; gap: 1.5rem; }
+}

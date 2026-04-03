@@ -1,0 +1,33 @@
+/* ==========================
+   Card Component
+========================== */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-small);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.card-header {
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+
+.card-body {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.card-footer {
+  margin-top: var(--space-4);
+  text-align: right;
+}

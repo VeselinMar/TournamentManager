@@ -1,0 +1,109 @@
+/* ==========================
+   Navbar Container
+========================== */
+.navbar {
+    background-color: var(--color-primary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* ==========================
+   Brand
+========================== */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: white !important;
+    transition: opacity 0.2s ease;
+}
+
+.navbar-brand:hover {
+    opacity: 0.8;
+}
+
+/* ==========================
+   Links
+========================== */
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius);
+    text-decoration: none;
+}
+
+/* ==========================
+   Active Link
+========================== */
+.navbar-nav .nav-item.active .nav-link {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius);
+}
+
+/* ==========================
+   Right Section (User / Logout)
+========================== */
+.navbar-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+/* Logout form */
+.logout-form > form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+/* Logout button */
+.logout-button {
+    background: none;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+/* ==========================
+   Spacing adjustments
+========================== */
+.navbar-nav .logout-form,
+.navbar-text {
+    margin-left: var(--space-4);
+}
+
+/* ==========================
+   Mobile
+========================== */
+@media (max-width: 768px) {
+
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-nav .nav-link,
+    .logout-button {
+        padding: 0.5rem;
+    }
+
+    .navbar-text {
+        margin-top: var(--space-2);
+    }
+
+    .navbar-nav .logout-form {
+        margin-top: var(--space-2);
+    }
+}

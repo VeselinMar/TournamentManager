@@ -1,24 +1,26 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="team-list-style">
-  <div class="container team-list-container">
-      <h1 class="page-title">Teams</h1>
+<div class="container my-5" style="max-width: 800px;">
+  <h1 class="page-title mb-4">Teams</h1>
 
-      {% if teams %}
-          <ul class="team-list">
-              {% for team in teams %}
-                  <li class="team-item">
-                      <a href="{% url 'team-detail' tournament_id=tournament.id pk=team.pk %}" class="team-link">{{ team.name }}</a>
-                  </li>
-              {% endfor %}
-          </ul>
-      {% else %}
-          <p>No teams available.</p>
-      {% endif %}
+  {% if teams %}
+    <div class="team-list d-flex flex-column gap-3">
+      {% for team in teams %}
+        <div class="card">
+          <a href="{% url 'team-detail' tournament_id=tournament.id pk=team.pk %}" class="team-link">
+            {{ team.name }}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No teams available.</p>
+  {% endif %}
 
-      <div class="actions">
-          <a href="{% url 'team-create' tournament.id %}" class="btn btn-primary">Add Team</a>
-      </div>
+  <div class="mt-4 text-center">
+    <a href="{% url 'team-create' tournament.id %}" class="button-primary">Add Team</a>
   </div>
 </div>
 {% endblock %}
