@@ -1,0 +1,58 @@
+.match-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+/* Players */
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Event buttons */
+.event-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.event-btn {
+  border: none;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--color-bg-alt);
+}
+
+.event-btn:hover {
+  transform: translateY(-1px);
+}
+
+.event-btn.goal { background: #e8f5e9; }
+.event-btn.yellow { background: #fff8e1; }
+.event-btn.red { background: #fdecea; }
+.event-btn.neutral { background: #f3f4f6; }
+
+/* Events log reuse */
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}

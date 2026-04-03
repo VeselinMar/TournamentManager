@@ -1,0 +1,47 @@
+/* ==========================
+   Team List Minimal Styling
+========================== */
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space between cards */
+  max-height: 60vh; /* optional scrollable list */
+  overflow-y: auto;
+}
+
+/* Optional: make links inside cards look nice */
+.team-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.team-link:hover {
+  color: var(--color-primary);
+  transform: scale(1.02);
+  text-decoration: none;
+}
+
+/* Optional scrollbar styling */
+.team-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.team-list::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-light);
+  border-radius: 4px;
+}
+
+.team-list::-webkit-scrollbar-track {
+  background-color: var(--color-surface);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .team-link {
+    font-size: 1rem;
+  }
+}

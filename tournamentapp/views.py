@@ -76,32 +76,6 @@ class TournamentUpdateView(LoginRequiredMixin, TournamentOwnerMixin, UpdateView)
     def get_success_url(self):
         return reverse('tournament-detail', kwargs={'pk': self.object.pk})
 
-# class TournamentPublicView(DetailView):
-#     model = Tournament
-#     template_name = 'tournament/public_home.html'
-#     slug_field = 'slug'
-#     slug_url_kwarg = 'slug'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         tournament = self.object
-
-#         context["sponsors"] = tournament.sponsors.all()
-
-#         timeline, field_names = build_timeline(tournament)
-
-#         context.update({
-#             'timeline': timeline,
-#             'field_names': field_names,
-#             'show_leaderboard': tournament.show_leaderboard,
-#             'show_vendors': tournament.show_vendors,
-#             'show_side_events': tournament.show_side_events,
-#             'show_announcements': tournament.show_announcements,
-#             'has_active_vendors': tournament.vendors.filter(is_active=True).exists(),
-#             'has_active_side_events': tournament.side_events.filter(is_active=True).exists(),            
-#         })
-
-#         return context
 class SpaView(TemplateView):
     template_name = "spa.html"
 
@@ -155,6 +129,31 @@ class LandingPageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['tournaments'] = Tournament.objects.filter(is_finished=False)
+        return context
+
+class DashboardView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
+    """
+    Pure navigational dashboard for tournament organizers.
+    Shows links to Teams, Matches, Fields, Vendors, Announcements.
+    """
+    model = Tournament
+    template_name = 'tournament/dashboard.html'
+    context_object_name = 'tournament'
+
+    def get_object(self, queryset=None):
+        """
+        Return the first tournament owned by the user if multiple exist.
+        """
+        return Tournament.objects.filter(owner=self.request.user).first()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournament = self.object
+
+        # Can add extra navigational context if needed
+        context.update({
+            'tournament': tournament,
+        })
         return context
 
 class TeamListView(LoginRequiredMixin, TournamentAccessMixin, ListView):
@@ -682,4 +681,4 @@ def toggle_player_mute(request, tournament_id, player_id):
     else:
         player.is_muted = True
         player.save(update_fields=['is_muted'])
-    return redirect('team-detail', tournament_id=tournament_id, pk=player.team.pk)
+    return redirect(request.META.get('HTTP_REFERER', '/'))

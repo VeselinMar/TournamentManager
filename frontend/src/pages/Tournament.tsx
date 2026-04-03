@@ -43,7 +43,7 @@ export default function TournamentPage() {
   ].filter(Boolean) as { label: string; path: string }[];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "96dvh" }}>
       <div ref={topRef}>
         <Header name={tournament.name} isFinished={tournament.is_finished} />
         <SponsorCarousel sponsors={tournament.sponsors} position="top" />

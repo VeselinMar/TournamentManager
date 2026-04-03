@@ -1,0 +1,11 @@
+.container {
+  max-width: 1200px;
+}
+
+.page-wrapper {
+  padding: var(--space-6) var(--space-4);
+}
+
+.section {
+  margin-bottom: var(--space-6);
+}

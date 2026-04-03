@@ -5,7 +5,7 @@ from .views import (
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
     generate_tournament_schedule, about_view, contact_view, privacy_policy_view, toggle_tournament_status,
-    reset_schedule, edit_match, delete_match, toggle_player_mute, SpaView
+    reset_schedule, edit_match, delete_match, toggle_player_mute, SpaView, DashboardView
 )
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing-page'),
@@ -19,6 +19,7 @@ urlpatterns = [
     path('tournament/create/', TournamentCreateView.as_view(), name='tournament-create'),
     path('tournament/<int:pk>/edit/', TournamentUpdateView.as_view(), name='tournament-edit'),
     path('tournament/<int:pk>/', TournamentDetailView.as_view(), name='tournament-detail'),
+    path('tournament/<int:pk>/dashboard', DashboardView.as_view(), name='tournament-dashboard'),
     path('public/<slug:slug>/', SpaView.as_view(), name='public-tournament-leaderboard'),
     path('public/<slug:slug>/<path:path>', SpaView.as_view()),
     # path('public/<slug:slug>/', TournamentPublicView.as_view(), name='public-tournament-leaderboard'),

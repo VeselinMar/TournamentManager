@@ -2,7 +2,7 @@
 
 {% block content %}
   <h2>Choose a name for your Tournament</h2>
-  <form method="post">
+  <form method="post" class="form-component">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Create Tournament</button>

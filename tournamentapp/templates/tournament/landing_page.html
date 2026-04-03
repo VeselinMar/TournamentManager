@@ -1,45 +1,98 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
+<div class="landing-wrapper">
 
-<div class="landing-page-container">
-  <div class="general">
-    <h2>Welcome to Football Tournament Manager</h2>
-    <p>
-      Bring your football tournament to life in just a few clicks. Our smart wizard
-      helps you create a tournament page, build schedules, and manage teams with ease.  
-      Round-robin matches are supported, every detail is at your
-      fingertips. Add your sponsors, share the link, and let players and fans enjoy a
-      professional tournament experience right away.
+  <!-- HERO -->
+  <div class="landing-hero">
+    <h1 class="landing-title">Manage Your Tournament Effortlessly</h1>
+    <p class="landing-subtitle">
+      Create schedules, manage teams, coordinate vendors, and run your event
+      from one simple dashboard.
     </p>
-    {% if user.is_authenticated %}
-      <a class="landing-page__button" href="{% url 'tournament-create' %}">Create a new tournament</a>
-    {% else %}
-    <span>
-      If you already have an account:
-      <a class="landing-page__button" href="{% url 'custom-login' %}">Login</a>
-    </span>
-    <br>
-    <span>Or you can register:
-      <a class="landing-page__button" href="{% url 'register' %}">Register</a>
-    </span>
-    {% endif %}
+    <div class="landing-actions">
+      {% if user.is_authenticated %}
+        <a class="button-primary" href="{% url 'tournament-create' %}">Create Tournament</a>
+      {% else %}
+        <a class="button-primary" href="{% url 'custom-login' %}">Login</a>
+        <a class="button-secondary" href="{% url 'register' %}">Register</a>
+      {% endif %}
+    </div>
   </div>
-  
-  <div class="landing-page">
-    <h2 class="landing-page__tournaments">Ongoing Tournaments</h2>
-    <ul class="landing-page__list">
-      {% for tournament in tournaments %}
-        <li class="landing-page__list-item">
-          <a class="landing-page__link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">
-            {{ tournament.name }}
-          </a>
-        </li>
-      {% empty %}
-        <li class="landing-page__list-item">No active tournaments right now.</li>
+
+  <!-- FEATURED TOURNAMENTS -->
+  {% if featured_tournaments %}
+  <div class="landing-section">
+    <h2 class="landing-section-title">Featured Tournaments</h2>
+    <div class="card-grid">
+      {% for tournament in featured_tournaments %}
+        <div class="card">
+          <div class="card-header">{{ tournament.name }}</div>
+          <div class="card-body">
+            <p>{{ tournament.teams.count }} teams</p>
+            <p>{{ tournament.matches.count }} matches played</p>
+          </div>
+          <div class="card-footer">
+            <a href="{% url 'public-tournament-leaderboard' tournament.slug %}" class="button-secondary">View Leaderboard</a>
+          </div>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
   </div>
+  {% endif %}
+
+  <!-- HOW IT WORKS -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">How It Works</h2>
+    <div class="how-it-works-grid">
+      <div class="card">
+        <div class="card-header">1. Create Teams</div>
+        <div class="card-body">
+          Add your teams and players easily via form or CSV upload.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">2. Set Up Fields</div>
+        <div class="card-body">
+          Define match locations and field schedules in seconds.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">3. Generate Schedule</div>
+        <div class="card-body">
+          Automatically generate round-robin or custom schedules.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">4. Track Results</div>
+        <div class="card-body">
+          Record match results, manage suspensions, and view stats.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGOING TOURNAMENTS -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Ongoing Tournaments</h2>
+    <div class="card-grid">
+      {% for tournament in tournaments %}
+        <div class="card">
+          <div class="card-header">{{ tournament.name }}</div>
+          <div class="card-body">
+            <p>{{ tournament.teams.count }} teams</p>
+            <p>{{ tournament.matches.count }} matches played</p>
+          </div>
+          <div class="card-footer">
+            <a class="button-secondary" href="{% url 'public-tournament-leaderboard' tournament.slug %}">View Leaderboard</a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-muted">No active tournaments right now.</div>
+      {% endfor %}
+    </div>
+  </div>
+
 </div>
 {% endblock %}
-
