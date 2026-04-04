@@ -22,7 +22,6 @@ urlpatterns = [
     path('tournament/<int:pk>/dashboard', DashboardView.as_view(), name='tournament-dashboard'),
     path('public/<slug:slug>/', SpaView.as_view(), name='public-tournament-leaderboard'),
     path('public/<slug:slug>/<path:path>', SpaView.as_view()),
-    # path('public/<slug:slug>/', TournamentPublicView.as_view(), name='public-tournament-leaderboard'),
     path('tournament/<int:tournament_id>/generate-schedule/', generate_tournament_schedule, name='generate-tournament-schedule'),
     path('tournament/<int:tournament_id>/reset-schedule/', reset_schedule, name='reset-schedule'),
     path('tournament/<int:pk>/toggle-status/', toggle_tournament_status, name='toggle-tournament-status'),
