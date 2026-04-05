@@ -128,7 +128,10 @@ class LandingPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tournaments'] = Tournament.objects.filter(is_finished=False)
+        context['tournament'] = (
+            Tournament.objects.filter(slug="your-example-slug").first()
+            or Tournament.objects.order_by("-created_at").first()
+        )
         return context
 
 class DashboardView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):

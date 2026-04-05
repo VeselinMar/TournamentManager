@@ -21,78 +21,70 @@
     </div>
   </div>
 
-  <!-- FEATURED TOURNAMENTS -->
-  {% if featured_tournaments %}
-  <div class="landing-section">
-    <h2 class="landing-section-title">Featured Tournaments</h2>
-    <div class="card-grid">
-      {% for tournament in featured_tournaments %}
-        <div class="card">
-          <div class="card-header">{{ tournament.name }}</div>
-          <div class="card-body">
-            <p>{{ tournament.teams.count }} teams</p>
-            <p>{{ tournament.matches.count }} matches played</p>
-          </div>
-          <div class="card-footer">
-            <a href="{% url 'public-tournament-leaderboard' tournament.slug %}" class="button-secondary">View Leaderboard</a>
-          </div>
-        </div>
-      {% endfor %}
+<!-- FEATURED TOURNAMENT -->
+{% if tournament %}
+<div class="landing-section">
+  <h2 class="landing-section-title">Featured Tournament</h2>
+  
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-header">{{ tournament.name }}</div>
+      
+      <div class="card-body">
+        <p>{{ tournament.teams.count }} teams</p>
+        <p>{{ tournament.matches.count }} matches played</p>
+      </div>
+      
+      <div class="card-footer">
+        <a href="{% url 'public-tournament-leaderboard' tournament.slug %}" 
+           class="button-secondary">
+          View Tournament
+        </a>
+      </div>
     </div>
   </div>
-  {% endif %}
+</div>
+{% endif %}
 
   <!-- HOW IT WORKS -->
   <div class="landing-section">
     <h2 class="landing-section-title">How It Works</h2>
     <div class="how-it-works-grid">
       <div class="card">
-        <div class="card-header">1. Create Teams</div>
+        <div class="card-header">1. Create Tournament</div>
+        <div class="card-body">
+          Provide a name for your tournament and define basic tournament rules.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">2. Create Teams</div>
         <div class="card-body">
           Add your teams and players easily via form or CSV upload.
         </div>
       </div>
       <div class="card">
-        <div class="card-header">2. Set Up Fields</div>
+        <div class="card-header">3. Set Up Fields</div>
         <div class="card-body">
-          Define match locations and field schedules in seconds.
+          Define match locations.
         </div>
       </div>
       <div class="card">
-        <div class="card-header">3. Generate Schedule</div>
+        <div class="card-header">4. Generate Schedule</div>
         <div class="card-body">
-          Automatically generate round-robin or custom schedules.
+          Automatically generate round-robin or create a custom schedule.
         </div>
       </div>
       <div class="card">
-        <div class="card-header">4. Track Results</div>
+        <div class="card-header">5. Manage Tournament</div>
         <div class="card-body">
-          Record match results, manage suspensions, and view stats.
+          Score match results, update player eligibility, reschedule matches, keep track of the leaderboard.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">6. Extend Spectator Experience</div>
+        <div class="card-body">
+          Decide whether you want spectators to see leaderboard, add sponsor logos, side event program, vendors and push live announcements.
         </div>
       </div>
     </div>
   </div>
-
-  <!-- ONGOING TOURNAMENTS -->
-  <div class="landing-section">
-    <h2 class="landing-section-title">Ongoing Tournaments</h2>
-    <div class="card-grid">
-      {% for tournament in tournaments %}
-        <div class="card">
-          <div class="card-header">{{ tournament.name }}</div>
-          <div class="card-body">
-            <p>{{ tournament.teams.count }} teams</p>
-            <p>{{ tournament.matches.count }} matches played</p>
-          </div>
-          <div class="card-footer">
-            <a class="button-secondary" href="{% url 'public-tournament-leaderboard' tournament.slug %}">View Tournament</a>
-          </div>
-        </div>
-      {% empty %}
-        <div class="text-muted">No active tournaments right now.</div>
-      {% endfor %}
-    </div>
-  </div>
-
-</div>
-{% endblock %}
