@@ -51,6 +51,8 @@ export default function TimelineTable({
       ref={containerRef}
       style={{
         width: "100%",
+        maxWidth: "min(1400px, 95vw",
+        margin: "0 auto",
         border: "2px solid #556b2f",
         borderRadius: 8,
         boxShadow: "0 4px 16px rgba(0,0,0,0.1)",

@@ -186,7 +186,7 @@ def get_team_standings(tournament):
 
     return sorted_teams
 
-def get_top_scorers(tournament, limit=10):
+def get_top_scorers(tournament, limit=5):
     """
     Returns the top scoring players in a tournament.
     Annotates each player with 'goal_count'.
