@@ -46,7 +46,7 @@ export default function TournamentPage() {
     <div style={{ display: "flex", flexDirection: "column", minHeight: "96dvh" }}>
       <div ref={topRef}>
         <Header name={tournament.name} isFinished={tournament.is_finished} />
-        <SponsorCarousel sponsors={tournament.sponsors} position="top" />
+        <SponsorCarousel sponsors={tournament.sponsors} direction="left" />
         <Navbar sections={sections} onSelect={handleSectionSelect} />
       </div>
 
@@ -64,7 +64,7 @@ export default function TournamentPage() {
       </main>
 
       <div ref={bottomRef}>
-        <SponsorCarousel sponsors={tournament.sponsors} position="bottom" />
+        <SponsorCarousel sponsors={tournament.sponsors} direction="right" />
       </div>
     </div>
   );

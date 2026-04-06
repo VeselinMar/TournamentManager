@@ -130,7 +130,7 @@ class LandingPageView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['tournament'] = (
             Tournament.objects.filter(slug="tournament-2026").first()
-            or Tournament.objects.order_by("-created_at").first()
+            or Tournament.objects.first()
         )
         return context
 
