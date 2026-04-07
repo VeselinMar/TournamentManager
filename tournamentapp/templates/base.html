@@ -132,14 +132,31 @@
 <!-- ==========================
      FOOTER
 =========================== -->
-<footer class="bg-dark text-light py-4 mt-auto">
-    <div class="container text-center">
-        <p class="mb-2">&copy; {% now "Y" %} Tournament Manager</p>
-        <div>
-            <a href="{% url 'about' %}" class="text-light me-3 text-decoration-none">About</a>
-            <a href="{% url 'contact' %}" class="text-light me-3 text-decoration-none">Contact</a>
-            <a href="{% url 'privacy-policy' %}" class="text-light text-decoration-none">Privacy Policy</a>
-        </div>
+<footer class="navbar navbar-expand-lg navbar-dark fixed-bottom">
+    <div class="container-fluid">
+
+        <!-- LEFT SIDE -->
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+                <span class="navbar-text">
+                    &copy; {% now "Y" %} Tournament Manager
+                </span>
+            </li>
+        </ul>
+
+        <!-- RIGHT SIDE -->
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+                <a href="{% url 'about' %}" class="nav-link">About</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'contact' %}" class="nav-link">Contact</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'privacy-policy' %}" class="nav-link">Privacy Policy</a>
+            </li>
+        </ul>
+
     </div>
 </footer>
 

@@ -1,3 +1,7 @@
+body {
+  padding-bottom: 70px;
+}
+
 .container {
   max-width: 1200px;
 }
