@@ -1,142 +1,203 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Privacy Policy | Football Tournament Manager{% endblock %}
 
 {% block content %}
-<div class="mt-4">
+<div class="landing-wrapper">
 
-    <h1>Privacy Policy</h1>
+  <!-- HERO -->
+  <div class="landing-hero">
+    <h1 class="landing-title">Privacy Policy</h1>
+    <p class="landing-subtitle">
+      How we collect, use, and protect your information.
+    </p>
+    <p class="text-muted">Last Updated: 19.02.26</p>
+  </div>
 
-    <p><strong>Last Updated:</strong> 19.02.26</p>
+  <!-- INTRO -->
+  <div class="landing-section">
+    <div class="card">
+      <div class="card-body">
+        <p>
+          This Privacy Policy explains how Football Tournament Manager ("we", "our", or "us")
+          collects, uses, and protects your information when you use our platform.
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <p>
-        This Privacy Policy explains how Football Tournament Manager ("we", "our", or "us")
-        collects, uses, and protects your information when you use our website and services.
-    </p>
+  <!-- INFORMATION WE COLLECT -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Information We Collect</h2>
 
-    <h2>1. Information We Collect</h2>
+    <div class="card-grid">
 
-    <h3>a) Google OAuth Authentication</h3>
-    <p>
-        We use Google OAuth for secure login. When you sign in using Google,
-        we may collect:
-    </p>
-    <ul>
-        <li>Your name</li>
-        <li>Your email address</li>
-        <li>Your Google account ID</li>
-        <li>Profile picture (if provided by Google)</li>
-    </ul>
-    <p>
-        We do not collect your Google password and do not have access to it.
-    </p>
+      <div class="card">
+        <div class="card-header">Google OAuth</div>
+        <div class="card-body">
+          <ul>
+            <li>Name</li>
+            <li>Email address</li>
+            <li>Google account ID</li>
+            <li>Profile picture (if provided)</li>
+          </ul>
+          <p class="mt-2">We never access your Google password.</p>
+        </div>
+      </div>
 
-    <h3>b) Tournament Data</h3>
-    <p>
-        When using the platform, you may provide:
-    </p>
-    <ul>
-        <li>Tournament names and details</li>
-        <li>Team names and player names</li>
-        <li>Match results and statistics</li>
-        <li>Substitution and card records</li>
-    </ul>
+      <div class="card">
+        <div class="card-header">Tournament Data</div>
+        <div class="card-body">
+          <ul>
+            <li>Tournament details</li>
+            <li>Teams and players</li>
+            <li>Match results and stats</li>
+            <li>Substitutions and cards</li>
+          </ul>
+        </div>
+      </div>
 
-    <h3>c) Sponsor Banner Uploads</h3>
-    <p>
-        Users may upload images for sponsor banners. These images are stored on our servers
-        and displayed publicly within the associated tournament page.
-        Users are responsible for ensuring they have the rights to upload and display these images.
-    </p>
+      <div class="card">
+        <div class="card-header">Sponsor Uploads</div>
+        <div class="card-body">
+          <p>
+            Uploaded sponsor images are stored and displayed publicly within tournaments.
+            Users are responsible for usage rights.
+          </p>
+        </div>
+      </div>
 
-    <h3>d) Automatically Collected Data</h3>
-    <p>
-        We may collect basic technical information such as:
-    </p>
-    <ul>
-        <li>IP address</li>
-        <li>Browser type</li>
-        <li>Device type</li>
-        <li>Access times</li>
-    </ul>
-    <p>
-        This information is used for security, analytics, and service improvement.
-    </p>
+      <div class="card">
+        <div class="card-header">Technical Data</div>
+        <div class="card-body">
+          <ul>
+            <li>IP address</li>
+            <li>Browser & device type</li>
+            <li>Access times</li>
+          </ul>
+        </div>
+      </div>
 
-    <h2>2. How We Use Your Information</h2>
-    <ul>
-        <li>To provide and operate the tournament management service</li>
-        <li>To authenticate users securely via Google OAuth</li>
-        <li>To store and display tournament data</li>
-        <li>To improve platform performance and security</li>
-        <li>To respond to support requests</li>
-    </ul>
+    </div>
+  </div>
 
-    <h2>3. Data Storage and Security</h2>
-    <p>
-        We implement appropriate technical and organizational measures to protect
-        your information from unauthorized access, alteration, or disclosure.
-    </p>
-    <p>
-        Uploaded sponsor images and tournament data are stored securely.
-    </p>
+  <!-- HOW WE USE DATA -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">How We Use Your Information</h2>
+    <div class="card">
+      <div class="card-body">
+        <ul>
+          <li>Operate the tournament platform</li>
+          <li>Authenticate users via Google OAuth</li>
+          <li>Store and display tournament data</li>
+          <li>Improve performance and security</li>
+          <li>Respond to support requests</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-    <h2>4. Data Sharing</h2>
-    <p>
-        We do not sell, rent, or trade your personal information.
-    </p>
-    <p>
-        We may share data only:
-    </p>
-    <ul>
-        <li>With service providers necessary to operate the platform (e.g., hosting providers)</li>
-        <li>If required by law or legal process</li>
-    </ul>
+  <!-- SECURITY -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Data Storage & Security</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>
+          We implement appropriate technical and organizational measures to protect your data.
+          Tournament data and uploaded files are stored securely.
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <h2>5. Cookies</h2>
-    <p>
-        We may use cookies or similar technologies to maintain login sessions
-        and improve user experience.
-    </p>
+  <!-- DATA SHARING -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Data Sharing</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>We do not sell or trade your personal data.</p>
+        <ul>
+          <li>Service providers (e.g., hosting)</li>
+          <li>Legal requirements</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-    <h2>6. Data Retention</h2>
-    <p>
-        We retain user account information and tournament data for as long as
-        the account remains active or as necessary to provide services.
-        Users may request deletion of their data at any time.
-    </p>
+  <!-- COOKIES -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Cookies</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>
+          We use cookies to maintain sessions and improve user experience.
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <h2>7. Your Rights</h2>
-    <p>
-        Depending on your location, you may have the right to:
-    </p>
-    <ul>
-        <li>Access your personal data</li>
-        <li>Request correction of inaccurate data</li>
-        <li>Request deletion of your data</li>
-        <li>Withdraw consent where applicable</li>
-    </ul>
+  <!-- RETENTION -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Data Retention</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>
+          We retain data as long as necessary to provide our services.
+          You may request deletion at any time.
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <h2>8. Third-Party Services</h2>
-    <p>
-        Our authentication system relies on Google OAuth. Your use of Google login
-        is also subject to Google’s Privacy Policy.
-    </p>
+  <!-- RIGHTS -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Your Rights</h2>
+    <div class="card">
+      <div class="card-body">
+        <ul>
+          <li>Access your data</li>
+          <li>Correct inaccurate data</li>
+          <li>Request deletion</li>
+          <li>Withdraw consent</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-    <h2>9. Changes to This Policy</h2>
-    <p>
-        We may update this Privacy Policy from time to time.
-        Updates will be posted on this page with a revised "Last Updated" date.
-    </p>
+  <!-- THIRD PARTY -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Third-Party Services</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>
+          Google OAuth authentication is subject to Google’s Privacy Policy.
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <h2>10. Contact Us</h2>
-    <p>
-        If you have any questions about this Privacy Policy,
-        please contact us at:
-    </p>
-    <p>
-        Email: veselin.martinov@gmail.com
-    </p>
+  <!-- CHANGES -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Changes to This Policy</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>
+          We may update this policy. Changes will be posted here with a new date.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="landing-section">
+    <h2 class="landing-section-title">Contact</h2>
+    <div class="card">
+      <div class="card-body">
+        <p>Email: <strong>veselin.martinov@gmail.com</strong></p>
+      </div>
+    </div>
+  </div>
 
 </div>
 {% endblock %}
