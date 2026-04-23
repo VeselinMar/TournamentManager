@@ -87,23 +87,27 @@ class SpaView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        logger = logging.getLogger(__name__)
         try:
-            manifest = get_vite_manifest()
-            entry = manifest.get('index.html') or {}
-
+            manifest_path = settings.BASE_DIR / 'vite-manifest.json'
+            
+            with open(manifest_path, 'r') as f:
+                manifest = json.load(f)
+            
+            entry = manifest.get('index.html', {})
+            
+            js_file = entry.get('file', '')
+            css_files = entry.get('css', [])
+            
             context.update({
                 'slug': self.kwargs.get('slug', ''),
-                'js': f"spa/{entry.get('file', '')}" if entry.get('file') else '',
-                'css': [f"spa/{css}" for css in entry.get('css', [])]
+                'js': f'spa/{js_file}' if js_file else '',
+                'css': [f'spa/{css}' for css in css_files]
             })
-        except Exception:
-            context.update({
-                'slug': self.kwargs.get('slug', ''),
-                'js': '',
-                'css': []
-            })
-
+        except Exception as e:
+            logger.exception(f"Error loading manifest: {e}")
+            context.update({'slug': self.kwargs.get('slug', ''), 'js': '', 'css': []})
+        
         return context
 
 class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
