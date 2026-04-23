@@ -32,6 +32,12 @@
                 {% if tournament.is_finished %}
                   <span class="status-badge finished">✓ Finished</span>
                   <button class="btn-reopen" id="reopenBtn">Reopen Tournament</button>
+                  <form action="{% url 'tournament-delete' tournament.pk %}" method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn-delete">
+                          Delete Tournament
+                      </button>
+                  </form>
                 {% else %}
                   <span class="status-badge live">● Live</span>
                   <button class="btn-finish" id="finishBtn">Finish Tournament</button>

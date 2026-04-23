@@ -13,7 +13,11 @@
     </p>
     <div class="landing-actions">
       {% if user.is_authenticated %}
+        {% if user_tournament %}
+          <a class="button-primary" href="{% url 'tournament-dashboard' user_tournament.id %}">Dashboard</a>
+        {% else %}
         <a class="button-primary" href="{% url 'tournament-create' %}">Create Tournament</a>
+        {% endif %}
       {% else %}
         <a class="button-primary" href="{% url 'custom-login' %}">Login</a>
         <a class="button-secondary" href="{% url 'register' %}">Register</a>
@@ -22,21 +26,21 @@
   </div>
 
 <!-- FEATURED TOURNAMENT -->
-{% if tournament %}
+{% if featured_tournament %}
 <div class="landing-section">
   <h2 class="landing-section-title">Featured Tournament</h2>
   
   <div class="card-grid">
     <div class="card">
-      <div class="card-header">{{ tournament.name }}</div>
+      <div class="card-header">{{ featured_tournament.name }}</div>
       
       <div class="card-body">
-        <p>{{ tournament.teams.count }} teams</p>
-        <p>{{ tournament.matches.count }} matches played</p>
+        <p>{{ featured_tournament.teams.count }} teams</p>
+        <p>{{ featured_tournament.matches.count }} matches played</p>
       </div>
       
       <div class="card-footer">
-        <a href="{% url 'public-tournament-leaderboard' tournament.slug %}" 
+        <a href="{% url 'public-tournament-leaderboard' featured_tournament.slug %}" 
            class="button-secondary">
           View Tournament
         </a>

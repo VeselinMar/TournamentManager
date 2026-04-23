@@ -40,32 +40,32 @@
 
         <!-- Nav content -->
         <div class="collapse navbar-collapse" id="navbarNav">
-
             <!-- LEFT SIDE -->
             <ul class="navbar-nav me-auto">
-
                 {% if user.is_authenticated %}
-
-                    {% if tournament %}
+                    {% if user_tournament %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'tournament-detail' tournament.id %}">
+                            <a class="nav-link" href="{% url 'tournament-detail' user_tournament.id %}">
                                 Tournament
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'tournament-dashboard' tournament.id %}">
+                            <a class="nav-link" href="{% url 'tournament-dashboard' user_tournament.id %}">
                                 Dashboard
                             </a>
                     </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'public-tournament-leaderboard' tournament.slug %}">
+                            <a class="nav-link" href="{% url 'public-tournament-leaderboard' user_tournament.slug %}">
                                 Public View
                             </a>
                         </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'tournament-create' %}">
+                                Create Tournament
+                            </a>
                     {% endif %}
-
                 {% endif %}
-
             </ul>
 
             <!-- RIGHT SIDE -->

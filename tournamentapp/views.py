@@ -5,7 +5,7 @@ from django import forms
 from django.conf import settings
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, DetailView, ListView
+from django.views.generic import TemplateView, DetailView, ListView, DeleteView
 from django.views.generic.edit import CreateView, UpdateView
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.utils.timezone import localtime
@@ -76,32 +76,34 @@ class TournamentUpdateView(LoginRequiredMixin, TournamentOwnerMixin, UpdateView)
     def get_success_url(self):
         return reverse('tournament-detail', kwargs={'pk': self.object.pk})
 
+class TournamentDeleteView(LoginRequiredMixin, TournamentOwnerMixin, DeleteView):
+    model = Tournament
+    template__name = 'tournament/tournament_confirm_delete.html'
+    success_url = reverse_lazy('landing-page')
+
+
 class SpaView(TemplateView):
     template_name = "spa.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger = logging.getLogger(__name__)
+
         try:
-            manifest_path = settings.BASE_DIR / 'vite-manifest.json'
-            
-            with open(manifest_path, 'r') as f:
-                manifest = json.load(f)
-            
-            entry = manifest.get('index.html', {})
-            
-            js_file = entry.get('file', '')
-            css_files = entry.get('css', [])
-            
+            manifest = get_vite_manifest()
+            entry = manifest.get('index.html') or {}
+
             context.update({
                 'slug': self.kwargs.get('slug', ''),
-                'js': f'spa/{js_file}' if js_file else '',
-                'css': [f'spa/{css}' for css in css_files]
+                'js': f"spa/{entry.get('file', '')}" if entry.get('file') else '',
+                'css': [f"spa/{css}" for css in entry.get('css', [])]
             })
-        except Exception as e:
-            logger.exception(f"Error loading manifest: {e}")
-            context.update({'slug': self.kwargs.get('slug', ''), 'js': '', 'css': []})
-        
+        except Exception:
+            context.update({
+                'slug': self.kwargs.get('slug', ''),
+                'js': '',
+                'css': []
+            })
+
         return context
 
 class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
@@ -128,9 +130,9 @@ class LandingPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tournament'] = (
+        context['featured_tournament'] = (
             Tournament.objects.filter(slug="tournament-2026").first()
-            or Tournament.objects.first()
+            or Tournament.objects.latest('id')
         )
         return context
 
@@ -143,17 +145,10 @@ class DashboardView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):
     template_name = 'tournament/dashboard.html'
     context_object_name = 'tournament'
 
-    def get_object(self, queryset=None):
-        """
-        Return the first tournament owned by the user if multiple exist.
-        """
-        return Tournament.objects.filter(owner=self.request.user).first()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tournament = self.object
 
-        # Can add extra navigational context if needed
         context.update({
             'tournament': tournament,
         })

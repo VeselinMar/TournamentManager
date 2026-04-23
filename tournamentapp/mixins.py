@@ -6,6 +6,10 @@ class TournamentOwnerMixin:
     def get_queryset(self):
         return Tournament.objects.filter(owner=self.request.user)
 
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        return obj
+
 class TournamentAccessMixin:
     def get_tournament(self):
         if not hasattr(self, "_tournament"):
