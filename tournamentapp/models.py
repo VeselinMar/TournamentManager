@@ -205,7 +205,7 @@ class Match(models.Model):
     start_time = models.DateTimeField()
     field = models.ForeignKey(
         Field, 
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         null=False, 
         blank=False,
         )

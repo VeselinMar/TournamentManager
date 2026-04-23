@@ -1,5 +1,8 @@
 from .models import Tournament
 
 def current_tournament(request):
-    tournament = Tournament.objects.first()
-    return {'tournament': tournament}
+    if request.user.is_authenticated:
+        return {
+            'user_tournament': Tournament.objects.filter(owner=request.user).first()
+        }
+    return {}

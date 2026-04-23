@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    TournamentCreateView, TournamentDetailView, TournamentUpdateView, LandingPageView,
+    TournamentCreateView, TournamentDetailView, TournamentUpdateView, TournamentDeleteView, LandingPageView,
     TeamListView, TeamDetailView, TeamCreateView,
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
@@ -19,6 +19,7 @@ urlpatterns = [
     path('tournament/create/', TournamentCreateView.as_view(), name='tournament-create'),
     path('tournament/<int:pk>/edit/', TournamentUpdateView.as_view(), name='tournament-edit'),
     path('tournament/<int:pk>/', TournamentDetailView.as_view(), name='tournament-detail'),
+    path('tournament/<int:pk>/delete', TournamentDeleteView.as_view(), name='tournament-delete'),
     path('tournament/<int:pk>/dashboard', DashboardView.as_view(), name='tournament-dashboard'),
     path('public/<slug:slug>/', SpaView.as_view(), name='public-tournament-leaderboard'),
     path('public/<slug:slug>/<path:path>', SpaView.as_view()),
