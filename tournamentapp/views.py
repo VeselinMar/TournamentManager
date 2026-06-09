@@ -477,7 +477,7 @@ def create_match_event(request, tournament_id, match_id):
 def add_player(request, tournament_id, team_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
 
-    team = get_object_or_404(Team, id=team_id, tournament=tournament, owner=request.user)
+    team = get_object_or_404(Team, id=team_id, tournament=tournament)
 
     if request.method == 'POST':
         player_name = request.POST.get('player')
