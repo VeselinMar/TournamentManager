@@ -94,6 +94,10 @@ frontend/.env
 frontend/.env.local
 frontend/.env.*.local
 
+# Vite build output
+tournamentapp/static/spa/*
+!tournamentapp/static/spa/.gitkeep
+
 # Logs
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
