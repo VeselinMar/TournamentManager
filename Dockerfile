@@ -24,8 +24,6 @@ COPY . .
 
 RUN cd frontend && npm run build
 
-RUN cp tournamentapp/static/spa/.vite/manifest.json ./vite-manifest.json || true
-
 EXPOSE 10000
 
 CMD sh -c "\

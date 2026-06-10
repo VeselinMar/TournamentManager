@@ -89,7 +89,14 @@ class SpaView(TemplateView):
         context = super().get_context_data(**kwargs)
         logger = logging.getLogger(__name__)
         try:
-            manifest_path = settings.BASE_DIR / 'vite-manifest.json'
+            manifest_path = (
+                settings.BASE_DIR
+                / 'tournamentapp'
+                / 'static'
+                / 'spa'
+                / '.vite'
+                / 'manifest.json'
+            )
             
             with open(manifest_path, 'r') as f:
                 manifest = json.load(f)
