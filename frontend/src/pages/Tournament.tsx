@@ -46,7 +46,6 @@ export default function TournamentPage() {
     <div style={{ display: "flex", flexDirection: "column", minHeight: "96dvh" }}>
       <div ref={topRef}>
         <Header name={tournament.name} isFinished={tournament.is_finished} />
-        <SponsorCarousel sponsors={tournament.sponsors} direction="left" />
         <Navbar sections={sections} onSelect={handleSectionSelect} />
       </div>
 
@@ -57,7 +56,7 @@ export default function TournamentPage() {
           justifyContent: "center",
           alignItems: "flex-start",
           overflow: "auto",
-          padding: "0.5rem",
+          padding: "1rem",
         }}
       >
         <Outlet context={{ topRef, bottomRef }} />
