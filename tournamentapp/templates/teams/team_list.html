@@ -8,10 +8,54 @@
   {% if teams %}
     <div class="team-list d-flex flex-column gap-3">
       {% for team in teams %}
-        <div class="card">
-          <a href="{% url 'team-detail' tournament_id=tournament.id pk=team.pk %}" class="team-link">
-            {{ team.name }}
-          </a>
+        <div class="card p-3">
+
+          {% if request.GET.edit|default:'' == team.id|stringformat:"s" %}
+
+            <!-- EDIT MODE -->
+            <form method="post" class="d-flex gap-2 align-items-center">
+              {% csrf_token %}
+
+              <input type="hidden" name="team_id" value="{{ team.id }}">
+
+              <input
+                type="text"
+                name="name"
+                value="{{ team.name }}"
+                class="form-control"
+                autofocus
+              >
+
+              <button type="submit" class="button-primary">
+                Save
+              </button>
+
+              <a
+                href="{% url 'team-list' tournament.id %}"
+                class="btn btn-outline-secondary"
+              >
+                Cancel
+              </a>
+            </form>
+
+          {% else %}
+
+            <!-- VIEW MODE -->
+            <div class="d-flex justify-content-between align-items-center">
+              <a href="{% url 'team-detail' tournament_id=tournament.id pk=team.pk %}" class="team-link">
+                {{ team.name }}
+              </a>
+
+              <a
+                href="?edit={{ team.id }}"
+                class="btn btn-sm btn-outline-primary"
+              >
+                Edit
+              </a>
+            </div>
+
+          {% endif %}
+
         </div>
       {% endfor %}
     </div>
@@ -20,7 +64,9 @@
   {% endif %}
 
   <div class="mt-4 text-center">
-    <a href="{% url 'team-create' tournament.id %}" class="button-primary">Add Team</a>
+    <a href="{% url 'team-create' tournament.id %}" class="button-primary">
+      Add Team
+    </a>
   </div>
 </div>
 {% endblock %}

@@ -107,6 +107,11 @@ class TeamCreateForm(forms.ModelForm):
 
         return self.cleaned_data['name'].strip()
 
+class TeamNameForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = ["name"]
+
 class MatchCreateForm(forms.ModelForm):
     class Meta:
         model = Match

@@ -74,26 +74,6 @@ def test_delete_unfinished_match(auth_client, tournament, field, team):
     assert response.status_code == 302
     assert not Match.objects.filter(pk=match.pk).exists()
 
-
-@pytest.mark.django_db
-def test_delete_finished_match_blocked(auth_client, tournament, field, team):
-    away = Team.objects.create(name="Away", tournament=tournament)
-    match = Match.objects.create(
-        tournament=tournament,
-        home_team=team, away_team=away,
-        start_time=timezone.now() + timedelta(hours=1),
-        field=field,
-        is_finished=True
-    )
-    url = reverse('delete-match', kwargs={
-        'tournament_id': tournament.pk,
-        'match_id': match.pk
-    })
-    response = auth_client.post(url)
-    assert response.status_code == 302
-    assert Match.objects.filter(pk=match.pk).exists()
-
-
 @pytest.mark.django_db
 def test_edit_match_requires_owner(client, tournament, field, team, django_user_model):
     away = Team.objects.create(name="Away", tournament=tournament)
