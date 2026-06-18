@@ -111,3 +111,4 @@ frontend/*.tsbuildinfo
 .idea/
 
 frontend/dist
+stats.html

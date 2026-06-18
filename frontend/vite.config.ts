@@ -1,9 +1,18 @@
 import { defineConfig } from 'vite'
+import { visualizer } from "rollup-plugin-visualizer";
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      open: true,
+      filename: "stats.html",
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
   base: '/',
 
   build: {
@@ -13,8 +22,14 @@ export default defineConfig({
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
-      }
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-router")) return "router";
+            if (id.includes("react")) return "react";
+            return "vendor";
+          }
+        },
+      },
     }
   },
 

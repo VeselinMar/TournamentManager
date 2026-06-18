@@ -29,27 +29,30 @@ export default function Leaderboard({ slug }: Props) {
     return () => clearInterval(interval);
   }, [slug]);
 
-  if (loading) return <div style={{ padding: 12 }}>Loading leaderboard...</div>;
-  if (!data) return <div style={{ padding: 12 }}>No leaderboard available</div>;
+  if (loading)
+    return <div style={{ padding: 12 }}>Loading leaderboard...</div>;
+
+  if (!data)
+    return <div style={{ padding: 12 }}>No leaderboard available</div>;
 
   return (
     <div
       style={{
         width: "100%",
-        border: "2px solid #556b2f",
-        borderRadius: 8,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+        border: "1px solid #d6e2d6",
+        borderRadius: 10,
+        boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
         overflow: "hidden",
-        background: "#7da87d",
+        background: "#f3f7f3",
       }}
     >
       {/* HEADER */}
       <div
         style={{
-          background: "#556b2f",
+          background: "#1f3a1f",
           color: "#fff",
-          padding: "10px",
-          fontWeight: 700,
+          padding: "12px",
+          fontWeight: 800,
           textAlign: "center",
           letterSpacing: 1,
         }}
@@ -57,38 +60,34 @@ export default function Leaderboard({ slug }: Props) {
         Leaderboard
       </div>
 
-      {/* TABLE CONTAINER (mobile scroll) */}
-      <div
-        style={{
-          overflowX: "auto",
-        }}
-      >
+      {/* TABLE WRAPPER */}
+      <div style={{ overflowX: "auto" }}>
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
             fontSize: "clamp(0.85rem, 1vw, 1rem)",
-            background: "#8fbc8f",
+            background: "#ffffff",
             color: "#1b1b1b",
-            minWidth: 500,
+            minWidth: 520,
           }}
         >
           <thead>
             <tr>
               {["#", "Team", "Pts", "W", "D", "L", "GF", "GA", "GD"].map(
-                (h, i) => (
+                (h) => (
                   <th
-                    key={i}
+                    key={h}
                     style={{
                       position: "sticky",
                       top: 0,
                       zIndex: 10,
-                      backgroundColor: "#556b2f",
-                      color: "#fff",
-                      padding: "8px",
+                      backgroundColor: "#1f3a1f",
+                      color: "#ffffff",
+                      padding: "10px",
                       textAlign: "center",
-                      border: "2px solid #a5d6a7",
-                      fontWeight: 700,
+                      borderBottom: "2px solid #d6e2d6",
+                      fontWeight: 800,
                       textTransform: "uppercase",
                     }}
                   >
@@ -109,15 +108,18 @@ export default function Leaderboard({ slug }: Props) {
                   key={team.team_name}
                   style={{
                     background: isTop
-                      ? "linear-gradient(to right, #ffd70033, transparent)"
+                      ? "#fff8e1"
                       : idx % 2 === 0
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(0,0,0,0.03)",
+                      ? "#ffffff"
+                      : "#f6f8f6",
+                    borderLeft: isTop
+                      ? "4px solid #f9a825"
+                      : "4px solid transparent",
                     transition: "background 0.2s ease",
+                    cursor: "default",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.12)")
+                    (e.currentTarget.style.backgroundColor = "#e6f2e6")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "")
@@ -128,7 +130,7 @@ export default function Leaderboard({ slug }: Props) {
                     style={{
                       textAlign: "center",
                       fontWeight: 800,
-                      padding: "6px",
+                      padding: "8px",
                       color: isPodium ? "#1b3a00" : "#333",
                     }}
                   >
@@ -138,7 +140,7 @@ export default function Leaderboard({ slug }: Props) {
                   {/* Team */}
                   <td
                     style={{
-                      padding: "6px",
+                      padding: "8px",
                       fontWeight: 600,
                     }}
                   >
@@ -168,19 +170,20 @@ export default function Leaderboard({ slug }: Props) {
                       key={i}
                       style={{
                         textAlign: "center",
-                        padding: "6px",
+                        padding: "8px",
                         fontVariantNumeric: "tabular-nums",
+                        color: "#2b2b2b",
                       }}
                     >
                       {val}
                     </td>
                   ))}
 
-                  {/* GD */}
+                  {/* Goal Difference */}
                   <td
                     style={{
                       textAlign: "center",
-                      fontWeight: 700,
+                      fontWeight: 800,
                       color:
                         team.goal_difference > 0
                           ? "#1b5e20"
@@ -189,8 +192,15 @@ export default function Leaderboard({ slug }: Props) {
                           : "#333",
                     }}
                   >
-                    {team.goal_difference > 0 ? "+" : ""}
+                    {team.goal_difference > 0
+                      ? "+"
+                      : ""}
                     {team.goal_difference}
+                    {team.goal_difference > 0
+                      ? " ▲"
+                      : team.goal_difference < 0
+                      ? " ▼"
+                      : ""}
                   </td>
                 </tr>
               );
@@ -200,20 +210,20 @@ export default function Leaderboard({ slug }: Props) {
       </div>
 
       {/* TOP SCORERS */}
-      <div style={{ borderTop: "2px solid #556b2f" }}>
+      <div style={{ borderTop: "1px solid #d6e2d6" }}>
         <div
           style={{
-            background: "#556b2f",
+            background: "#1f3a1f",
             color: "#fff",
-            padding: "8px",
-            fontWeight: 700,
+            padding: "10px",
+            fontWeight: 800,
             textAlign: "center",
           }}
         >
           Top Scorers
         </div>
 
-        <div style={{ padding: 8 }}>
+        <div style={{ padding: 10 }}>
           {data.top_scorers.map((p, i) => (
             <div
               key={i}
@@ -221,24 +231,25 @@ export default function Leaderboard({ slug }: Props) {
                 display: "grid",
                 gridTemplateColumns: "28px 1fr auto",
                 alignItems: "center",
-                padding: "6px 8px",
-                borderRadius: 6,
+                padding: "8px 10px",
+                borderRadius: 8,
                 marginBottom: 6,
-                background:
-                  i === 0
-                    ? "rgba(255,215,0,0.25)"
-                    : "rgba(255,255,255,0.15)",
-                transition: "all 0.2s ease",
+                background: i === 0 ? "#fff3cd" : "#ffffff",
+                border: "1px solid #e6e6e6",
+                transition: "background 0.2s ease",
               }}
             >
-              <div style={{ fontWeight: 700 }}>{i + 1}</div>
+              <div style={{ fontWeight: 800 }}>{i + 1}</div>
 
-              <div style={{ fontSize: "0.95rem" }}>
+              <div style={{ fontSize: "0.95rem", color: "#1b1b1b" }}>
                 {p.player_name}
-                <span style={{ opacity: 0.7 }}> ({p.team_name})</span>
+                <span style={{ opacity: 0.7 }}>
+                  {" "}
+                  ({p.team_name})
+                </span>
               </div>
 
-              <div style={{ fontWeight: 800 }}>{p.goals}</div>
+              <div style={{ fontWeight: 900 }}>{p.goals}</div>
             </div>
           ))}
         </div>

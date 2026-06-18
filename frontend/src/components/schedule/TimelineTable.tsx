@@ -17,7 +17,7 @@ type TimelineRow = {
 interface TimelineTableProps {
   fieldNames?: string[];
   timeline?: TimelineRow[];
-  maxHeight?: number | string; //
+  maxHeight?: number | string;
 }
 
 export default function TimelineTable({
@@ -35,8 +35,9 @@ export default function TimelineTable({
       const rowIndex = timeline.findIndex((row) =>
         row.matches?.some((m) => m && !m.is_finished)
       );
+
       if (rowIndex >= 0) {
-        const rowElem = tableRef.current!.rows[rowIndex + 1]; // +1 for header
+        const rowElem = tableRef.current!.rows[rowIndex + 1];
         rowElem?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     });
@@ -51,17 +52,18 @@ export default function TimelineTable({
       ref={containerRef}
       style={{
         width: "100%",
-        maxWidth: "min(1400px, 95vw",
         margin: "0 auto",
-        border: "2px solid #556b2f",
-        borderRadius: 8,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+        border: "1px solid #d6e2d6",
+        borderRadius: 10,
+        boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
         maxHeight: maxHeight,
         overflowY: "auto",
         overflowX: "auto",
+        background: "#f3f7f3",
       }}
       className="timeline-scrollbar"
     >
+      {/* Scrollbar styling */}
       <style>
         {`
           .timeline-scrollbar::-webkit-scrollbar {
@@ -69,11 +71,11 @@ export default function TimelineTable({
             height: 10px;
           }
           .timeline-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #a5d6a7;
+            background-color: #c8d8c8;
             border-radius: 5px;
           }
           .timeline-scrollbar::-webkit-scrollbar-track {
-            background-color: #e8f5e9;
+            background-color: #eef5ee;
           }
         `}
       </style>
@@ -84,7 +86,7 @@ export default function TimelineTable({
           width: "100%",
           borderCollapse: "collapse",
           fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
-          background: "#8fbc8f",
+          background: "#ffffff",
           color: "#1b1b1b",
         }}
       >
@@ -96,18 +98,18 @@ export default function TimelineTable({
                 top: 0,
                 left: 0,
                 zIndex: 12,
-                backgroundColor: "#556b2f",
+                backgroundColor: "#1f3a1f",
                 color: "#fff",
-                fontWeight: 700,
-                fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
+                fontWeight: 800,
                 textTransform: "uppercase",
                 textAlign: "center",
-                padding: "8px",
-                border: "2px solid #a5d6a7",
+                padding: "10px",
+                borderBottom: "2px solid #d6e2d6",
               }}
             >
               Time
             </th>
+
             {fieldNames.map((f) => (
               <th
                 key={f}
@@ -115,12 +117,13 @@ export default function TimelineTable({
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  fontWeight: 700,
-                  textAlign: "center",
-                  padding: "8px",
-                  border: "2px solid #a5d6a7",
-                  backgroundColor: "#3e521e",
+                  backgroundColor: "#1f3a1f",
                   color: "#fff",
+                  fontWeight: 800,
+                  textAlign: "center",
+                  padding: "10px",
+                  borderBottom: "2px solid #d6e2d6",
+                  textTransform: "uppercase",
                 }}
               >
                 {f}
@@ -128,88 +131,106 @@ export default function TimelineTable({
             ))}
           </tr>
         </thead>
+
         <tbody>
-          {timeline.map((row, idx) => (
-            <tr
-              key={idx}
-              style={{
-                backgroundColor:
-                  idx % 2 === 0 ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-              }}
-            >
-              <td
+          {timeline.map((row, idx) => {
+            const rowBg = idx % 2 === 0 ? "#ffffff" : "#f6f8f6";
+
+            return (
+              <tr
+                key={idx}
                 style={{
-                  position: "sticky",
-                  left: 0,
-                  zIndex: 5,
-                  backgroundColor: "#6b8e23",
-                  fontWeight: "bold",
-                  fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
-                  color: "#fff",
-                  border: "2px solid rgba(0,0,0,0.15)",
-                  minWidth: 64,
-                  padding: "8px",
+                  backgroundColor: rowBg,
+                  transition: "background 0.2s ease",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#e6f2e6")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = rowBg)
+                }
               >
-                {row.time}
-              </td>
-              {(row.matches ?? []).filter(Boolean).map((match, fIdx) => (
+                {/* TIME COLUMN */}
                 <td
-                  key={fIdx}
                   style={{
-                    padding: "8px",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 5,
+                    backgroundColor: "#ffffff",
+                    fontWeight: 700,
+                    color: "#1b1b1b",
+                    borderRight: "2px solid #d6e2d6",
+                    padding: "10px",
+                    minWidth: 70,
                     textAlign: "center",
-                    border: "2px solid rgba(0,0,0,0.15)",
                   }}
                 >
-                  {match ? (
-                    <div
-                      style={{
-                        background: match.is_finished
-                          ? "linear-gradient(to bottom, #8fbc8f, #6b8e23)"
-                          : "linear-gradient(to bottom, #ffecb3, #ffd54f)",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        margin: "2px 0",
-                        boxShadow: match.is_finished
-                          ? "0 2px 6px rgba(0,0,0,0.15)"
-                          : "0 2px 12px rgba(0,0,0,0.25)",
-                        fontWeight: match.is_finished ? "normal" : "bold",
-                      }}
-                    >
+                  {row.time}
+                </td>
+
+                {/* MATCH CELLS */}
+                {(row.matches ?? []).filter(Boolean).map((match, fIdx) => (
+                  <td
+                    key={fIdx}
+                    style={{
+                      padding: "8px",
+                      textAlign: "center",
+                      border: "1px solid #e6e6e6",
+                      minWidth: 180,
+                    }}
+                  >
+                    {match ? (
                       <div
                         style={{
-                          fontWeight: 500,
-                          fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
-                          color: "#1b3a00",
-                          marginTop: 2,
+                          background: match.is_finished
+                            ? "#ffffff"
+                            : "#f1f8e9",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 6,
+                          padding: "6px",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                          fontWeight: match.is_finished ? 500 : 700,
                         }}
                       >
-                        <strong>{match.home_team}</strong> vs{" "}
-                        <strong>{match.away_team}</strong>
-                      </div>
-                      {match.is_finished && (
+                        {/* TEAMS */}
                         <div
                           style={{
-                            fontWeight: 700,
-                            fontSize: "clamp(0.9rem, 1vw, 1.3rem)",
-                            color: "#1b3a00",
-                            marginTop: 2,
+                            fontSize:
+                              "clamp(0.85rem, 1vw, 1.1rem)",
+                            color: "#1b1b1b",
                           }}
                         >
-                          {match.home_score} : {match.away_score}
+                          <strong>{match.home_team}</strong> vs{" "}
+                          <strong>{match.away_team}</strong>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ color: "rgba(0,0,0,0.2)", fontSize: "clamp(0.9rem, 1vw, 1.3rem)", }}>
-                      —
-                    </div>
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
+
+                        {/* SCORE */}
+                        {match.is_finished && (
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontWeight: 800,
+                              color: "#1b5e20",
+                            }}
+                          >
+                            {match.home_score} : {match.away_score}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          color: "#b0b0b0",
+                        }}
+                      >
+                        —
+                      </div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

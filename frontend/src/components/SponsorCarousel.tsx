@@ -33,7 +33,6 @@ export default function SponsorCarousel({
     return <div>Loading sponsors...</div>;
   }
 
-  // 🎯 If only one unique sponsor → center instead of animate
   if (sponsors.length === 1) {
     const s = sponsors[0];
 
@@ -81,8 +80,6 @@ export default function SponsorCarousel({
         overflow: "hidden",
         width: "100%",
         position: "relative",
-        padding: "10px 0",
-        // subtle edge fade
         maskImage:
           "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
         WebkitMaskImage:
@@ -136,7 +133,7 @@ export default function SponsorCarousel({
         })}
       </div>
 
-      {/* 🎬 animation + interaction styles */}
+      {/* animation + interaction styles */}
       <style>
         {`
           @keyframes scroll {

@@ -1,4 +1,4 @@
-import { Typography, Box, Chip } from "@mui/material";
+import { Typography, Box } from "@mui/material";
 
 interface HeaderProps {
   name: string;
@@ -6,7 +6,7 @@ interface HeaderProps {
   liveCount?: number;
 }
 
-export default function Header({ name, isFinished, liveCount = 0 }: HeaderProps) {
+export default function Header({ name }: HeaderProps) {
   return (
     <Box
       sx={{
@@ -31,21 +31,6 @@ export default function Header({ name, isFinished, liveCount = 0 }: HeaderProps)
       >
         {name}
       </Typography>
-
-      {/* Status row */}
-      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <Chip
-          label={isFinished ? "Finished" : "Live"}
-          color={isFinished ? "default" : "error"}
-          size="small"
-        />
-
-        {!isFinished && liveCount > 0 && (
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>
-            🔴 {liveCount} matches live
-          </Typography>
-        )}
-      </Box>
     </Box>
   );
 }
