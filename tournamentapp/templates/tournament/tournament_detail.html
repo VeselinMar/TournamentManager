@@ -113,6 +113,9 @@
                                 <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">
                                   Edit Result
                                 </a>
+                                {% comment %} remove comment after implementing delete_match revert_points <button class="btn-match-delete"
+                                        data-match-id="{{ match.pk }}"
+                                        data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✕</button> {% endcomment %}
                               {% else %}
                                 {% if not tournament.is_finished %}
                                   <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">

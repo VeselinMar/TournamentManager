@@ -16,7 +16,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404, render
 from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
-from .forms import TeamCreateForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm
+from .forms import TeamCreateForm, TeamNameForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm
 from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count, F
@@ -178,6 +178,18 @@ class TeamListView(LoginRequiredMixin, TournamentAccessMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['tournament'] = self.get_tournament()
         return context
+
+    def post(self, request, *args, **kwargs):
+        team = Team.objects.get(
+            pk=request.POST.get("team_id"),
+            tournament=self.get_tournament()
+        )
+
+        form = TeamNameForm(request.POST, instance=team)
+        if form.is_valid():
+            form.save()
+
+        return redirect(request.path)
 
 class TeamDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):
     model = Team
@@ -671,10 +683,6 @@ def edit_match(request, tournament_id, match_id):
 def delete_match(request, tournament_id, match_id):
     tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
-
-    if match.is_finished:
-        messages.error(request, "Cannot delete a finished match.")
-        return redirect('tournament-detail', pk=tournament_id)
 
     match.delete()
     messages.success(request, "Match removed.")
