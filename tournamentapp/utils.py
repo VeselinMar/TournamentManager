@@ -4,91 +4,220 @@ from django.db.models import Q, F, Count, ExpressionWrapper, DateTimeField
 from django.utils import timezone
 from django.utils.timezone import localtime
 from collections import defaultdict
-from datetime import timedelta
-from typing import List, Tuple
+from datetime import timedelta, datetime
+from typing import List, Tuple, Optional
 from .models import Team, Player, Tournament, Match, Field, MatchEvent
 import json
+import logging
+import random
 from django.conf import settings
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 
-def generate_round_robin(tournament: Tournament) -> List[List[Tuple[Team, Team]]]:
+LOOKAHEAD_ATTEMPTS = 10  # number of random shuffles to try before inserting rest slot
+
+def generate_round_robin(tournament: Tournament) -> List[Tuple[Team, Team]]:
     """
-    Generate round-robin match pairings for a tournament.
-    
-    Returns:
-        rounds: List of rounds, each round is a list of (home_team, away_team) tuples
+    Generate all round-robin pairings for a tournament as a flat list.
+
+    The bye sentinel is fixed at the LAST position during rotation so it
+    never occupies index 0, preserving a consistent fixed anchor.
+
+    Home/away is balanced greedily: for each pair, the team with the lower
+    net home count (home_games - away_games) is assigned as home. Ties go
+    to the naturally ordered home candidate.
+
+    Raises:
+        ValueError: If the tournament has fewer than 2 teams.
     """
     teams = list(tournament.teams.all())
-    if not teams:
-        return []
 
-    # Handle odd number of teams by adding a "bye"
-    bye_team = None
-    if len(teams) % 2 == 1:
-        bye_team = None
-        teams.append(bye_team)
+    if len(teams) < 2:
+        raise ValueError(
+            f"Tournament requires at least 2 teams, got {len(teams)}."
+        )
+
+    # Fix the bye at the end, not in the rotating pool, so it never
+    # displaces the anchor at index 0.
+    has_bye = len(teams) % 2 == 1
+    if has_bye:
+        teams.append(None)
 
     n = len(teams)
-    rounds = []
+    # Separate anchor from rotating slice
+    anchor = teams[0]
+    rotating = teams[1:]  # length n-1, bye (if any) is at rotating[-1]
 
-    for round_index in range(n - 1):
-        round_matches = []
+    net_home: dict[Team, int] = defaultdict(int)  # home_games - away_games
+    all_matches: List[Tuple[Team, Team]] = []
+
+    for _ in range(n - 1):
+        round_teams = [anchor] + rotating
         for i in range(n // 2):
-            home = teams[i]
-            away = teams[n - 1 - i]
-            # Skip matches with the "bye"
-            if home is not None and away is not None:
-                round_matches.append((home, away))
-        rounds.append(round_matches)
-        # Rotate teams (except first one)
-        teams = [teams[0]] + [teams[-1]] + teams[1:-1]
-    
-    return rounds
+            home = round_teams[i]
+            away = round_teams[n - 1 - i]
+
+            if home is None or away is None:
+                continue
+
+            # Assign home to the team with the lower net home count.
+            # On a tie, keep the natural (home, away) order.
+            if net_home[away] < net_home[home]:
+                home, away = away, home
+
+            net_home[home] += 1
+            net_home[away] -= 1
+            all_matches.append((home, away))
+
+        # Rotate only the non-anchor slice; bye stays at the tail naturally
+        rotating = [rotating[-1]] + rotating[:-1]
+
+    return all_matches
+
+
+def _try_fill_slot(
+    remaining: List[Tuple[Team, Team]],
+    field_count: int,
+    prev_slot_teams: set,
+) -> Tuple[List[Tuple[Team, Team]], List[int]] | None:
+    """
+    Attempt to fill a slot of up to `field_count` matches from `remaining`,
+    respecting the rest constraint against `prev_slot_teams`.
+
+    Returns (slot_matches, used_indices) if at least one match was found,
+    or None if no valid match exists at all.
+    """
+    slot: List[Tuple[Team, Team]] = []
+    slot_teams: set = set()
+    used_indices: List[int] = []
+
+    for idx, (home, away) in enumerate(remaining):
+        if len(slot) == field_count:
+            break
+        if home in prev_slot_teams or away in prev_slot_teams:
+            continue
+        if home in slot_teams or away in slot_teams:
+            continue
+        slot.append((home, away))
+        slot_teams |= {home, away}
+        used_indices.append(idx)
+
+    if not slot:
+        return None
+    return slot, used_indices
+
+
+def _assign_slots(
+    matches: List[Tuple[Team, Team]],
+    field_count: int,
+) -> List[List[Tuple[Team, Team]]]:
+    """
+    Assign matches to slots of up to `field_count`, ensuring no team plays
+    in consecutive slots.
+
+    Uses lookahead: before inserting a forced rest slot, tries
+    LOOKAHEAD_ATTEMPTS random orderings of the remaining matches to see if
+    any avoids the deadlock. Inserts an empty rest slot only if all
+    attempts fail.
+
+    Returns:
+        List of slots; empty lists are forced rest slots.
+    """
+    remaining = list(matches)
+    slots: List[List[Tuple[Team, Team]]] = []
+    prev_slot_teams: set = set()
+
+    while remaining:
+        result = _try_fill_slot(remaining, field_count, prev_slot_teams)
+
+        if result is None:
+            # Lookahead: try random permutations of remaining before giving up
+            resolved = False
+            for _ in range(LOOKAHEAD_ATTEMPTS):
+                candidate = random.sample(remaining, len(remaining))
+                result = _try_fill_slot(candidate, field_count, prev_slot_teams)
+                if result is not None:
+                    # Rebuild remaining in the order that worked
+                    slot, used_indices = result
+                    for idx in sorted(used_indices, reverse=True):
+                        candidate.pop(idx)
+                    remaining = candidate
+                    slots.append(slot)
+                    prev_slot_teams = {t for m in slot for t in m}
+                    resolved = True
+                    break
+
+            if not resolved:
+                logger.info(
+                    "Inserting forced rest slot after slot %d to maintain "
+                    "rest constraint.",
+                    len(slots),
+                )
+                slots.append([])
+                prev_slot_teams = set()
+        else:
+            slot, used_indices = result
+            for idx in sorted(used_indices, reverse=True):
+                remaining.pop(idx)
+            slots.append(slot)
+            prev_slot_teams = {t for m in slot for t in m}
+
+    return slots
+
 
 def create_round_robin_matches(
-    tournament,
-    start_time,
+    tournament: Tournament,
+    start_time: datetime,
     game_duration: timedelta,
-    pause_duration: timedelta
-):
+    pause_duration: timedelta,
+) -> None:
     """
     Create Match objects for a tournament using round-robin pairings,
-    distributing matches across available fields fairly so no team
-    has consecutive matches without a break when multiple fields exist.
+    scheduled as compactly as possible while ensuring each team has at
+    least one slot of rest between games.
 
-    game_duration already accounts for halves and half-time break if applicable
-    — the caller is responsible for computing the total match duration.
+    Under-full slots assign fields left-to-right; remaining fields are
+    idle for that slot. Time is derived solely from slot index, so
+    start_time + field uniquely identifies each match.
+
+    Raises:
+        TypeError:  If start_time is not a datetime.
+        ValueError: If start_time is not timezone-aware, or the tournament
+                    has no fields configured.
     """
+    if not isinstance(start_time, datetime):
+        raise TypeError(f"start_time must be a datetime, got {type(start_time)!r}.")
+    if start_time.tzinfo is None:
+        raise ValueError("start_time must be timezone-aware.")
+
     with transaction.atomic():
         fields = list(tournament.fields.all())
         if not fields:
             raise ValueError("Tournament has no fields.")
 
-        rounds = generate_round_robin(tournament)
-        current_time = start_time
-        slot_duration = game_duration + pause_duration
+        all_matches = generate_round_robin(tournament)
+        slots = _assign_slots(all_matches, field_count=len(fields))
 
+        slot_duration = game_duration + pause_duration
         matches_to_create = []
 
-        for round_index, round_matches in enumerate(rounds, start=1):
-            slots = [round_matches[i:i + len(fields)] for i in range(0, len(round_matches), len(fields))]
-
-            for slot in slots:
-                for i, (home, away) in enumerate(slot):
-                    field = fields[i % len(fields)]
-                    matches_to_create.append(
-                        Match(
-                            tournament=tournament,
-                            home_team=home,
-                            away_team=away,
-                            start_time=current_time,
-                            field=field
-                        )
+        for slot_index, slot in enumerate(slots):
+            slot_time = start_time + slot_index * slot_duration
+            for field_index, (home, away) in enumerate(slot):
+                # field_index is always < len(fields) because _assign_slots
+                # caps slot size at field_count
+                matches_to_create.append(
+                    Match(
+                        tournament=tournament,
+                        home_team=home,
+                        away_team=away,
+                        start_time=slot_time,
+                        field=fields[field_index],
                     )
-                current_time += slot_duration
+                )
 
-    Match.objects.bulk_create(matches_to_create)
+        Match.objects.bulk_create(matches_to_create)
 
 def propagate_match_delay(match, new_start_time):
     """
