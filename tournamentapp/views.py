@@ -176,7 +176,7 @@ class TeamListView(LoginRequiredMixin, TournamentAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tournament'] = self.get_tournament
+        context['tournament'] = self.get_tournament()
         return context
 
 class TeamDetailView(LoginRequiredMixin, TournamentAccessMixin, DetailView):

@@ -67,6 +67,20 @@
     </div>
 
   </div>
+  <!-- Bottom Section: Upcoming Matches -->
+    <div class="team-detail-upcoming mt-4">
+      <h2 class="section-title">Upcoming Matches</h2>
+      {% for match in upcoming_matches %}
+        <li class="card card-match-upcoming">
+          <a href="{% url 'match-detail' tournament.id match.id %}" class="card-link">
+            {{ match.home_team.name }} vs {{ match.away_team.name }} —
+            {{ match.start_time|date:"M d, Y H:i" }} | Field: {{ match.field }}
+          </a>
+        </li>
+      {% empty %}
+        <p>No upcoming matches for this team.</p>
+      {% endfor %}
+    </div>
 </div>
 
 {% endblock %}
