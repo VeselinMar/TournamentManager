@@ -31,18 +31,20 @@ export default function TimelineTable({
   useEffect(() => {
     if (!tableRef.current || timeline.length === 0) return;
 
-    const id = requestIdleCallback(() => {
+    const id = window.setTimeout(() => {
       const rowIndex = timeline.findIndex((row) =>
         row.matches?.some((m) => m && !m.is_finished)
       );
 
       if (rowIndex >= 0) {
-        const rowElem = tableRef.current!.rows[rowIndex + 1];
-        rowElem?.scrollIntoView({ behavior: "smooth", block: "center" });
+        tableRef.current?.rows[rowIndex + 1]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
-    });
+    }, 0);
 
-    return () => cancelIdleCallback(id);
+    return () => clearTimeout(id);
   }, [timeline]);
 
   if (!timeline.length) return <div>Loading timeline...</div>;
