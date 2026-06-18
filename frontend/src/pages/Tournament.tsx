@@ -42,8 +42,14 @@ export default function TournamentPage() {
     tournament.show_side_events && { label: "Side Events", path: "side-events" },
   ].filter(Boolean) as { label: string; path: string }[];
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "96dvh" }}>
+return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "97dvh",
+      }}
+    >
       <div ref={topRef}>
         <Header name={tournament.name} isFinished={tournament.is_finished} />
         <Navbar sections={sections} onSelect={handleSectionSelect} />
@@ -54,12 +60,22 @@ export default function TournamentPage() {
           flex: 1,
           display: "flex",
           justifyContent: "center",
-          alignItems: "flex-start",
-          overflow: "auto",
-          padding: "1rem",
+          padding: "0.5rem 1rem",
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
       >
-        <Outlet context={{ topRef, bottomRef }} />
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 1400,
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.75rem",
+          }}
+        >
+          <Outlet context={{ topRef, bottomRef }} />
+        </div>
       </main>
 
       <div ref={bottomRef}>
