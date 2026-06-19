@@ -30,6 +30,12 @@ export default function TournamentPage() {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+  
+  useEffect(() => {
+    if (tournament?.name) {
+      document.title = tournament.name;
+    }
+  }, [tournament?.name]);
 
   if (loading) return <div>Loading tournament...</div>;
   if (error) return <div>{error}</div>;
