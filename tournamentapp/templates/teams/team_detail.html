@@ -39,7 +39,12 @@
             <li class="card card-player">
               <div class="d-flex justify-content-between align-items-center">
                 <span>
-                  {{ player.name }} — {{ player.goals }} goal{{ player.goals|pluralize }}
+                  <span
+                      class="player-name-edit"
+                      contenteditable="true"
+                      data-player-id="{{ player.id }}"
+                      data-original="{{ player.name }}"
+                    >{{ player.name }}</span> — {{ player.goals }} goal{{ player.goals|pluralize }}
                   {% if player.is_muted %}
                     <span class="badge badge-warning">Suspended</span>
                     <span class="text-muted">({{ player.games_sat_out }} game{{ player.games_sat_out|pluralize }})</span>
