@@ -153,6 +153,32 @@ class FieldCreateForm(forms.ModelForm):
             raise forms.ValidationError(f'A field named "{name}" already exists.')
         return name
 
+class AddPlayerForm(forms.Form):
+    name = forms.CharField(max_length=100, strip=True)
+    team_id = forms.IntegerField(widget=forms.HiddenInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        team_id = cleaned_data.get('team_id')
+        name = cleaned_data.get('name')
+
+        try:
+            team = Team.objects.get(pk=team_id)
+        except Team.DoesNotExist:
+            raise forms.ValidationError("Team not found.")
+
+        if Player.objects.filter(name__iexact=name, team=team).exists():
+            raise forms.ValidationError(f"'{name}' is already on this team.")
+
+        cleaned_data['team'] = team
+        return cleaned_data
+
+    def save(self):
+        return Player.objects.create(
+            name=self.cleaned_data['name'],
+            team=self.cleaned_data['team']
+        )
+
 class MatchEditForm(forms.ModelForm):
     class Meta:
         model = Match

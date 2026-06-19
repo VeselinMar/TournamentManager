@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load static %}
 
-<div class="container team-detail-container">
+<div class="container team-detail-container" data-tournament-id="{{ tournament.id }}">
 
   <h1 class="page-title">{{ team.name }}</h1>
 
@@ -64,6 +65,15 @@
       {% else %}
         <p>No players in this team.</p>
       {% endif %}
+      <form id="team-detail-player-form"
+            class="form-component mt-2"
+            data-team-id="{{ team.id }}">
+        {% csrf_token %}
+        <div class="form-inline">
+          <input type="text" name="player" placeholder="Add player" required>
+          <button class="button-primary" type="submit">Add</button>
+        </div>
+      </form>
     </div>
 
   </div>
@@ -83,4 +93,8 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/add_player.js' %}"></script>
 {% endblock %}
