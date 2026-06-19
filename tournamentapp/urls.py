@@ -5,7 +5,7 @@ from .views import (
     MatchCreateView, MatchDetailView, MatchEditView, LeaderboardView, FieldAddView,
     create_match_event, add_player, finish_match, remove_match_event, field_edit, field_delete,
     generate_tournament_schedule, about_view, contact_view, privacy_policy_view, toggle_tournament_status,
-    reset_schedule, edit_match, delete_match, toggle_player_mute, SpaView, DashboardView
+    reset_schedule, edit_match, delete_match, toggle_player_mute, SpaView, DashboardView, rename_player
 )
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing-page'),
@@ -52,4 +52,7 @@ urlpatterns = [
 
     # Leaderboard (tournament-specific)
     path('tournament/<int:tournament_id>/leaderboard/', LeaderboardView.as_view(), name='leaderboard'),
+
+    # Players
+    path('tournament/<int:tournament_id>/players/<int:player_id>/rename/', rename_player, name='rename-player'),
 ]

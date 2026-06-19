@@ -44,3 +44,44 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch((err) => console.error("❌ Error adding player:", err));
   });
 });
+
+const tournamentId = document.querySelector(".team-detail-container").dataset.tournamentId;
+
+document.querySelector(".team-detail-right").addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && e.target.classList.contains("player-name-edit")) {
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
+document.querySelector(".team-detail-right").addEventListener("focusout", function (e) {
+  if (!e.target.classList.contains("player-name-edit")) return;
+
+  const el = e.target;
+  const playerId = el.dataset.playerId;
+  const original = el.dataset.original;
+  const name = el.textContent.trim();
+
+  if (name === original) return;
+
+  fetch(`/tournament/${tournamentId}/players/${playerId}/rename/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ name }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        el.dataset.original = data.name;
+      } else {
+        alert(data.error || "Failed to rename player.");
+        el.textContent = original; // revert
+      }
+    })
+    .catch(() => {
+      el.textContent = original; // revert on network error
+    });
+});

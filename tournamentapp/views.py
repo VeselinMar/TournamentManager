@@ -699,3 +699,20 @@ def toggle_player_mute(request, tournament_id, player_id):
         player.is_muted = True
         player.save(update_fields=['is_muted'])
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required
+@require_POST
+def rename_player(request, tournament_id, player_id):
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    player = get_object_or_404(Player, pk=player_id, team__tournament=tournament)
+    
+    name = request.POST.get('name', '').strip()
+    if not name:
+        return JsonResponse({'success': False, 'error': 'Name cannot be empty.'})
+    
+    if Player.objects.filter(name__iexact=name, team=player.team).exclude(pk=player.pk).exists():
+        return JsonResponse({'success': False, 'error': 'A player with that name already exists.'})
+    
+    player.name = name
+    player.save()
+    return JsonResponse({'success': True, 'name': player.name})
