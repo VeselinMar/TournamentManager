@@ -24,6 +24,7 @@ class Tournament(models.Model):
         unique=True,
         blank=True
     )
+    cache_version = models.PositiveIntegerField(default=1)
     tournament_date = models.DateField(null=True, blank=True)
     show_leaderboard = models.BooleanField(default=True)
     show_vendors = models.BooleanField(default=True)
