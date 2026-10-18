@@ -5,6 +5,13 @@
 <div class="container my-5" style="max-width: 500px;">
   <h2 class="page-title mb-4">Generate Schedule — {{ tournament.name }}</h2>
 
+  {% if tournament.uses_groups %}
+    <p class="text-muted">
+      Groups + Knockout: group matches are scheduled first, then the full bracket.
+      Make sure all teams are in a group — <a href="{% url 'group-setup' tournament.pk %}">manage groups</a>.
+    </p>
+  {% endif %}
+
   <form method="post" class="form-component">
     {% csrf_token %}
 
@@ -42,6 +49,17 @@
         <div class="form-error">{{ error }}</div>
       {% endfor %}
     </div>
+
+    {% if tournament.uses_groups %}
+    <!-- Break before knockout -->
+    <div class="form-group mb-3">
+      <label for="{{ form.break_before_knockout.id_for_label }}">{{ form.break_before_knockout.label }}</label>
+      {{ form.break_before_knockout }}
+      {% for error in form.break_before_knockout.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Has Halves -->
     <div class="form-group mb-3 form-inline">

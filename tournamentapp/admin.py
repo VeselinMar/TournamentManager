@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Team, Player, Match, GoalEvent, Field, MatchEvent, Tournament
+from .models import Team, Player, Match, GoalEvent, Field, MatchEvent, Tournament, Group, MatchSlot
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
@@ -11,7 +11,8 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tournament_points', 'tournament')
+    list_display = ('name', 'group', 'tournament')
+    list_filter = ('tournament',)
     search_fields = ('name',)
 
 @admin.register(Player)
@@ -22,8 +23,8 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('home_team', 'away_team', 'start_time', 'field', 'home_score', 'away_score', 'is_finished')
-    list_filter = ('field', 'is_finished')
+    list_display = ('__str__', 'stage', 'round', 'start_time', 'field', 'home_score', 'away_score', 'is_finished')
+    list_filter = ('stage', 'is_finished', 'tournament')
     search_fields = ('home_team__name', 'away_team__name')
     ordering = ('start_time',)
 
@@ -43,3 +44,14 @@ class MatchEventAdmin(admin.ModelAdmin):
     list_filter = ('event_type', 'team')
     search_fields = ('player__name', 'team__name')
     ordering = ('match', 'minute')
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'tournament', 'order')
+    list_filter = ('tournament',)
+
+
+@admin.register(MatchSlot)
+class MatchSlotAdmin(admin.ModelAdmin):
+    list_display = ('match', 'side', 'source_type', 'seed', 'source_match', 'placeholder', 'is_manual_override')
+    list_filter = ('source_type', 'is_manual_override')

@@ -54,3 +54,20 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+/* ---- Groups + Knockout ------------------------------------------------ */
+.match-card .match-stage {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.match-card .placeholder {
+  font-style: italic;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.match-card.knockout {
+  border-left: 3px solid #f9a825;
+}

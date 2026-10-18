@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
-import type { LeaderboardResponse } from "../types/leaderboard";
+import type { GroupStanding, LeaderboardResponse } from "../types/leaderboard";
 
 interface Props {
   slug: string;
@@ -35,6 +35,8 @@ export default function Leaderboard({ slug }: Props) {
   if (!data)
     return <div style={{ padding: 12 }}>No leaderboard available</div>;
 
+  const isGroups = data.format === "groups_knockout";
+
   return (
     <div
       style={{
@@ -57,157 +59,39 @@ export default function Leaderboard({ slug }: Props) {
           letterSpacing: 1,
         }}
       >
-        Leaderboard
+        {isGroups ? "Group Standings" : "Leaderboard"}
       </div>
 
-      {/* TABLE WRAPPER */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "clamp(0.85rem, 1vw, 1rem)",
-            background: "#ffffff",
-            color: "#1b1b1b",
-            minWidth: 520,
-          }}
-        >
-          <thead>
-            <tr>
-              {["#", "Team", "Pts", "W", "D", "L", "GF", "GA", "GD"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    style={{
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 10,
-                      backgroundColor: "#1f3a1f",
-                      color: "#ffffff",
-                      padding: "10px",
-                      textAlign: "center",
-                      borderBottom: "2px solid #d6e2d6",
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {h}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
+      {data.groups.map((group) => (
+        <div key={group.name ?? "table"}>
+          {isGroups && (
+            <div
+              style={{
+                background: "#e6efe6",
+                color: "#1f3a1f",
+                padding: "8px 12px",
+                fontWeight: 800,
+                borderTop: "1px solid #d6e2d6",
+              }}
+            >
+              Group {group.name}
+            </div>
+          )}
+          <StandingsTable group={group} isGroup={isGroups} />
+        </div>
+      ))}
 
-          <tbody>
-            {data.standings.map((team, idx) => {
-              const isTop = idx === 0;
-              const isPodium = idx < 3;
-
-              return (
-                <tr
-                  key={team.team_name}
-                  style={{
-                    background: isTop
-                      ? "#fff8e1"
-                      : idx % 2 === 0
-                      ? "#ffffff"
-                      : "#f6f8f6",
-                    borderLeft: isTop
-                      ? "4px solid #f9a825"
-                      : "4px solid transparent",
-                    transition: "background 0.2s ease",
-                    cursor: "default",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#e6f2e6")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "")
-                  }
-                >
-                  {/* Rank */}
-                  <td
-                    style={{
-                      textAlign: "center",
-                      fontWeight: 800,
-                      padding: "8px",
-                      color: isPodium ? "#1b3a00" : "#333",
-                    }}
-                  >
-                    {idx + 1}
-                  </td>
-
-                  {/* Team */}
-                  <td
-                    style={{
-                      padding: "8px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {team.team_name}
-                  </td>
-
-                  {/* Points */}
-                  <td
-                    style={{
-                      textAlign: "center",
-                      fontWeight: 900,
-                      fontSize: "1.05em",
-                    }}
-                  >
-                    {team.points}
-                  </td>
-
-                  {/* Stats */}
-                  {[
-                    team.wins,
-                    team.draws,
-                    team.losses,
-                    team.goals_for,
-                    team.goals_against,
-                  ].map((val, i) => (
-                    <td
-                      key={i}
-                      style={{
-                        textAlign: "center",
-                        padding: "8px",
-                        fontVariantNumeric: "tabular-nums",
-                        color: "#2b2b2b",
-                      }}
-                    >
-                      {val}
-                    </td>
-                  ))}
-
-                  {/* Goal Difference */}
-                  <td
-                    style={{
-                      textAlign: "center",
-                      fontWeight: 800,
-                      color:
-                        team.goal_difference > 0
-                          ? "#1b5e20"
-                          : team.goal_difference < 0
-                          ? "#b71c1c"
-                          : "#333",
-                    }}
-                  >
-                    {team.goal_difference > 0
-                      ? "+"
-                      : ""}
-                    {team.goal_difference}
-                    {team.goal_difference > 0
-                      ? " ▲"
-                      : team.goal_difference < 0
-                      ? " ▼"
-                      : ""}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {isGroups && (
+        <div style={{ padding: "8px 12px", fontSize: "0.85rem", color: "#4b5b4b" }}>
+          <span style={{ borderLeft: "4px solid #2e7d32", paddingLeft: 6 }}>
+            Top {data.groups[0]?.qualifiers ?? 0} of each group qualify
+          </span>
+          {data.best_placed_qualifiers > 0 &&
+            ` · plus the ${data.best_placed_qualifiers} best ${ordinal(
+              (data.groups[0]?.qualifiers ?? 0) + 1
+            )}-placed team${data.best_placed_qualifiers > 1 ? "s" : ""}`}
+        </div>
+      )}
 
       {/* TOP SCORERS */}
       <div style={{ borderTop: "1px solid #d6e2d6" }}>
@@ -256,4 +140,171 @@ export default function Leaderboard({ slug }: Props) {
       </div>
     </div>
   );
+}
+
+interface StandingsTableProps {
+  group: GroupStanding;
+  isGroup: boolean;
+}
+
+function StandingsTable({ group, isGroup }: StandingsTableProps) {
+  return (
+    <>
+        {/* TABLE WRAPPER */}
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "clamp(0.85rem, 1vw, 1rem)",
+              background: "#ffffff",
+              color: "#1b1b1b",
+              minWidth: 520,
+            }}
+          >
+            <thead>
+              <tr>
+                {["#", "Team", "Pts", "W", "D", "L", "GF", "GA", "GD"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      style={{
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 10,
+                        backgroundColor: "#1f3a1f",
+                        color: "#ffffff",
+                        padding: "10px",
+                        textAlign: "center",
+                        borderBottom: "2px solid #d6e2d6",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+
+            <tbody>
+              {group.standings.map((team, idx) => {
+                const isTop = !isGroup && idx === 0;
+                const isPodium = !isGroup && idx < 3;
+
+                return (
+                  <tr
+                    key={team.team_name}
+                    style={{
+                      background: isTop
+                        ? "#fff8e1"
+                        : idx % 2 === 0
+                        ? "#ffffff"
+                        : "#f6f8f6",
+                      borderLeft: isTop
+                        ? "4px solid #f9a825"
+                        : team.qualifies
+                        ? "4px solid #2e7d32"
+                        : "4px solid transparent",
+                      transition: "background 0.2s ease",
+                      cursor: "default",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#e6f2e6")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "")
+                    }
+                  >
+                    {/* Rank */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        fontWeight: 800,
+                        padding: "8px",
+                        color: isPodium ? "#1b3a00" : "#333",
+                      }}
+                    >
+                      {idx + 1}
+                    </td>
+
+                    {/* Team */}
+                    <td
+                      style={{
+                        padding: "8px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {team.team_name}
+                    </td>
+
+                    {/* Points */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        fontWeight: 900,
+                        fontSize: "1.05em",
+                      }}
+                    >
+                      {team.points}
+                    </td>
+
+                    {/* Stats */}
+                    {[
+                      team.wins,
+                      team.draws,
+                      team.losses,
+                      team.goals_for,
+                      team.goals_against,
+                    ].map((val, i) => (
+                      <td
+                        key={i}
+                        style={{
+                          textAlign: "center",
+                          padding: "8px",
+                          fontVariantNumeric: "tabular-nums",
+                          color: "#2b2b2b",
+                        }}
+                      >
+                        {val}
+                      </td>
+                    ))}
+
+                    {/* Goal Difference */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        fontWeight: 800,
+                        color:
+                          team.goal_difference > 0
+                            ? "#1b5e20"
+                            : team.goal_difference < 0
+                            ? "#b71c1c"
+                            : "#333",
+                      }}
+                    >
+                      {team.goal_difference > 0
+                        ? "+"
+                        : ""}
+                      {team.goal_difference}
+                      {team.goal_difference > 0
+                        ? " ▲"
+                        : team.goal_difference < 0
+                        ? " ▼"
+                        : ""}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+    </>
+  );
+}
+
+function ordinal(n: number): string {
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
+  return `${n}${suffix}`;
 }

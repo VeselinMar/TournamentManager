@@ -32,18 +32,30 @@ class TopScorerSerializer(serializers.Serializer):
 
 
 class TeamStandingSerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
     team_name = serializers.CharField()
     points = serializers.IntegerField()
+    played = serializers.IntegerField()
     wins = serializers.IntegerField()
     draws = serializers.IntegerField()
     losses = serializers.IntegerField()
     goals_for = serializers.IntegerField()
     goals_against = serializers.IntegerField()
     goal_difference = serializers.IntegerField()
+    qualifies = serializers.BooleanField()
+
+
+class GroupStandingSerializer(serializers.Serializer):
+    name = serializers.CharField(allow_null=True)
+    qualifiers = serializers.IntegerField()
+    standings = TeamStandingSerializer(many=True)
 
 
 class LeaderboardSerializer(serializers.Serializer):
+    format = serializers.CharField()
     standings = TeamStandingSerializer(many=True)
+    groups = GroupStandingSerializer(many=True)
+    best_placed_qualifiers = serializers.IntegerField()
     top_scorers = TopScorerSerializer(many=True)
 
 class TournamentMetaSerializer(serializers.ModelSerializer):
@@ -55,7 +67,7 @@ class TournamentMetaSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'slug', 'is_finished', 'tournament_date',
             'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements',
-            'tiebreak_rule', 'sponsors'
+            'tiebreak_rule', 'format', 'sponsors'
         ]
 
     def get_sponsors(self, obj):

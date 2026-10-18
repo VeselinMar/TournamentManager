@@ -8,19 +8,20 @@
   <div class="leaderboard-grid">
 
     <!-- Teams -->
+    {% for group, group_teams in group_tables %}
     <div class="card">
-      <div class="card-header">Team Leaderboard</div>
+      <div class="card-header">{% if group %}{{ group }}{% else %}Team Leaderboard{% endif %}</div>
       <div class="card-body">
 
-        {% if teams %}
+        {% if group_teams %}
           <ol class="leaderboard-list">
-            {% for team in teams %}
-              <li class="leaderboard-item">
+            {% for team in group_teams %}
+              <li class="leaderboard-item{% if group and forloop.counter <= tournament.qualifiers_per_group %} qualifies{% endif %}">
                 <a href="{% url 'team-detail' tournament.id team.pk %}">
                   {{ team.name }}
                 </a>
                 <span class="leaderboard-meta">
-                  {{ team.tournament_points }} pts
+                  {{ team.points }} pts · {{ team.played }} pl · GD {{ team.goal_difference }}
                 </span>
               </li>
             {% endfor %}
@@ -31,6 +32,7 @@
 
       </div>
     </div>
+    {% endfor %}
 
     <!-- Players -->
     <div class="card">
@@ -59,6 +61,33 @@
     </div>
 
   </div>
+
+  {% if bracket %}
+  <h2 class="page-title mt-4">Knockout</h2>
+  <div class="leaderboard-grid">
+    {% for round in bracket %}
+      <div class="card">
+        <div class="card-header">{{ round.label }}</div>
+        <div class="card-body">
+          <ul class="leaderboard-list">
+            {% for match in round.matches %}
+              <li class="leaderboard-item">
+                <a href="{% url 'match-edit' tournament.id match.pk %}">{{ match.home_label }} vs {{ match.away_label }}</a>
+                <span class="leaderboard-meta">
+                  {% if match.is_finished %}
+                    {{ match.home_score }}-{{ match.away_score }}{% if match.decided_by == 'penalties' %} ({{ match.home_penalties }}–{{ match.away_penalties }} p){% elif match.decided_by == 'extra_time' %} aet{% endif %}
+                  {% else %}
+                    {{ match.start_time|time:"H:i" }} · {{ match.field.name }}
+                  {% endif %}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
 </div>
 {% endblock %}

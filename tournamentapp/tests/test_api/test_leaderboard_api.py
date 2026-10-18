@@ -23,8 +23,10 @@ def test_leaderboard_contains_standings(client, tournament, field, team):
 @pytest.mark.django_db
 def test_leaderboard_shows_team_points(client, tournament, field, team):
     away = Team.objects.create(name="Away", tournament=tournament)
-    team.tournament_points = 3
-    team.save()
+    Match.objects.create(
+        tournament=tournament, home_team=team, away_team=away, field=field,
+        start_time=timezone.now(), home_score=2, away_score=0, is_finished=True,
+    )
 
     url = f'/api/tournaments/{tournament.slug}/leaderboard/'
     response = client.get(url)

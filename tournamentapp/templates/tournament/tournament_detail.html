@@ -48,6 +48,13 @@
                   Edit
                 </a>
 
+                {% if tournament.uses_groups %}
+                  <a href="{% url 'group-setup' tournament.pk %}" class="btn-edit-tournament">Groups</a>
+                {% endif %}
+                {% if not tournament.matches.exists %}
+                  <a href="{% url 'generate-tournament-schedule' tournament.pk %}" class="btn-edit-tournament">Generate Schedule</a>
+                {% endif %}
+
                 {% if tournament.matches.exists %}
                   <button class="btn-reset" id="resetBtn">Reset Schedule</button>
                 {% endif %}
@@ -73,7 +80,7 @@
           <div class="current-matches-grid">
             {% for match in current_matches %}
               <div class="current-match-card">
-                <h3>{{ match.home_team.name }} vs {{ match.away_team.name }}</h3>
+                <h3>{{ match.home_label }} vs {{ match.away_label }}</h3>
                 <p class="current-score">{{ match.home_score }} - {{ match.away_score }}</p>
                 <p class="field-label">Field: {{ match.field }}</p>
               </div>
@@ -103,19 +110,27 @@
                       {% for match in row.matches %}
                         <td>
                           {% if match %}
-                            <div class="match-card {% if match.is_finished %}finished{% endif %}">
-                              <strong>{{ match.home_team.name }}</strong>
+                            <div class="match-card {% if match.is_finished %}finished{% endif %}{% if match.is_knockout %} knockout{% endif %}">
+                              {% if match.round_label %}
+                                <small class="match-stage">{{ match.round_label }}</small><br>
+                              {% endif %}
+                              <strong class="{% if not match.home_team %}placeholder{% endif %}">{{ match.home_label }}</strong>
                               vs
-                              <strong>{{ match.away_team.name }}</strong><br>
+                              <strong class="{% if not match.away_team %}placeholder{% endif %}">{{ match.away_label }}</strong><br>
 
                               {% if match.is_finished %}
-                                <span class="score">{{ match.home_score }} - {{ match.away_score }}</span><br>
+                                <span class="score">{{ match.home_score }} - {{ match.away_score }}</span>
+                                {% if match.decided_by == 'penalties' %}
+                                  <small>({{ match.home_penalties }}–{{ match.away_penalties }} pens)</small>
+                                {% elif match.decided_by == 'extra_time' %}
+                                  <small>(a.e.t.)</small>
+                                {% endif %}<br>
                                 <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">
                                   Edit Result
                                 </a>
                                 {% comment %} remove comment after implementing delete_match revert_points <button class="btn-match-delete"
                                         data-match-id="{{ match.pk }}"
-                                        data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✕</button> {% endcomment %}
+                                        data-match-name="{{ match.home_label }} vs {{ match.away_label }}">✕</button> {% endcomment %}
                               {% else %}
                                 {% if not tournament.is_finished %}
                                   <a href="{% url 'match-edit' tournament.id match.pk %}" class="btn-score">
@@ -128,12 +143,14 @@
                                         data-match-id="{{ match.pk }}"
                                         data-start-time="{{ match.start_time|time:'H:i' }}"
                                         data-field-id="{{ match.field.pk }}"
-                                        data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}"
+                                        data-match-name="{{ match.home_label }} vs {{ match.away_label }}"
                                         data-notes="{{ match.notes }}">✏</button>
 
+                                {% if not match.is_knockout %}
                                 <button class="btn-match-delete"
                                         data-match-id="{{ match.pk }}"
-                                        data-match-name="{{ match.home_team.name }} vs {{ match.away_team.name }}">✕</button>
+                                        data-match-name="{{ match.home_label }} vs {{ match.away_label }}">✕</button>
+                                {% endif %}
                               {% endif %}
                             </div>
                           {% else %}

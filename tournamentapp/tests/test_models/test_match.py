@@ -1,4 +1,5 @@
 from django.test import TestCase
+from tournamentapp.utils import get_team_standings
 from tournamentapp.models import Player, Team, Field, Match, GoalEvent, Tournament
 from accounts.models import AppUser
 from django.core.exceptions import ValidationError
@@ -66,6 +67,9 @@ class MatchModelTests(TestCase):
     def test_str_representation(self):
         self.assertEqual(str(self.match), "Team A vs Team B")
 
+    def _load_points(self):
+        self.points = {t.name: t.points for t in get_team_standings(self.tournament)}
+
     def test_apply_result_home_win(self):
         GoalEvent.objects.create(match=self.match, team=self.team1, player=self.player1, minute=10)
         GoalEvent.objects.create(match=self.match, team=self.team1, player=self.player1, minute=20)
@@ -73,13 +77,12 @@ class MatchModelTests(TestCase):
 
         self.match.apply_result()
         self.match.refresh_from_db()
-        self.team1.refresh_from_db()
-        self.team2.refresh_from_db()
+        self._load_points()
 
         self.assertEqual(self.match.home_score, 2)
         self.assertEqual(self.match.away_score, 1)
-        self.assertEqual(self.team1.tournament_points, 3)
-        self.assertEqual(self.team2.tournament_points, 0)
+        self.assertEqual(self.points[self.team1.name], 3)
+        self.assertEqual(self.points[self.team2.name], 0)
         self.assertTrue(self.match.is_finished)
 
     def test_apply_result_away_win(self):
@@ -90,13 +93,12 @@ class MatchModelTests(TestCase):
 
         self.match.apply_result()
         self.match.refresh_from_db()
-        self.team1.refresh_from_db()
-        self.team2.refresh_from_db()
+        self._load_points()
 
         self.assertEqual(self.match.home_score, 1)
         self.assertEqual(self.match.away_score, 3)
-        self.assertEqual(self.team2.tournament_points, 3)
-        self.assertEqual(self.team1.tournament_points, 0)
+        self.assertEqual(self.points[self.team2.name], 3)
+        self.assertEqual(self.points[self.team1.name], 0)
         self.assertTrue(self.match.is_finished)
 
     def test_apply_result_draw(self):
@@ -105,13 +107,12 @@ class MatchModelTests(TestCase):
 
         self.match.apply_result()
         self.match.refresh_from_db()
-        self.team1.refresh_from_db()
-        self.team2.refresh_from_db()
+        self._load_points()
 
         self.assertEqual(self.match.home_score, 1)
         self.assertEqual(self.match.away_score, 1)
-        self.assertEqual(self.team1.tournament_points, 1)
-        self.assertEqual(self.team2.tournament_points, 1)
+        self.assertEqual(self.points[self.team1.name], 1)
+        self.assertEqual(self.points[self.team2.name], 1)
         self.assertTrue(self.match.is_finished)
 
     def test_apply_result_only_once(self):
@@ -122,8 +123,7 @@ class MatchModelTests(TestCase):
         self.match.apply_result()
 
         self.match.refresh_from_db()
-        self.team1.refresh_from_db()
-        self.team2.refresh_from_db()
+        self._load_points()
 
-        self.assertEqual(self.team1.tournament_points, 1)
-        self.assertEqual(self.team2.tournament_points, 1)
+        self.assertEqual(self.points[self.team1.name], 1)
+        self.assertEqual(self.points[self.team2.name], 1)

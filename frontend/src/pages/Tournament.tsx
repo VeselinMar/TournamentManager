@@ -43,7 +43,11 @@ export default function TournamentPage() {
 
   const sections = [
     { label: "Schedule", path: "schedule" },
-    tournament.show_leaderboard && { label: "Leaderboard", path: "leaderboard" },
+    tournament.show_leaderboard && {
+      label: tournament.format === "groups_knockout" ? "Groups" : "Leaderboard",
+      path: "leaderboard",
+    },
+    tournament.format === "groups_knockout" && { label: "Bracket", path: "bracket" },
     tournament.show_vendors && { label: "Vendors", path: "vendors" },
     tournament.show_side_events && { label: "Side Events", path: "side-events" },
   ].filter(Boolean) as { label: string; path: string }[];

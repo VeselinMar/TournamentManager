@@ -12,14 +12,31 @@ import logging
 import random
 from django.conf import settings
 from pathlib import Path
+from django.core.cache import cache
+
+
+def leaderboard_cache_key(tournament_id, version):
+    return f"leaderboard:{tournament_id}:{version}"
+
+
+def write_leaderboard_cache(tournament_id, version, data, timeout=None):
+    key = leaderboard_cache_key(tournament_id, version)
+    cache.set(key, data, timeout=timeout)
+    return key
+
+
+def read_leaderboard_cache(tournament_id, version):
+    key = leaderboard_cache_key(tournament_id, version)
+    return cache.get(key)
+
 
 logger = logging.getLogger(__name__)
 
 LOOKAHEAD_ATTEMPTS = 10  # number of random shuffles to try before inserting rest slot
 
-def generate_round_robin(tournament: Tournament) -> List[Tuple[Team, Team]]:
+def round_robin_rounds(teams: List[Team]) -> List[List[Tuple[Team, Team]]]:
     """
-    Generate all round-robin pairings for a tournament as a flat list.
+    Round-robin pairings grouped by round (circle method).
 
     The bye sentinel is fixed at the LAST position during rotation so it
     never occupies index 0, preserving a consistent fixed anchor.
@@ -27,33 +44,26 @@ def generate_round_robin(tournament: Tournament) -> List[Tuple[Team, Team]]:
     Home/away is balanced greedily: for each pair, the team with the lower
     net home count (home_games - away_games) is assigned as home. Ties go
     to the naturally ordered home candidate.
-
-    Raises:
-        ValueError: If the tournament has fewer than 2 teams.
     """
-    teams = list(tournament.teams.all())
-
+    teams = list(teams)
     if len(teams) < 2:
         raise ValueError(
             f"Tournament requires at least 2 teams, got {len(teams)}."
         )
 
-    # Fix the bye at the end, not in the rotating pool, so it never
-    # displaces the anchor at index 0.
-    has_bye = len(teams) % 2 == 1
-    if has_bye:
+    if len(teams) % 2 == 1:
         teams.append(None)
 
     n = len(teams)
-    # Separate anchor from rotating slice
     anchor = teams[0]
-    rotating = teams[1:]  # length n-1, bye (if any) is at rotating[-1]
+    rotating = teams[1:]  # bye (if any) is at rotating[-1]
 
-    net_home: dict[Team, int] = defaultdict(int)  # home_games - away_games
-    all_matches: List[Tuple[Team, Team]] = []
+    net_home: dict = defaultdict(int)  # home_games - away_games
+    rounds: List[List[Tuple[Team, Team]]] = []
 
     for _ in range(n - 1):
         round_teams = [anchor] + rotating
+        round_matches = []
         for i in range(n // 2):
             home = round_teams[i]
             away = round_teams[n - 1 - i]
@@ -61,19 +71,29 @@ def generate_round_robin(tournament: Tournament) -> List[Tuple[Team, Team]]:
             if home is None or away is None:
                 continue
 
-            # Assign home to the team with the lower net home count.
-            # On a tie, keep the natural (home, away) order.
             if net_home[away] < net_home[home]:
                 home, away = away, home
 
             net_home[home] += 1
             net_home[away] -= 1
-            all_matches.append((home, away))
+            round_matches.append((home, away))
+        rounds.append(round_matches)
 
         # Rotate only the non-anchor slice; bye stays at the tail naturally
         rotating = [rotating[-1]] + rotating[:-1]
 
-    return all_matches
+    return rounds
+
+
+def generate_round_robin(tournament: Tournament) -> List[Tuple[Team, Team]]:
+    """
+    Generate all round-robin pairings for a tournament as a flat list.
+
+    Raises:
+        ValueError: If the tournament has fewer than 2 teams.
+    """
+    rounds = round_robin_rounds(tournament.teams.all())
+    return [pair for round_matches in rounds for pair in round_matches]
 
 
 def _try_fill_slot(
@@ -92,14 +112,15 @@ def _try_fill_slot(
     slot_teams: set = set()
     used_indices: List[int] = []
 
-    for idx, (home, away) in enumerate(remaining):
+    for idx, item in enumerate(remaining):
+        home, away = item[0], item[1]
         if len(slot) == field_count:
             break
         if home in prev_slot_teams or away in prev_slot_teams:
             continue
         if home in slot_teams or away in slot_teams:
             continue
-        slot.append((home, away))
+        slot.append(item)
         slot_teams |= {home, away}
         used_indices.append(idx)
 
@@ -144,7 +165,7 @@ def _assign_slots(
                         candidate.pop(idx)
                     remaining = candidate
                     slots.append(slot)
-                    prev_slot_teams = {t for m in slot for t in m}
+                    prev_slot_teams = {t for m in slot for t in m[:2]}
                     resolved = True
                     break
 
@@ -161,7 +182,7 @@ def _assign_slots(
             for idx in sorted(used_indices, reverse=True):
                 remaining.pop(idx)
             slots.append(slot)
-            prev_slot_teams = {t for m in slot for t in m}
+            prev_slot_teams = {t for m in slot for t in m[:2]}
 
     return slots
 
@@ -287,12 +308,16 @@ def _collect_stats(tournament, matches, team_ids=None):
     return stats
 
 
-def get_team_standings(tournament):
+def get_team_standings(tournament, group=None):
     """
-    Return the tournament's teams in ranking order.
+    Return teams in ranking order with their record attached.
 
-    Teams are ordered by tournament points. Teams level on points are
-    separated according to `tournament.tiebreak_rule`:
+    Points are calculated from finished group-stage matches (nothing is
+    stored on the team). For a Groups + Knockout tournament pass `group`
+    to get that group's table; knockout matches never add points.
+
+    Teams level on points are separated according to
+    `tournament.tiebreak_rule`:
 
     head_to_head (default, UEFA style):
         1. points in matches between the tied teams
@@ -307,18 +332,27 @@ def get_team_standings(tournament):
 
     Team name is the final, deterministic fallback.
 
-    Each returned team carries: played, wins, draws, losses, goals_for,
-    goals_against, goal_difference and goal_difference_vs_tied.
+    Each returned team carries: points, played, wins, draws, losses,
+    goals_for, goals_against, goal_difference and goal_difference_vs_tied.
+    `tournament_points` is set to the same value as `points` for templates
+    and code written before points were derived.
     """
-    teams = list(Team.objects.filter(tournament=tournament))
-    matches = list(
-        Match.objects.filter(tournament=tournament, is_finished=True)
-        .only('home_team_id', 'away_team_id', 'home_score', 'away_score')
+    teams_qs = Team.objects.filter(tournament=tournament)
+    matches_qs = Match.objects.filter(
+        tournament=tournament, stage=Match.STAGE_GROUP, is_finished=True,
     )
+    if group is not None:
+        teams_qs = teams_qs.filter(group=group)
+        matches_qs = matches_qs.filter(group=group)
+
+    teams = list(teams_qs)
+    matches = list(matches_qs.only('home_team_id', 'away_team_id', 'home_score', 'away_score'))
 
     overall = _collect_stats(tournament, matches)
     for team in teams:
         row = overall[team.id]
+        team.points = row['points']
+        team.tournament_points = row['points']
         team.played = row['played']
         team.wins = row['wins']
         team.draws = row['draws']
@@ -330,18 +364,18 @@ def get_team_standings(tournament):
 
     points_groups = defaultdict(list)
     for team in teams:
-        points_groups[team.tournament_points].append(team)
+        points_groups[team.points].append(team)
 
     use_head_to_head_first = tournament.tiebreak_rule != Tournament.TIEBREAK_GOAL_DIFFERENCE
     sorted_teams = []
 
     for points in sorted(points_groups.keys(), reverse=True):
-        group = points_groups[points]
+        tied = points_groups[points]
 
-        if len(group) > 1:
-            tied_ids = {t.id for t in group}
+        if len(tied) > 1:
+            tied_ids = {t.id for t in tied}
             h2h = _collect_stats(tournament, matches, team_ids=tied_ids)
-            for team in group:
+            for team in tied:
                 row = h2h[team.id]
                 team.h2h_points = row['points']
                 team.goal_difference_vs_tied = row['goals_for'] - row['goals_against']
@@ -360,10 +394,17 @@ def get_team_standings(tournament):
             )
             return primary + secondary + (t.name.lower(),)
 
-        group.sort(key=sort_key)
-        sorted_teams.extend(group)
+        tied.sort(key=sort_key)
+        sorted_teams.extend(tied)
 
     return sorted_teams
+
+
+def get_group_tables(tournament):
+    """[(group, standings)] for every group; a round robin has one table with group None."""
+    if not tournament.uses_groups:
+        return [(None, get_team_standings(tournament))]
+    return [(g, get_team_standings(tournament, group=g)) for g in tournament.groups.all()]
 
 def get_top_scorers(tournament, limit=5):
     """
@@ -402,7 +443,8 @@ def build_timeline(tournament):
     # Get all matches with related data
     matches = (
         tournament.matches
-        .select_related('field', 'home_team', 'away_team')
+        .select_related('field', 'home_team', 'away_team', 'group')
+        .prefetch_related('slots')
         .order_by('start_time')
     )
 
@@ -414,16 +456,19 @@ def build_timeline(tournament):
     # Initialize timeline structure
     timeline_dict = defaultdict(lambda: {field: None for field in field_names})
 
+    # Rows are keyed by the full date and time (not just HH:MM), so matches
+    # on different days can never overwrite each other.
     for match in matches:
-        time_str = localtime(match.start_time).strftime('%H:%M')
-        timeline_dict[time_str][match.field.name] = match
+        moment = localtime(match.start_time).replace(second=0, microsecond=0)
+        timeline_dict[moment][match.field.name] = match
 
     timeline = [
         {
-            'time': time_str,
-            'matches': [timeline_dict[time_str][field] for field in field_names],
+            'time': moment.strftime('%H:%M'),
+            'datetime': moment,
+            'matches': [timeline_dict[moment][field] for field in field_names],
         }
-        for time_str in sorted(timeline_dict.keys())
+        for moment in sorted(timeline_dict.keys())
     ]
 
     return timeline, field_names
@@ -439,89 +484,32 @@ def match_points(tournament, home_goals, away_goals):
 
 def recalculate_match_points(match, new_home_score, new_away_score):
     """
-    Apply a manually entered result to a match.
-
-    - Reverses the previously stored result if the match was already finished
-      (values are read from the database, not from the in-memory instance)
-    - Applies the new result using the tournament's configured points
-    - Marks the match as finished
+    Apply a manually entered group-stage result and mark the match finished.
+    Standings are derived from match results, so only the match is updated.
     """
-    tournament = match.tournament
-
     with transaction.atomic():
         stored = Match.objects.select_for_update().get(pk=match.pk)
-        home = Team.objects.select_for_update().get(pk=stored.home_team_id)
-        away = Team.objects.select_for_update().get(pk=stored.away_team_id)
-
-        if stored.is_finished:
-            old_home_pts, old_away_pts = match_points(tournament, stored.home_score, stored.away_score)
-            home.tournament_points = max(0, home.tournament_points - old_home_pts)
-            away.tournament_points = max(0, away.tournament_points - old_away_pts)
-
-        new_home_pts, new_away_pts = match_points(tournament, new_home_score, new_away_score)
-        home.tournament_points += new_home_pts
-        away.tournament_points += new_away_pts
-        home.save(update_fields=['tournament_points'])
-        away.save(update_fields=['tournament_points'])
-
         stored.home_score = new_home_score
         stored.away_score = new_away_score
         stored.is_finished = True
         stored.save(update_fields=['home_score', 'away_score', 'is_finished'])
-
     return stored
 
 def reset_tournament_schedule(tournament):
     """
-    Delete all matches (cascades to MatchEvent) and reset team points.
+    Delete all matches (cascades to events and knockout slots).
+    Standings are derived from matches, so nothing else needs resetting.
     """
     with transaction.atomic():
         tournament.matches.all().delete()
-        tournament.teams.all().update(tournament_points=0)
 
 def recalculate_points(match):
-    tournament = match.tournament
-    home = match.home_team.__class__.objects.get(pk=match.home_team.pk)
-    away = match.away_team.__class__.objects.get(pk=match.away_team.pk)
-
-    # reverse old points based on stored score
-    if match.home_score > match.away_score:
-        home.tournament_points = max(0, home.tournament_points - tournament.points_for_win)
-        away.tournament_points = max(0, away.tournament_points - tournament.points_for_loss)
-    elif match.away_score > match.home_score:
-        away.tournament_points = max(0, away.tournament_points - tournament.points_for_win)
-        home.tournament_points = max(0, home.tournament_points - tournament.points_for_loss)
-    else:
-        home.tournament_points = max(0, home.tournament_points - tournament.points_for_draw)
-        away.tournament_points = max(0, away.tournament_points - tournament.points_for_draw)
-
-    # recalculate new score from events
-    home_goals = (
-        match.events.filter(event_type='goal', team=home).count() +
-        match.events.filter(event_type='own_goal', team=away).count()
-    )
-    away_goals = (
-        match.events.filter(event_type='goal', team=away).count() +
-        match.events.filter(event_type='own_goal', team=home).count()
-    )
-
-    # apply new points
-    if home_goals > away_goals:
-        home.tournament_points += tournament.points_for_win
-        away.tournament_points += tournament.points_for_loss
-    elif away_goals > home_goals:
-        away.tournament_points += tournament.points_for_win
-        home.tournament_points += tournament.points_for_loss
-    else:
-        home.tournament_points += tournament.points_for_draw
-        away.tournament_points += tournament.points_for_draw
-
-    home.save()
-    away.save()
-
-    match.home_score = home_goals
-    match.away_score = away_goals
-    match.save(update_fields=['home_score', 'away_score'])
+    """
+    Refresh the stored score of a finished match after its events changed.
+    Knockout matches also get their winner re-evaluated.
+    """
+    from .competition import refresh_match_result
+    refresh_match_result(match)
 
 def get_vite_asset(asset_name):
     manifest_path = Path(settings.BASE_DIR) / "tournamentapp/static//spa/.vite/manifest.json"

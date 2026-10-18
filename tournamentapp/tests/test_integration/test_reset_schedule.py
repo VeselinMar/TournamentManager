@@ -6,10 +6,8 @@ from tournamentapp.models import Tournament, Team, Match, Field, MatchEvent
 
 
 @pytest.mark.django_db
-def test_reset_clears_matches_and_points(auth_client, tournament, field, team):
-    away = Team.objects.create(name="Away", tournament=tournament, tournament_points=3)
-    team.tournament_points = 6
-    team.save()
+def test_reset_clears_matches_and_points(auth_client, tournament, field, team, points_table):
+    away = Team.objects.create(name="Away", tournament=tournament)
 
     Match.objects.create(
         tournament=tournament,
@@ -17,18 +15,19 @@ def test_reset_clears_matches_and_points(auth_client, tournament, field, team):
         away_team=away,
         start_time=timezone.now() + timedelta(hours=1),
         field=field,
+        home_score=3,
         is_finished=True
     )
+    assert points_table(tournament)[team.name] == 3
 
     url = reverse('reset-schedule', kwargs={'tournament_id': tournament.pk})
     response = auth_client.post(url)
     assert response.status_code == 302
 
     assert tournament.matches.count() == 0
-    team.refresh_from_db()
-    away.refresh_from_db()
-    assert team.tournament_points == 0
-    assert away.tournament_points == 0
+    points = points_table(tournament)
+    assert points[team.name] == 0
+    assert points[away.name] == 0
 
 
 @pytest.mark.django_db

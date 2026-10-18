@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Groups — {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container page-wrapper">
+  <h1 class="page-title">Groups — {{ tournament.name }}</h1>
+
+  {% if locked %}
+    <div class="alert alert-info">
+      The schedule has been generated, so groups are locked. Reset the schedule to change them.
+    </div>
+  {% endif %}
+
+  <!-- Plan summary -->
+  <div class="card mb-3">
+    <div class="card-header">Knockout stage</div>
+    <div class="card-body">
+      {% if plan %}
+        <p>
+          {{ plan.total }} teams qualify
+          ({{ plan.per_group }} per group{% if plan.best_placed %} + {{ plan.best_placed }} best-placed{% endif %}).
+          Bracket of {{ plan.bracket_size }}{% if plan.byes %} with {{ plan.byes }} bye{{ plan.byes|pluralize }} for the top seeds{% endif %}.
+        </p>
+      {% else %}
+        <p class="text-muted">{{ plan_error }}</p>
+      {% endif %}
+      <a href="{% url 'tournament-edit' tournament.pk %}">Change qualification settings</a>
+    </div>
+  </div>
+
+  {% if not locked %}
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap gap-3 align-items-end">
+      <form method="post" class="form-inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="set_count">
+        <label for="{{ count_form.group_count.id_for_label }}">{{ count_form.group_count.label }}</label>
+        {{ count_form.group_count }}
+        <button type="submit" class="button-secondary">Update groups</button>
+        {% for error in count_form.group_count.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+      </form>
+
+      {% if groups %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="random_draw">
+        <button type="submit" class="button-primary">Random draw</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if groups %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="assign">
+
+    <div class="leaderboard-grid">
+      {% for group in groups %}
+        <div class="card">
+          <div class="card-header">{{ group }} ({{ group.teams.count }})</div>
+          <div class="card-body">
+            <ul class="leaderboard-list">
+              {% for team in group.teams.all %}
+                <li class="leaderboard-item">
+                  <span>{{ team.name }}</span>
+                  {% if not locked %}
+                    <select name="team_{{ team.pk }}">
+                      <option value="">— no group —</option>
+                      {% for g in groups %}
+                        <option value="{{ g.pk }}" {% if g.pk == team.group_id %}selected{% endif %}>{{ g }}</option>
+                      {% endfor %}
+                    </select>
+                  {% endif %}
+                </li>
+              {% empty %}
+                <li class="text-muted">No teams yet.</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% if unassigned %}
+        <div class="card">
+          <div class="card-header">Not assigned ({{ unassigned|length }})</div>
+          <div class="card-body">
+            <ul class="leaderboard-list">
+              {% for team in unassigned %}
+                <li class="leaderboard-item">
+                  <span>{{ team.name }}</span>
+                  {% if not locked %}
+                    <select name="team_{{ team.pk }}">
+                      <option value="" selected>— no group —</option>
+                      {% for g in groups %}
+                        <option value="{{ g.pk }}">{{ g }}</option>
+                      {% endfor %}
+                    </select>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if not locked %}
+      <button type="submit" class="button-primary mt-3">Save assignments</button>
+    {% endif %}
+  </form>
+  {% else %}
+    <p class="text-muted">No groups yet. Choose the number of groups above.</p>
+  {% endif %}
+
+  {% if plan and not locked %}
+    <a href="{% url 'generate-tournament-schedule' tournament.pk %}" class="button-primary mt-3">Generate schedule</a>
+  {% endif %}
+</div>
+{% endblock %}

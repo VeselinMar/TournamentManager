@@ -6,11 +6,18 @@ from django.core.validators import MinValueValidator
 
 class Tournament(models.Model):
     ROUND_ROBIN = 'round_robin'
-    KNOCKOUT = 'knockout'
+    GROUPS_KNOCKOUT = 'groups_knockout'
 
     FORMAT_CHOICES = [
         (ROUND_ROBIN, 'Round Robin'),
-        # (KNOCKOUT, 'Knockout'),
+        (GROUPS_KNOCKOUT, 'Groups + Knockout'),
+    ]
+
+    DRAW_PENALTIES = 'penalties'
+    DRAW_EXTRA_TIME = 'extra_time'
+    KNOCKOUT_DRAW_CHOICES = [
+        (DRAW_PENALTIES, 'Straight to penalties'),
+        (DRAW_EXTRA_TIME, 'Extra time, then penalties'),
     ]
 
     name = models.CharField(max_length=100)
@@ -57,8 +64,40 @@ class Tournament(models.Model):
         max_length=20,
         choices=FORMAT_CHOICES,
         default=ROUND_ROBIN,
-        help_text="Tournament format. Only 'round_robin' is implemented currently."
+        help_text="Round robin: everyone plays everyone. Groups + Knockout: group stage followed by a bracket."
     )
+
+    # --- Groups + Knockout settings (ignored for round robin)
+    qualifiers_per_group = models.PositiveSmallIntegerField(
+        default=2,
+        validators=[MinValueValidator(1)],
+        help_text="Teams that qualify directly from each group.",
+    )
+    best_placed_qualifiers = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Additional qualifiers: the best teams in the next group position "
+                  "(e.g. best third-placed teams).",
+    )
+    third_place_match = models.BooleanField(default=False)
+    knockout_draw_resolution = models.CharField(
+        max_length=20,
+        choices=KNOCKOUT_DRAW_CHOICES,
+        default=DRAW_PENALTIES,
+        help_text="What happens when a knockout match ends in a draw.",
+    )
+    extra_time_duration = models.PositiveSmallIntegerField(
+        default=10,
+        validators=[MinValueValidator(1)],
+        help_text="Total extra time in minutes (only used with 'Extra time, then penalties').",
+    )
+
+    @property
+    def uses_groups(self):
+        return self.format == self.GROUPS_KNOCKOUT
+
+    @property
+    def allows_extra_time(self):
+        return self.knockout_draw_resolution == self.DRAW_EXTRA_TIME
 
     def __str__(self):
         return f"{self.name} ({self.owner.email})"
@@ -74,6 +113,23 @@ class Tournament(models.Model):
             self.slug = slug
         super().save(*args, **kwargs)
     
+class Group(models.Model):
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='groups',
+    )
+    name = models.CharField(max_length=20)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('tournament', 'name')
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"Group {self.name}"
+
+
 class Team(models.Model):
     name = models.CharField(
         max_length=100,
@@ -93,31 +149,22 @@ class Team(models.Model):
         verbose_name="Team Logo",
         )
 
-    tournament_points = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Tournament Points",
-        )
-        
-    match_points = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Match Points",
-        )
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='teams',
+    )
+
+    # Points are not stored: standings are calculated from finished
+    # group-stage matches (see utils.get_team_standings).
 
     class Meta:
         unique_together = ('name', 'tournament')
 
     def __str__(self):
         return self.name
-
-    def add_match_points(self, points):
-        """Add points to the team's match points."""
-        self.match_points += points
-        self.save()
-    
-    def add_tournament_points(self, points):
-        """Add points to the team's tournament points."""
-        self.tournament_points += points
-        self.save()
     
 class Player(models.Model):
     name = models.CharField(
@@ -229,17 +276,59 @@ class Field(models.Model):
         return self.match_set.exists()
 
 class Match(models.Model):
+    STAGE_GROUP = 'group'
+    STAGE_KNOCKOUT = 'knockout'
+    STAGE_CHOICES = [
+        (STAGE_GROUP, 'Group stage'),
+        (STAGE_KNOCKOUT, 'Knockout'),
+    ]
+
+    DECIDED_REGULAR = 'regular'
+    DECIDED_EXTRA_TIME = 'extra_time'
+    DECIDED_PENALTIES = 'penalties'
+    DECIDED_CHOICES = [
+        (DECIDED_REGULAR, 'Regular time'),
+        (DECIDED_EXTRA_TIME, 'Extra time'),
+        (DECIDED_PENALTIES, 'Penalties'),
+    ]
+
     tournament = models.ForeignKey(
         Tournament,
         on_delete=models.CASCADE,
         related_name='matches'
     )
 
-    home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
-    away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
+    stage = models.CharField(max_length=10, choices=STAGE_CHOICES, default=STAGE_GROUP)
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='matches',
+    )
+    # Group stage: matchday number. Knockout: number of teams in the round
+    # (8 = quarter-final, 4 = semi-final, 2 = final).
+    round = models.PositiveSmallIntegerField(null=True, blank=True)
+    bracket_position = models.PositiveSmallIntegerField(null=True, blank=True)
+    is_third_place = models.BooleanField(default=False)
+
+    # Knockout matches start without teams; they are filled in as results come in.
+    home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches', null=True, blank=True)
+    away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches', null=True, blank=True)
 
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
+
+    home_penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+    away_penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+    decided_by = models.CharField(max_length=12, choices=DECIDED_CHOICES, blank=True, default='')
+    winner = models.ForeignKey(
+        Team,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='knockout_wins',
+    )
 
     is_finished = models.BooleanField(default=False)
     start_time = models.DateTimeField()
@@ -257,15 +346,59 @@ class Match(models.Model):
         verbose_name_plural = "Matches"
 
     def __str__(self):
-        return f"{self.home_team.name} vs {self.away_team.name}"
-    
+        return f"{self.home_label} vs {self.away_label}"
+
+    # ---- labels -----------------------------------------------------------
+
+    def _side_label(self, side):
+        team = self.home_team if side == 'home' else self.away_team
+        if team is not None:
+            return team.name
+        if self.pk is None:
+            return 'TBD'
+        slot = next((s for s in self.slots.all() if s.side == side), None)
+        return slot.placeholder if slot else 'TBD'
+
+    @property
+    def home_label(self):
+        return self._side_label('home')
+
+    @property
+    def away_label(self):
+        return self._side_label('away')
+
+    @property
+    def is_knockout(self):
+        return self.stage == self.STAGE_KNOCKOUT
+
+    @property
+    def teams_known(self):
+        return self.home_team_id is not None and self.away_team_id is not None
+
+    @property
+    def round_label(self):
+        """'Group A', 'Semi-final 1', 'Final', 'Third place' or ''."""
+        if self.is_knockout:
+            from .competition import round_name
+            name = round_name(self.round, self.is_third_place)
+            if self.is_third_place or self.round == 2:
+                return name
+            return f"{name} {self.bracket_position}"
+        if self.group_id:
+            return str(self.group)
+        return ''
+
+    def has_started(self):
+        return self.is_finished or self.events.exists()
+
     def clean(self):
         super().clean()
-        if self.home_team == self.away_team:
+        if self.home_team_id and self.home_team_id == self.away_team_id:
             raise ValidationError("A team cannot play against itself.")
 
-        if self.home_team.tournament != self.tournament or self.away_team.tournament != self.tournament:
-            raise ValidationError("Both teams must belong to the same tournament as the match.")
+        for team in (self.home_team, self.away_team):
+            if team is not None and team.tournament_id != self.tournament_id:
+                raise ValidationError("Both teams must belong to the same tournament as the match.")
 
         overlapping = Match.objects.filter(
             field=self.field,
@@ -286,33 +419,50 @@ class Match(models.Model):
         return home_goals, away_goals
 
     def apply_result(self):
+        """Finish a group-stage match using the score from its events.
+        Points are derived from finished matches, so nothing else is stored."""
         if self.is_finished:
             return
 
-        tournament = self.tournament
-
-        home_goals, away_goals = self.score_from_events()
-
-        # Set the score fields
-        self.home_score = home_goals
-        self.away_score = away_goals
-
-        # Assign points
-        if home_goals > away_goals:
-            self.home_team.tournament_points += tournament.points_for_win
-            self.away_team.tournament_points += tournament.points_for_loss
-        elif away_goals > home_goals:
-            self.away_team.tournament_points += tournament.points_for_win
-            self.home_team.tournament_points += tournament.points_for_loss
-        else:
-            self.home_team.tournament_points += tournament.points_for_draw
-            self.away_team.tournament_points += tournament.points_for_draw
-
-        # Save everything
-        self.home_team.save()
-        self.away_team.save()
+        self.home_score, self.away_score = self.score_from_events()
         self.is_finished = True
-        self.save()
+        self.save(update_fields=['home_score', 'away_score', 'is_finished'])
+
+
+class MatchSlot(models.Model):
+    """Where a knockout participant comes from."""
+    HOME = 'home'
+    AWAY = 'away'
+    SIDE_CHOICES = [(HOME, 'Home'), (AWAY, 'Away')]
+
+    SOURCE_SEED = 'seed'
+    SOURCE_WINNER = 'match_winner'
+    SOURCE_LOSER = 'match_loser'
+    SOURCE_CHOICES = [
+        (SOURCE_SEED, 'Seed from group stage'),
+        (SOURCE_WINNER, 'Winner of match'),
+        (SOURCE_LOSER, 'Loser of match'),
+    ]
+
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='slots')
+    side = models.CharField(max_length=4, choices=SIDE_CHOICES)
+    source_type = models.CharField(max_length=12, choices=SOURCE_CHOICES)
+    seed = models.PositiveSmallIntegerField(null=True, blank=True)
+    source_match = models.ForeignKey(
+        Match,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='feeds',
+    )
+    placeholder = models.CharField(max_length=60, help_text="Shown until the team is known.")
+    is_manual_override = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('match', 'side')
+
+    def __str__(self):
+        return f"{self.match_id}/{self.side}: {self.placeholder}"
 
 class MatchEvent(models.Model):
     EVENT_TYPES = (

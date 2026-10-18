@@ -3,6 +3,7 @@ import ScheduleIcon from "@mui/icons-material/Schedule";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import StoreIcon from "@mui/icons-material/Store";
 import EventIcon from "@mui/icons-material/Event";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import type { SvgIconComponent } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
 
@@ -21,6 +22,7 @@ const iconMap: Record<string, SvgIconComponent> = {
   leaderboard: LeaderboardIcon,
   vendors: StoreIcon,
   "side-events": EventIcon,
+  bracket: AccountTreeIcon,
 };
 
 export default function Navbar({ sections, onSelect }: NavbarProps) {

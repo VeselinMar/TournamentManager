@@ -15,16 +15,23 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, get_object_or_404, render
-from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament
-from .forms import TeamCreateForm, TeamNameForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm
+from .models import Match, Team, GoalEvent, Player, MatchEvent, Field, Tournament, Group, MatchSlot
+from .forms import TeamCreateForm, TeamNameForm, MatchCreateForm, MatchEditForm, MatchEventForm, FieldCreateForm, TournamentCreateForm, TournamentUpdateForm, TournamentScheduleForm, MatchRescheduleForm, GroupCountForm
+from . import competition
+from .competition import CompetitionError
 from .mixins import TournamentOwnerMixin, TournamentAccessMixin
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count, F
 from collections import defaultdict
 from django.utils.timezone import localtime, datetime
 from formtools.wizard.views import SessionWizardView
-from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_top_scorers, build_timeline, reset_tournament_schedule, recalculate_points, get_vite_asset
+from .utils import create_round_robin_matches, propagate_match_delay, get_team_standings, get_group_tables, get_top_scorers, build_timeline, reset_tournament_schedule, get_vite_asset
 from .services import handle_batch_lines
+
+
+def _report_conflicts(request, conflicts):
+    for conflict in conflicts:
+        messages.warning(request, conflict)
 
 
 def about_view(request):
@@ -360,13 +367,22 @@ class MatchEditView(LoginRequiredMixin, TournamentAccessMixin, UpdateView):
             raise Http404("Match does not belong to this tournament.")
         return match
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _report_conflicts(self.request, form.conflicts)
+        return response
+
     def get_success_url(self):
         return reverse('tournament-detail', kwargs={'pk': self.get_tournament().pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = self.object
+        tournament = self.get_tournament()
         context.update({
+            'slots': {slot.side: slot for slot in match.slots.all()},
+            'tournament_teams': tournament.teams.order_by('name') if match.is_knockout else [],
+            'can_override': match.is_knockout and not match.has_started(),
             'match_events': match.events.all(),
             'tournament': self.get_tournament()
         })
@@ -381,6 +397,8 @@ class LeaderboardView(LoginRequiredMixin, TournamentAccessMixin, TemplateView):
 
         context['players'] = get_top_scorers(tournament, limit=10)
         context['teams'] = get_team_standings(tournament)
+        context['group_tables'] = get_group_tables(tournament)
+        context['bracket'] = competition.bracket_rounds(tournament) if tournament.uses_groups else []
         context['tournament'] = tournament
         return context
         
@@ -416,6 +434,9 @@ def create_match_event(request, tournament_id, match_id):
     tournament = get_object_or_404(Tournament, id=tournament_id, owner=request.user)
 
     match = get_object_or_404(Match, id=match_id, tournament=tournament)
+
+    if not match.teams_known:
+        return JsonResponse({'success': False, 'error': 'The teams for this match are not decided yet.'}, status=400)
 
     event_type = request.POST.get('event_type')
     team_side = request.POST.get('team')
@@ -473,9 +494,11 @@ def create_match_event(request, tournament_id, match_id):
         
     # Recalculate scores
     home_score, away_score = match.score_from_events()
+    conflicts = []
 
     if match.is_finished:
-        recalculate_points(match)
+        # Corrected result: refresh score (and knockout winner / bracket)
+        conflicts = competition.refresh_match_result(match)
     else:
         # Keep the stored score current during a live match
         match.home_score, match.away_score = home_score, away_score
@@ -492,7 +515,9 @@ def create_match_event(request, tournament_id, match_id):
             'player_name': player.name,
             'event_type': event_type,
             'timestamp': f"{minute}'"
-        }
+        },
+        'is_finished': match.is_finished,
+        'conflicts': conflicts,
     })
 
 @login_required
@@ -525,14 +550,48 @@ def finish_match(request, tournament_id, match_id):
 
     match = get_object_or_404(Match, id=match_id, tournament=tournament)
 
-    if not match.is_finished:
-        match.apply_result()
-        # increment games_sat_out for muted players on both teams
-        for team in [match.home_team, match.away_team]:
-            team.players.filter(is_muted=True).update(
-                games_sat_out=F('games_sat_out') + 1
+    if match.is_finished:
+        return redirect('tournament-detail', pk=tournament_id)
+
+    if not match.teams_known:
+        messages.error(request, "The teams for this match are not decided yet.")
+        return redirect('match-edit', tournament_id=tournament_id, pk=match_id)
+
+    try:
+        if match.is_knockout:
+            conflicts = competition.finish_knockout_match(
+                match,
+                home_penalties=_optional_int(request.POST.get('home_penalties')),
+                away_penalties=_optional_int(request.POST.get('away_penalties')),
+                extra_time=request.POST.get('extra_time') in ('on', 'true', '1'),
             )
+        else:
+            match.apply_result()
+            conflicts = competition.after_group_match_finished(match)
+    except (CompetitionError, ValueError) as exc:
+        messages.error(request, str(exc))
+        return redirect('match-edit', tournament_id=tournament_id, pk=match_id)
+
+    # increment games_sat_out for muted players on both teams
+    for team in [match.home_team, match.away_team]:
+        team.players.filter(is_muted=True).update(
+            games_sat_out=F('games_sat_out') + 1
+        )
+    _report_conflicts(request, conflicts)
     return redirect('tournament-detail', pk=tournament_id)
+
+
+def _optional_int(value):
+    """'' / None -> None, '3' -> 3; raises ValueError with a readable message otherwise."""
+    if value in (None, ''):
+        return None
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("Penalty scores must be whole numbers.")
+    if number < 0:
+        raise ValueError("Penalty scores cannot be negative.")
+    return number
 
 @require_http_methods(['DELETE'])
 @login_required
@@ -544,10 +603,12 @@ def remove_match_event(request, tournament_id, event_id):
         return JsonResponse({'success': False, 'error': 'Forbidden'}, status=403)
 
     event.delete()
+    conflicts = []
 
     if match.is_finished:
-        # Finished match: reverse old points and re-apply from remaining events
-        recalculate_points(match)
+        # Finished match: re-read the score (standings are derived from it);
+        # a knockout match that becomes a draw is reopened for penalties
+        conflicts = competition.refresh_match_result(match)
     else:
         # Live match: only refresh the score, the match stays open
         match.home_score, match.away_score = match.score_from_events()
@@ -557,6 +618,8 @@ def remove_match_event(request, tournament_id, event_id):
         'success': True,
         'home_score': match.home_score,
         'away_score': match.away_score,
+        'is_finished': match.is_finished,
+        'conflicts': conflicts,
     })
     
 @require_POST
@@ -599,6 +662,7 @@ def generate_tournament_schedule(request, tournament_id):
             start_date = form.cleaned_data['start_date']
             start_time_input = form.cleaned_data['start_time']
             pause_duration = timedelta(minutes=form.cleaned_data['pause_duration'])
+            break_before_knockout = timedelta(minutes=form.cleaned_data.get('break_before_knockout') or 0)
 
             start_time = timezone.make_aware(
                 datetime.combine(start_date, start_time_input)
@@ -612,23 +676,56 @@ def generate_tournament_schedule(request, tournament_id):
                 total_match_duration = timedelta(minutes=form.cleaned_data['game_duration'])
 
             try:
-                create_round_robin_matches(
-                    tournament=tournament,
-                    start_time=start_time,
-                    game_duration=total_match_duration,
-                    pause_duration=pause_duration
+                if tournament.uses_groups:
+                    competition.schedule_groups_knockout(
+                        tournament=tournament,
+                        start_time=start_time,
+                        game_duration=total_match_duration,
+                        pause_duration=pause_duration,
+                        break_before_knockout=break_before_knockout,
+                    )
+                else:
+                    create_round_robin_matches(
+                        tournament=tournament,
+                        start_time=start_time,
+                        game_duration=total_match_duration,
+                        pause_duration=pause_duration
+                    )
+            except (CompetitionError, ValueError, TypeError) as e:
+                messages.error(request, f"Error generating schedule: {e}")
+                return redirect('generate-tournament-schedule', tournament_id=tournament.pk)
+
+            # The tournament date is the single source of truth for the event day
+            if tournament.tournament_date != start_date:
+                tournament.tournament_date = start_date
+                tournament.save(update_fields=['tournament_date'])
+
+            last_match = tournament.matches.order_by('-start_time').first()
+            if last_match:
+                last_start = localtime(last_match.start_time)
+                messages.success(
+                    request,
+                    f"Schedule generated: {tournament.matches.count()} matches, "
+                    f"last match starts at {last_start:%H:%M}."
                 )
-                messages.success(request, "Round-robin schedule generated successfully!")
-            except Exception as e:
-                messages.error(request, f"Error generating schedule: {str(e)}")
+                if last_start.date() != start_date:
+                    messages.warning(
+                        request,
+                        "The schedule runs past midnight. Consider shorter matches, "
+                        "more fields or fewer teams."
+                    )
+            else:
+                messages.success(request, "Schedule generated.")
 
             return redirect('tournament-detail', pk=tournament.pk)
     else:
-        form = TournamentScheduleForm()
+        form = TournamentScheduleForm(initial={
+            'start_date': tournament.tournament_date or timezone.localdate(),
+        })
 
     return render(request, 'tournament/generate_schedule.html', {
         'form': form,
-        'tournament': tournament
+        'tournament': tournament,
     })
 
 @require_POST
@@ -687,6 +784,10 @@ def delete_match(request, tournament_id, match_id):
     tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
     match = get_object_or_404(Match, pk=match_id, tournament=tournament)
 
+    if match.is_knockout:
+        messages.error(request, "Knockout matches are part of the bracket and cannot be deleted. Reset the schedule instead.")
+        return redirect('tournament-detail', pk=tournament_id)
+
     match.delete()
     messages.success(request, "Match removed.")
     return redirect('tournament-detail', pk=tournament_id)
@@ -719,3 +820,89 @@ def rename_player(request, tournament_id, player_id):
     player.name = name
     player.save()
     return JsonResponse({'success': True, 'name': player.name})
+
+
+# ---------------------------------------------------------------------------
+# Groups + Knockout
+# ---------------------------------------------------------------------------
+
+class GroupSetupView(LoginRequiredMixin, TournamentAccessMixin, TemplateView):
+    """Create groups, draw or assign teams. Locked once a schedule exists."""
+    template_name = 'tournament/group_setup.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournament = self.get_tournament()
+        groups = list(tournament.groups.prefetch_related('teams'))
+        plan, plan_error = None, None
+        try:
+            plan = competition.qualifier_plan(tournament)
+        except CompetitionError as exc:
+            plan_error = str(exc)
+
+        context.update({
+            'tournament': tournament,
+            'groups': groups,
+            'teams': tournament.teams.select_related('group').order_by('name'),
+            'unassigned': tournament.teams.filter(group__isnull=True).order_by('name'),
+            'locked': tournament.matches.exists(),
+            'count_form': kwargs.get('count_form') or GroupCountForm(initial={'group_count': len(groups) or 2}),
+            'plan': plan,
+            'plan_error': plan_error,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        tournament = self.get_tournament()
+        action = request.POST.get('action')
+        try:
+            if action == 'set_count':
+                form = GroupCountForm(request.POST)
+                if not form.is_valid():
+                    return self.render_to_response(self.get_context_data(count_form=form))
+                competition.set_group_count(tournament, form.cleaned_data['group_count'])
+                messages.success(request, "Groups updated.")
+            elif action == 'random_draw':
+                competition.random_draw(tournament)
+                messages.success(request, "Teams drawn into groups.")
+            elif action == 'assign':
+                groups = {str(g.pk): g for g in tournament.groups.all()}
+                for team in tournament.teams.all():
+                    value = request.POST.get(f'team_{team.pk}')
+                    if value is None:
+                        continue
+                    group = groups.get(value)
+                    if value and group is None:
+                        raise CompetitionError("Unknown group selected.")
+                    if team.group_id != (group.pk if group else None):
+                        competition.assign_team(team, group)
+                messages.success(request, "Group assignments saved.")
+            else:
+                messages.error(request, "Unknown action.")
+        except CompetitionError as exc:
+            messages.error(request, str(exc))
+        return redirect('group-setup', tournament_id=tournament.pk)
+
+
+@require_POST
+@login_required
+def set_knockout_slot(request, tournament_id, match_id):
+    """Manually place a team in a knockout slot, or clear the override."""
+    tournament = get_object_or_404(Tournament, pk=tournament_id, owner=request.user)
+    match = get_object_or_404(Match, pk=match_id, tournament=tournament, stage=Match.STAGE_KNOCKOUT)
+
+    side = request.POST.get('side')
+    if side not in (MatchSlot.HOME, MatchSlot.AWAY):
+        messages.error(request, "Invalid side.")
+        return redirect('match-edit', tournament_id=tournament_id, pk=match_id)
+
+    team_id = request.POST.get('team_id')
+    team = get_object_or_404(Team, pk=team_id, tournament=tournament) if team_id else None
+
+    try:
+        conflicts = competition.set_slot_team(match, side, team)
+        messages.success(request, "Team set manually." if team else "Slot returned to automatic filling.")
+        _report_conflicts(request, conflicts)
+    except CompetitionError as exc:
+        messages.error(request, str(exc))
+    return redirect('match-edit', tournament_id=tournament_id, pk=match_id)

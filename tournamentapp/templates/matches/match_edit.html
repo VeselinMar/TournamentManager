@@ -10,13 +10,59 @@
   <!-- HEADER -->
   <div class="card">
     <div class="card-body text-center">
-      <h2>{{ match.home_team.name }} vs {{ match.away_team.name }}</h2>
+      {% if match.round_label %}<p class="text-muted mb-1">{{ match.round_label }}</p>{% endif %}
+      <h2>{{ match.home_label }} vs {{ match.away_label }}</h2>
 
       <!-- ✅ keep this selector stable -->
       <h2 class="match-score">{{ match.home_score }} - {{ match.away_score }}</h2>
+      {% if match.is_finished and match.decided_by == 'penalties' %}
+        <p>{{ match.home_penalties }}–{{ match.away_penalties }} on penalties</p>
+      {% elif match.is_finished and match.decided_by == 'extra_time' %}
+        <p>after extra time</p>
+      {% endif %}
     </div>
   </div>
 
+  {% if match.is_knockout %}
+  <!-- KNOCKOUT SLOTS -->
+  <div class="card">
+    <div class="card-header">Knockout slots</div>
+    <div class="card-body">
+      {% if not match.teams_known %}
+        <p class="text-muted">
+          Teams are filled in automatically when the group stage or the previous round is finished.
+          You can also set a team manually, e.g. after drawing lots.
+        </p>
+      {% endif %}
+      <div class="match-edit-grid">
+        {% for side, slot in slots.items %}
+          <div>
+            <strong>{% if side == 'home' %}Home{% else %}Away{% endif %}:</strong>
+            {{ slot.placeholder }}
+            {% if slot.is_manual_override %}<span class="status-badge">set manually</span>{% endif %}
+            {% if can_override %}
+              <form method="post" action="{% url 'set-knockout-slot' tournament.id match.id %}" class="form-inline mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="side" value="{{ side }}">
+                <select name="team_id">
+                  <option value="">Automatic</option>
+                  {% for t in tournament_teams %}
+                    <option value="{{ t.pk }}"
+                      {% if side == 'home' and match.home_team_id == t.pk and slot.is_manual_override %}selected{% endif %}
+                      {% if side == 'away' and match.away_team_id == t.pk and slot.is_manual_override %}selected{% endif %}>{{ t.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="button-secondary btn-sm">Save</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if match.teams_known %}
   <!-- TEAMS -->
   <div class="match-edit-grid">
 
@@ -177,14 +223,36 @@
   </div>
 
   <!-- FINISH -->
+  {% if not match.is_finished %}
   <div class="match-actions text-center">
-    <form method="post" action="{% url 'finish-match' tournament.id match.id %}">
+    <form method="post" action="{% url 'finish-match' tournament.id match.id %}" class="form-component">
       {% csrf_token %}
+      {% if match.is_knockout %}
+        <p class="text-muted">
+          A knockout match needs a winner.
+          {% if tournament.allows_extra_time %}If it is level after regular time, play extra time;{% endif %}
+          if it is still level, enter the penalty shoot-out.
+        </p>
+        {% if tournament.allows_extra_time %}
+          <div class="form-inline mb-2">
+            <input type="checkbox" name="extra_time" id="extra_time">
+            <label for="extra_time">Extra time was played</label>
+          </div>
+        {% endif %}
+        <div class="form-inline mb-2">
+          <label for="home_penalties">Penalties {{ match.home_label }}</label>
+          <input type="number" min="0" name="home_penalties" id="home_penalties">
+          <label for="away_penalties">{{ match.away_label }}</label>
+          <input type="number" min="0" name="away_penalties" id="away_penalties">
+        </div>
+      {% endif %}
       <button type="submit" class="button-primary">
         Finish Match
       </button>
     </form>
   </div>
+  {% endif %}
+  {% endif %}
 
 </div>
 {% endblock %}

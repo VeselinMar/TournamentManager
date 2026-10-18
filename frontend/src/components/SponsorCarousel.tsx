@@ -1,10 +1,6 @@
 import { useMemo } from "react";
 
-type Sponsor = {
-  name: string;
-  image_url: string | null;
-  link_url: string | null;
-};
+import type { Sponsor } from "../types/tournament";
 
 interface Props {
   sponsors: Sponsor[];

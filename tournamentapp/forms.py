@@ -57,7 +57,13 @@ class TournamentCreateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
 class TournamentUpdateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'tiebreak_rule', 'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements']
+        fields = [
+            'name', 'tournament_date', 'format',
+            'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'tiebreak_rule',
+            'qualifiers_per_group', 'best_placed_qualifiers', 'third_place_match',
+            'knockout_draw_resolution', 'extra_time_duration',
+            'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements',
+        ]
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
@@ -67,6 +73,12 @@ class TournamentUpdateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
             'show_side_events': 'Show programme on public page',
             'show_announcements': 'Show announcements on public page',
             'tiebreak_rule': 'Tie-break rule',
+            'format': 'Tournament format',
+            'qualifiers_per_group': 'Qualifiers per group',
+            'best_placed_qualifiers': 'Extra best-placed qualifiers',
+            'third_place_match': 'Play a third-place match',
+            'knockout_draw_resolution': 'Knockout draws',
+            'extra_time_duration': 'Extra time (minutes)',
         }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
@@ -75,6 +87,17 @@ class TournamentUpdateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._make_tiebreak_optional()
+        # Settings added after the original form; older clients may not send them
+        for name in ('format', 'qualifiers_per_group', 'best_placed_qualifiers',
+                     'knockout_draw_resolution', 'extra_time_duration'):
+            self.fields[name].required = False
+
+        if self.instance and self.instance.pk and self.instance.matches.exists():
+            # Format and bracket shape are fixed once a schedule exists
+            for name in ('format', 'qualifiers_per_group', 'best_placed_qualifiers', 'third_place_match'):
+                self.fields[name].disabled = True
+                self.fields[name].help_text = "Reset the schedule to change this."
+
         # lock points fields if scored matches exist
         if self.instance and self.instance.pk:
             if self.instance.matches.filter(is_finished=True).exists():
@@ -106,6 +129,27 @@ class TournamentUpdateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
         if not name:
             raise forms.ValidationError("Tournament name cannot be empty.")
         return name
+
+    def _keep_when_missing(self, name):
+        value = self.cleaned_data.get(name)
+        if value in (None, ''):
+            return getattr(self.instance, name)
+        return value
+
+    def clean_format(self):
+        return self._keep_when_missing('format')
+
+    def clean_qualifiers_per_group(self):
+        return self._keep_when_missing('qualifiers_per_group')
+
+    def clean_best_placed_qualifiers(self):
+        return self._keep_when_missing('best_placed_qualifiers')
+
+    def clean_knockout_draw_resolution(self):
+        return self._keep_when_missing('knockout_draw_resolution')
+
+    def clean_extra_time_duration(self):
+        return self._keep_when_missing('extra_time_duration')
         
 class TeamCreateForm(forms.ModelForm):
     class Meta:
@@ -204,6 +248,11 @@ class AddPlayerForm(forms.Form):
         )
 
 class MatchEditForm(forms.ModelForm):
+    """Manual result entry. Knockout matches also take extra time / penalties."""
+    extra_time = forms.BooleanField(required=False, label="Decided in extra time")
+    home_penalties = forms.IntegerField(required=False, min_value=0, label="Home penalties")
+    away_penalties = forms.IntegerField(required=False, min_value=0, label="Away penalties")
+
     class Meta:
         model = Match
         fields = ['home_score', 'away_score']
@@ -215,22 +264,57 @@ class MatchEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.match = kwargs.get('instance')
         super().__init__(*args, **kwargs)
+        self.conflicts = []
 
         if self.match:
-            self.fields['home_score'].label = self.match.home_team.name
-            self.fields['away_score'].label = self.match.away_team.name
+            self.fields['home_score'].label = self.match.home_label
+            self.fields['away_score'].label = self.match.away_label
+            if not self.match.is_knockout:
+                for name in ('extra_time', 'home_penalties', 'away_penalties'):
+                    del self.fields[name]
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.match and self.match.is_knockout and not self.errors:
+            from .competition import CompetitionError
+            # Dry-run the knockout rules so errors show on the form
+            home, away = cleaned.get('home_score'), cleaned.get('away_score')
+            hp, ap = cleaned.get('home_penalties'), cleaned.get('away_penalties')
+            if not self.match.teams_known:
+                raise forms.ValidationError("Both teams must be known before entering a result.")
+            if cleaned.get('extra_time') and not self.match.tournament.allows_extra_time:
+                raise forms.ValidationError("This tournament goes straight to penalties.")
+            if home != away and (hp is not None or ap is not None):
+                raise forms.ValidationError("Penalties are only taken when the match ends in a draw.")
+            if home == away and (hp is None or ap is None or hp == ap):
+                raise forms.ValidationError("A drawn knockout match needs a decisive penalty result.")
+        return cleaned
 
     def save(self, commit=True):
         match = super().save(commit=False)
         if not commit:
             return match
 
-        # Reverses any previous result and applies the new one atomically
-        return recalculate_match_points(
+        if match.is_knockout:
+            from .competition import apply_knockout_result
+            self.conflicts = apply_knockout_result(
+                match,
+                self.cleaned_data['home_score'],
+                self.cleaned_data['away_score'],
+                self.cleaned_data.get('home_penalties'),
+                self.cleaned_data.get('away_penalties'),
+                bool(self.cleaned_data.get('extra_time')),
+            )
+            return match
+
+        from .competition import after_group_match_finished
+        stored = recalculate_match_points(
             match=match,
             new_home_score=self.cleaned_data['home_score'],
             new_away_score=self.cleaned_data['away_score'],
         )
+        self.conflicts = after_group_match_finished(stored)
+        return stored
 
 class MatchRescheduleForm(forms.Form):
     start_time = forms.TimeField(
@@ -350,6 +434,13 @@ class TournamentScheduleForm(forms.Form):
         initial=5,
         min_value=0
     )
+    break_before_knockout = forms.IntegerField(
+        label="Break Before Knockout Stage (minutes)",
+        initial=0,
+        min_value=0,
+        required=False,
+        help_text="Only used for Groups + Knockout tournaments.",
+    )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -365,3 +456,7 @@ class TournamentScheduleForm(forms.Form):
                 raise forms.ValidationError("Game duration is required.")
 
         return cleaned_data
+
+
+class GroupCountForm(forms.Form):
+    group_count = forms.IntegerField(min_value=1, max_value=26, label="Number of groups")

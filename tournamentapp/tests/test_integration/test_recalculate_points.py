@@ -6,10 +6,8 @@ from tournamentapp.models import Match, Team, MatchEvent
 
 
 @pytest.mark.django_db
-def test_adding_goal_to_finished_match_updates_points(auth_client, tournament, field, team):
-    away = Team.objects.create(name="Away", tournament=tournament, tournament_points=3)
-    team.tournament_points = 0
-    team.save()
+def test_adding_goal_to_finished_match_updates_points(auth_client, tournament, field, team, points_table):
+    away = Team.objects.create(name="Away", tournament=tournament)
 
     match = Match.objects.create(
         tournament=tournament,
@@ -42,11 +40,16 @@ def test_adding_goal_to_finished_match_updates_points(auth_client, tournament, f
     })
     assert response.status_code == 200
 
+    # 1-1 now: both teams get a draw
+    match.refresh_from_db()
+    assert (match.home_score, match.away_score) == (1, 1)
+    points = points_table(tournament)
+    assert points[team.name] == 1
+    assert points[away.name] == 1
+
 @pytest.mark.django_db
-def test_removing_goal_from_finished_match_updates_points(auth_client, tournament, field, team):
-    away = Team.objects.create(name="Away", tournament=tournament, tournament_points=0)
-    team.tournament_points = 3
-    team.save()
+def test_removing_goal_from_finished_match_updates_points(auth_client, tournament, field, team, points_table):
+    away = Team.objects.create(name="Away", tournament=tournament)
 
     match = Match.objects.create(
         tournament=tournament,
@@ -69,15 +72,14 @@ def test_removing_goal_from_finished_match_updates_points(auth_client, tournamen
     response = auth_client.delete(url)
     assert response.status_code == 200
 
-    team.refresh_from_db()
-    away.refresh_from_db()
     match.refresh_from_db()
 
     # now 0-0, should be draw
     assert match.home_score == 0
     assert match.away_score == 0
-    assert team.tournament_points == 1
-    assert away.tournament_points == 1
+    points = points_table(tournament)
+    assert points[team.name] == 1
+    assert points[away.name] == 1
 
     response = auth_client.post(url, {
     'event_type': 'goal',

@@ -19,6 +19,15 @@
       <a href="{% url 'team-create' tournament.id %}" class="btn-dashboard">Add Team</a>
     </div>
 
+    {% if tournament.uses_groups %}
+    <!-- Groups -->
+    <div class="dashboard-card">
+      <h3>Groups</h3>
+      <p>Create groups and draw or assign teams before generating the schedule.</p>
+      <a href="{% url 'group-setup' tournament.id %}" class="btn-dashboard">Manage Groups</a>
+    </div>
+    {% endif %}
+
     <!-- Matches -->
     <div class="dashboard-card">
       <h3>Matches</h3>
@@ -62,8 +71,8 @@
     <div class="dashboard-card">
       <h3>Program</h3>
       <p>View and manage tournament program.</p>
-      <a href="{% url 'vendor-list' tournament.id %}" class="btn-dashboard">View Program</a>
-      <a href="{% url 'vendor-create' tournament.id %}" class="btn-dashboard">Add Events</a>
+      <a href="{% url 'sideevent-list' tournament.id %}" class="btn-dashboard">View Program</a>
+      <a href="{% url 'sideevent-create' tournament.id %}" class="btn-dashboard">Add Events</a>
     </div>
 
   </div>
