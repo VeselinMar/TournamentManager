@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistics — {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container page-wrapper">
+  <h1 class="page-title">Reach &amp; sponsors — {{ tournament.name }}</h1>
+
+  <p class="text-muted">
+    Anonymous totals from the public tournament page. A view is counted each time a visitor opens a
+    section (schedule, groups, bracket, …); automatic refreshes, search engines and link previews are
+    not counted. A sponsor logo counts as shown once per view, because the sponsor strip is on every section.
+  </p>
+
+  <div class="leaderboard-grid">
+
+    <div class="card">
+      <div class="card-header">Page views</div>
+      <div class="card-body">
+        <p class="stat-total">{{ report.total_views }}</p>
+        {% if report.by_section %}
+          <ul class="leaderboard-list">
+            {% for row in report.by_section %}
+              <li class="leaderboard-item">
+                <span>{{ row.section }}</span>
+                <span class="leaderboard-meta">{{ row.views }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No visits recorded yet. Share the public link to start counting.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Views per day</div>
+      <div class="card-body">
+        {% if report.by_day %}
+          <ul class="leaderboard-list">
+            {% for row in report.by_day %}
+              <li class="leaderboard-item">
+                <span>{{ row.date|date:"D, d M Y" }}</span>
+                <span class="leaderboard-meta">{{ row.total }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">—</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Sponsors</span>
+      {% if report.sponsors %}
+        <a href="{% url 'tournament-stats-csv' tournament.pk %}" class="button-secondary btn-sm">Download CSV</a>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if report.sponsors %}
+        <div class="table-container">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>Sponsor</th>
+                <th>Logo shown</th>
+                <th>Clicks</th>
+                <th>Click rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in report.sponsors %}
+                <tr>
+                  <td>
+                    {{ row.sponsor.name }}
+                    {% if not row.sponsor.link_url %}<small class="text-muted">(no website — clicks not possible)</small>{% endif %}
+                  </td>
+                  <td>{{ row.impressions }}</td>
+                  <td>{{ row.clicks }}</td>
+                  <td>{{ row.click_rate }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted">
+          No sponsors yet. <a href="{% url 'sponsor-add' tournament.pk %}">Add a sponsor banner</a>.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
