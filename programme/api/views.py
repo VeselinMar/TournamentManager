@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
 
+from tournamentapp.api.caching import cached_response
+
 from tournamentapp.models import Tournament
 from programme.models import SideEvent
 from .serializers import SideEventSerializer
@@ -21,6 +23,7 @@ class SideEventListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        side_events = SideEvent.objects.filter(tournament=tournament, is_active=True)
-        serializer = SideEventSerializer(side_events, many=True)
-        return Response(serializer.data)
+        return cached_response(
+            request, tournament, "side-events",
+            lambda: SideEventSerializer(SideEvent.objects.filter(tournament=tournament, is_active=True), many=True).data,
+        )

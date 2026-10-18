@@ -13,6 +13,7 @@ urlpatterns = [
     path('', include('vendors.urls')),
     path('', include('programme.urls')),
     path('', include('announcements.urls')),
+    path('', include('analytics.urls')),
     path('api/', include([
         path('', include('tournamentapp.api.urls')),
         path('', include('vendors.api.urls')),

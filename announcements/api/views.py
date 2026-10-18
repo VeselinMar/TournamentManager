@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
 
+from tournamentapp.api.caching import cached_response
+
 from tournamentapp.models import Tournament
 from announcements.models import Announcement
 from .serializers import AnnouncementSerializer
@@ -21,6 +23,7 @@ class AnnouncementsListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        announcements = Announcement.objects.filter(tournament=tournament, is_active=True)
-        serializer = AnnouncementSerializer(announcements, many=True)
-        return Response(serializer.data)
+        return cached_response(
+            request, tournament, "announcements",
+            lambda: AnnouncementSerializer(Announcement.objects.filter(tournament=tournament, is_active=True), many=True).data,
+        )

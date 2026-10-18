@@ -51,6 +51,13 @@
       <a href="{% url 'sponsor-add' tournament.id %}" class="btn-dashboard">Add Banner</a>
     </div>
 
+    <!-- Statistics -->
+    <div class="dashboard-card">
+      <h3>Reach &amp; Sponsors</h3>
+      <p>Visits to the public page and how often sponsor logos were shown and clicked.</p>
+      <a href="{% url 'tournament-stats' tournament.id %}" class="btn-dashboard">View Statistics</a>
+    </div>
+
     <!-- Announcements -->
     <div class="dashboard-card">
       <h3>Announcements</h3>

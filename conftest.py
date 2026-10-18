@@ -7,6 +7,22 @@ from tournamentapp.models import Tournament, Team, Field, Match
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def _isolated_media(settings, tmp_path):
+    """Uploaded test files go to a temporary folder, never the project's media/."""
+    settings.MEDIA_ROOT = tmp_path / "media"
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    """Each test starts with an empty cache. Database ids can repeat between
+    tests (rollbacks), so cached public responses must not leak across tests."""
+    from django.core.cache import cache
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
 def user(db):
     return User.objects.create_user(

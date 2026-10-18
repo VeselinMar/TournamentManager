@@ -12,22 +12,7 @@ import logging
 import random
 from django.conf import settings
 from pathlib import Path
-from django.core.cache import cache
-
-
-def leaderboard_cache_key(tournament_id, version):
-    return f"leaderboard:{tournament_id}:{version}"
-
-
-def write_leaderboard_cache(tournament_id, version, data, timeout=None):
-    key = leaderboard_cache_key(tournament_id, version)
-    cache.set(key, data, timeout=timeout)
-    return key
-
-
-def read_leaderboard_cache(tournament_id, version):
-    key = leaderboard_cache_key(tournament_id, version)
-    return cache.get(key)
+from .cache import batched_invalidation, invalidate
 
 
 logger = logging.getLogger(__name__)
@@ -212,7 +197,7 @@ def create_round_robin_matches(
     if start_time.tzinfo is None:
         raise ValueError("start_time must be timezone-aware.")
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         fields = list(tournament.fields.all())
         if not fields:
             raise ValueError("Tournament has no fields.")
@@ -239,6 +224,7 @@ def create_round_robin_matches(
                 )
 
         Match.objects.bulk_create(matches_to_create)
+        invalidate(tournament.pk)  # bulk_create sends no signals
 
 def propagate_match_delay(match, new_start_time):
     """
@@ -252,14 +238,13 @@ def propagate_match_delay(match, new_start_time):
     if delay.total_seconds() == 0:
         return
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         # Update the delayed match
         match.start_time = new_start_time
         match.save(update_fields=["start_time"])
 
         # Shift future matches based on OLD time, excluding current match
-        match.start_time = new_start_time
-        match.save(update_fields=["start_time"])
+        invalidate(match.tournament_id)  # QuerySet.update sends no signals
 
         (
             match.tournament.matches
@@ -500,8 +485,9 @@ def reset_tournament_schedule(tournament):
     Delete all matches (cascades to events and knockout slots).
     Standings are derived from matches, so nothing else needs resetting.
     """
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         tournament.matches.all().delete()
+        invalidate(tournament.pk)
 
 def recalculate_points(match):
     """
