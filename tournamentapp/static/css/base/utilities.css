@@ -13,3 +13,25 @@
 .mb-4 {
   margin-bottom: var(--space-4);
 }
+/* Flash messages (rendered by base.html) */
+.messages {
+  margin-bottom: 1rem;
+}
+
+.messages .message {
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  background: #eef5ee;
+  border: 1px solid #c8d8c8;
+}
+
+.messages .message.error {
+  background: #fdecea;
+  border-color: #f5c2c0;
+}
+
+.messages .message.warning {
+  background: #fff8e1;
+  border-color: #ffe08a;
+}

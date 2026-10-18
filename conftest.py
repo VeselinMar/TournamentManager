@@ -61,3 +61,13 @@ def match(tournament, team, field):
         field=field,
         start_time=timezone.now()
     )
+
+
+@pytest.fixture
+def points_table():
+    """Return {team name: points} calculated from finished matches."""
+    from tournamentapp.utils import get_team_standings
+
+    def _points(tournament, group=None):
+        return {t.name: t.points for t in get_team_standings(tournament, group=group)}
+    return _points

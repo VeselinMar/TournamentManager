@@ -38,3 +38,8 @@
   margin-right: var(--space-3);
   color: var(--color-text-muted);
 }
+/* Teams currently in a qualifying position */
+.leaderboard-item.qualifies {
+  border-left: 3px solid #2e7d32;
+  padding-left: 0.5rem;
+}

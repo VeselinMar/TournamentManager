@@ -20,21 +20,9 @@ class LeaderboardIntegrationTests(TestCase):
             name="Musterment",
             owner=self.user
         )
-        self.team1 = Team.objects.create(
-            name="Team 1",
-            tournament_points=6,
-            tournament=self.tournament
-        )
-        self.team2 = Team.objects.create(
-            name="Team 2",
-            tournament_points=6,
-            tournament=self.tournament
-        )
-        self.team3 = Team.objects.create(
-            name="Team 3",
-            tournament_points=3,
-            tournament=self.tournament
-        )
+        self.team1 = Team.objects.create(name="Team 1", tournament=self.tournament)
+        self.team2 = Team.objects.create(name="Team 2", tournament=self.tournament)
+        self.team3 = Team.objects.create(name="Team 3", tournament=self.tournament)
         self.field = Field.objects.create(
             name="Field A",
             tournament=self.tournament,
@@ -47,6 +35,8 @@ class LeaderboardIntegrationTests(TestCase):
             away_team=self.team2,
             start_time=timezone.now() - timedelta(days=1),
             is_finished=True,
+            home_score=7,
+            away_score=1,
             field=self.field,
             tournament=self.tournament,
         )

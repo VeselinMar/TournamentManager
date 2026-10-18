@@ -14,7 +14,7 @@ from tournamentapp.utils import match_points, recalculate_match_points
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db
-def test_removing_event_in_live_match_keeps_match_open(auth_client, tournament, match):
+def test_removing_event_in_live_match_keeps_match_open(auth_client, tournament, match, points_table):
     scorer = Player.objects.create(name="Scorer", team=match.home_team)
     keep = MatchEvent.objects.create(match=match, team=match.home_team, player=scorer, event_type="goal")
     mistake = MatchEvent.objects.create(match=match, team=match.home_team, player=scorer, event_type="goal")
@@ -24,12 +24,9 @@ def test_removing_event_in_live_match_keeps_match_open(auth_client, tournament, 
     assert response.status_code == 200
     assert response.json()["home_score"] == 1
     match.refresh_from_db()
-    match.home_team.refresh_from_db()
-    match.away_team.refresh_from_db()
     assert match.is_finished is False
     assert (match.home_score, match.away_score) == (1, 0)
-    assert match.home_team.tournament_points == 0
-    assert match.away_team.tournament_points == 0
+    assert set(points_table(tournament).values()) == {0}
     assert MatchEvent.objects.filter(pk=keep.pk).exists()
 
 
@@ -52,7 +49,7 @@ def test_removing_own_goal_in_live_match_updates_opponent_score(auth_client, tou
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db
-def test_manual_score_entry_finishes_match_with_configured_points(auth_client, tournament, match):
+def test_manual_score_entry_finishes_match_with_configured_points(auth_client, tournament, match, points_table):
     tournament.points_for_win = 2
     tournament.points_for_loss = 1
     tournament.save()
@@ -64,24 +61,22 @@ def test_manual_score_entry_finishes_match_with_configured_points(auth_client, t
 
     assert response.status_code == 302
     match.refresh_from_db()
-    match.home_team.refresh_from_db()
-    match.away_team.refresh_from_db()
     assert match.is_finished is True
     assert (match.home_score, match.away_score) == (3, 1)
-    assert match.home_team.tournament_points == 2
-    assert match.away_team.tournament_points == 1
+    points = points_table(tournament)
+    assert points[match.home_team.name] == 2
+    assert points[match.away_team.name] == 1
 
 
 @pytest.mark.django_db
-def test_correcting_manual_score_reverses_previous_points(auth_client, tournament, match):
+def test_correcting_manual_score_reverses_previous_points(auth_client, tournament, match, points_table):
     url = reverse("match-edit", args=[tournament.pk, match.pk])
     auth_client.post(url, {"home_score": 2, "away_score": 0})   # home win: 3 / 0
     auth_client.post(url, {"home_score": 1, "away_score": 1})   # corrected to a draw: 1 / 1
 
-    match.home_team.refresh_from_db()
-    match.away_team.refresh_from_db()
-    assert match.home_team.tournament_points == 1
-    assert match.away_team.tournament_points == 1
+    points = points_table(tournament)
+    assert points[match.home_team.name] == 1
+    assert points[match.away_team.name] == 1
 
 
 @pytest.mark.django_db
@@ -99,15 +94,13 @@ def test_manual_score_entry_rejects_other_users(client, other_user, tournament, 
 
 
 @pytest.mark.django_db
-def test_recalculate_match_points_reads_previous_result_from_database(tournament, match):
+def test_corrected_manual_result_replaces_previous_one(tournament, match, points_table):
     recalculate_match_points(match, 0, 2)          # away win
-    match.home_score, match.away_score = 9, 9      # stale in-memory values must be ignored
     recalculate_match_points(match, 2, 0)          # corrected to home win
 
-    home = Team.objects.get(pk=match.home_team.pk)
-    away = Team.objects.get(pk=match.away_team.pk)
-    assert home.tournament_points == tournament.points_for_win
-    assert away.tournament_points == tournament.points_for_loss
+    points = points_table(tournament)
+    assert points[match.home_team.name] == tournament.points_for_win
+    assert points[match.away_team.name] == tournament.points_for_loss
 
 
 @pytest.mark.django_db

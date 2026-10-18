@@ -34,7 +34,6 @@ class LeaderboardPerformanceTests(TestCase):
                 Team.objects.create(
                     name=f"Team {i}",
                     tournament=self.tournament,
-                    tournament_points=i,
                 )
             )
 

@@ -1,3 +1,9 @@
+export type Sponsor = {
+  name: string;
+  image_url: string | null;
+  link_url: string | null;
+};
+
 export type Tournament = {
   slug: string;
   name: string;
@@ -7,5 +13,7 @@ export type Tournament = {
   show_vendors: boolean;
   show_side_events: boolean;
   show_announcements: boolean;
-  sponsors: any[];
+  tiebreak_rule: "head_to_head" | "goal_difference";
+  format: "round_robin" | "groups_knockout";
+  sponsors: Sponsor[];
 };

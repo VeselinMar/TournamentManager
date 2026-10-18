@@ -4,6 +4,7 @@ import Schedule from "../pages/Schedule";
 import Leaderboard from "../pages/Leaderboard";
 import Vendors from "../pages/Vendors";
 import Events from "../pages/Events";
+import Bracket from "../pages/Bracket";
 import { useParams } from "react-router-dom";
 
 function ScheduleWrapper() {
@@ -30,6 +31,12 @@ function EventsWrapper() {
   return <Events slug={slug} />;
 }
 
+function BracketWrapper() {
+  const { slug } = useParams<{ slug: string }>();
+  if (!slug) return <div>No tournament selected</div>;
+  return <Bracket slug={slug} />;
+}
+
 const basename = import.meta.env.DEV ? "/" : "/public";
 
 const router = createBrowserRouter(
@@ -41,6 +48,7 @@ const router = createBrowserRouter(
         { index: true, element: <ScheduleWrapper /> },
         { path: "schedule", element: <ScheduleWrapper /> },
         { path: "leaderboard", element: <LeaderboardWrapper /> },
+        { path: "bracket", element: <BracketWrapper /> },
         { path: "vendors", element: <VendorsWrapper /> },
         { path: "side-events", element: <EventsWrapper /> },
       ],

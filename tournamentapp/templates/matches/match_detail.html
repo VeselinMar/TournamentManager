@@ -7,11 +7,17 @@
   <div class="card">
     <div class="card-body match-header">
 
+      {% if match.round_label %}<p class="text-muted">{{ match.round_label }}</p>{% endif %}
       <h1 class="match-title">
-        {{ match.home_team.name }}
+        {{ match.home_label }}
         <span class="text-muted">vs</span>
-        {{ match.away_team.name }}
+        {{ match.away_label }}
       </h1>
+      {% if match.is_finished and match.decided_by == 'penalties' %}
+        <p>{{ match.home_score }} - {{ match.away_score }} ({{ match.home_penalties }}–{{ match.away_penalties }} on penalties)</p>
+      {% elif match.is_finished and match.decided_by == 'extra_time' %}
+        <p>{{ match.home_score }} - {{ match.away_score }} after extra time</p>
+      {% endif %}
 
       <div class="match-meta">
         <span>🕐 {{ match.start_time|date:"M d, Y H:i" }}</span>
@@ -29,7 +35,7 @@
 
     <!-- HOME -->
     <div class="card">
-      <div class="card-header">{{ match.home_team.name }}</div>
+      <div class="card-header">{{ match.home_label }}</div>
       <div class="card-body">
         <ul class="event-list">
           {% for event in match.events.all %}
@@ -53,7 +59,7 @@
 
     <!-- AWAY -->
     <div class="card">
-      <div class="card-header">{{ match.away_team.name }}</div>
+      <div class="card-header">{{ match.away_label }}</div>
       <div class="card-body">
         <ul class="event-list">
           {% for event in match.events.all %}

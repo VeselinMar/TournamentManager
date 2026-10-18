@@ -6,7 +6,7 @@ from tournamentapp.models import Match, Team, Tournament, MatchEvent
 
 
 @pytest.mark.django_db
-def test_custom_points_applied_on_finish(auth_client, tournament, field, team):
+def test_custom_points_applied_on_finish(auth_client, tournament, field, team, points_table):
     tournament.points_for_win = 2
     tournament.points_for_draw = 1
     tournament.save()
@@ -34,13 +34,12 @@ def test_custom_points_applied_on_finish(auth_client, tournament, field, team):
     })
     auth_client.post(url)
 
-    team.refresh_from_db()
-    away.refresh_from_db()
-    assert team.tournament_points == 2
-    assert away.tournament_points == 0
+    points = points_table(tournament)
+    assert points[team.name] == 2
+    assert points[away.name] == 0
 
 @pytest.mark.django_db
-def test_custom_draw_points(auth_client, tournament, field, team):
+def test_custom_draw_points(auth_client, tournament, field, team, points_table):
     tournament.points_for_win = 3
     tournament.points_for_draw = 2
     tournament.save()
@@ -60,10 +59,9 @@ def test_custom_draw_points(auth_client, tournament, field, team):
     })
     auth_client.post(url)
 
-    team.refresh_from_db()
-    away.refresh_from_db()
-    assert team.tournament_points == 2
-    assert away.tournament_points == 2
+    points = points_table(tournament)
+    assert points[team.name] == 2
+    assert points[away.name] == 2
 
 
 @pytest.mark.django_db

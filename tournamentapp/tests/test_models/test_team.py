@@ -19,8 +19,7 @@ class TeamModelTests(TestCase):
     def test_team_creation(self):
         team = Team.objects.create(name="Lions FC", tournament=self.tournament)
         self.assertEqual(team.name, "Lions FC")
-        self.assertEqual(team.match_points, 0)
-        self.assertEqual(team.tournament_points, 0)
+        self.assertIsNone(team.group)
         self.assertFalse(team.logo)
 
     def test_team_str_representation(self):
@@ -32,40 +31,16 @@ class TeamModelTests(TestCase):
         with self.assertRaises(IntegrityError):
             Team.objects.create(name="Tigers FC")
     
-    def test_add_match_points(self):
-        team = Team.objects.create(name="Wolves FC", tournament=self.tournament)
-        team.add_match_points(5)
+    def test_team_can_be_assigned_to_group(self):
+        from tournamentapp.models import Group
+        group = Group.objects.create(tournament=self.tournament, name="A")
+        team = Team.objects.create(name="Owls FC", tournament=self.tournament, group=group)
+        self.assertEqual(list(group.teams.all()), [team])
+
+    def test_deleting_group_keeps_team(self):
+        from tournamentapp.models import Group
+        group = Group.objects.create(tournament=self.tournament, name="A")
+        team = Team.objects.create(name="Owls FC", tournament=self.tournament, group=group)
+        group.delete()
         team.refresh_from_db()
-        self.assertEqual(team.match_points, 5)
-
-    def test_add_tournament_points(self):
-        team = Team.objects.create(name="Eagles FC", tournament=self.tournament)
-        team.add_tournament_points(3)
-        team.refresh_from_db()
-        self.assertEqual(team.tournament_points, 3)
-
-    def test_point_incrementation_with_varied_totals(self):
-        base_increments = [3, 1, 0]  # Win, draw, loss points
-        num_teams = 10
-
-        for i in range(num_teams):
-            team = Team.objects.create(
-                name=f"Team {i+1}",
-                tournament=self.tournament
-            )
-
-            # Repeat the base pattern i+1 times for each team to vary totals:
-            increments = base_increments * (i + 1)  
-
-            for inc in increments:
-                team.add_match_points(inc)
-
-            team.refresh_from_db()
-
-            expected_points = sum(increments)
-
-            self.assertEqual(
-                team.match_points,
-                expected_points,
-                f"{team.name} expected {expected_points} points but got {team.match_points}"
-            )
+        self.assertIsNone(team.group)

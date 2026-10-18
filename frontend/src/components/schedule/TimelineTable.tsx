@@ -1,18 +1,7 @@
 import { useEffect, useRef } from "react";
-
-type MatchData = {
-  id: number;
-  home_team: string;
-  away_team: string;
-  home_score: number;
-  away_score: number;
-  is_finished: boolean;
-};
-
-type TimelineRow = {
-  time: string;
-  matches?: (MatchData | null)[];
-};
+import type { TimelineRow } from "../../types/match";
+import { TeamName } from "../MatchResult";
+import { resultText } from "../../utils/match";
 
 interface TimelineTableProps {
   fieldNames?: string[];
@@ -140,7 +129,7 @@ export default function TimelineTable({
 
             return (
               <tr
-                key={idx}
+                key={row.datetime ?? idx}
                 style={{
                   backgroundColor: rowBg,
                   transition: "background 0.2s ease",
@@ -170,66 +159,97 @@ export default function TimelineTable({
                   {row.time}
                 </td>
 
-                {/* MATCH CELLS */}
-                {(row.matches ?? []).filter(Boolean).map((match, fIdx) => (
-                  <td
-                    key={fIdx}
-                    style={{
-                      padding: "8px",
-                      textAlign: "center",
-                      border: "1px solid #e6e6e6",
-                      minWidth: 180,
-                    }}
-                  >
-                    {match ? (
-                      <div
-                        style={{
-                          background: match.is_finished
-                            ? "#ffffff"
-                            : "#f1f8e9",
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 6,
-                          padding: "6px",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                          fontWeight: match.is_finished ? 500 : 700,
-                        }}
-                      >
-                        {/* TEAMS */}
+                {/* MATCH CELLS — one per field, empty cells keep their column */}
+                {fieldNames.map((fieldName, fIdx) => {
+                  const match = row.matches?.[fIdx] ?? null;
+                  return (
+                    <td
+                      key={fieldName}
+                      style={{
+                        padding: "8px",
+                        textAlign: "center",
+                        border: "1px solid #e6e6e6",
+                        minWidth: 180,
+                      }}
+                    >
+                      {match ? (
                         <div
                           style={{
-                            fontSize:
-                              "clamp(0.85rem, 1vw, 1.1rem)",
-                            color: "#1b1b1b",
+                            background: match.is_finished
+                              ? "#ffffff"
+                              : "#f1f8e9",
+                            border: "1px solid #e0e0e0",
+                            borderLeft:
+                              match.stage === "knockout"
+                                ? "3px solid #f9a825"
+                                : "1px solid #e0e0e0",
+                            borderRadius: 6,
+                            padding: "6px",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                            fontWeight: match.is_finished ? 500 : 700,
                           }}
                         >
-                          <strong>{match.home_team}</strong> vs{" "}
-                          <strong>{match.away_team}</strong>
-                        </div>
+                          {/* STAGE */}
+                          {match.round_label && (
+                            <div
+                              style={{
+                                fontSize: "0.7rem",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                                color: "#5b6b5b",
+                                marginBottom: 2,
+                              }}
+                            >
+                              {match.round_label}
+                            </div>
+                          )}
 
-                        {/* SCORE */}
-                        {match.is_finished && (
+                          {/* TEAMS */}
                           <div
                             style={{
-                              marginTop: 4,
-                              fontWeight: 800,
-                              color: "#1b5e20",
+                              fontSize:
+                                "clamp(0.85rem, 1vw, 1.1rem)",
+                              color: "#1b1b1b",
                             }}
                           >
-                            {match.home_score} : {match.away_score}
+                            <TeamName
+                              name={match.home_team}
+                              placeholder={match.home_placeholder}
+                              isWinner={match.winner === match.home_team}
+                            />{" "}
+                            vs{" "}
+                            <TeamName
+                              name={match.away_team}
+                              placeholder={match.away_placeholder}
+                              isWinner={match.winner === match.away_team}
+                            />
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          color: "#b0b0b0",
-                        }}
-                      >
-                        —
-                      </div>
-                    )}
-                  </td>
-                ))}
+
+                          {/* SCORE */}
+                          {match.is_finished && (
+                            <div
+                              style={{
+                                marginTop: 4,
+                                fontWeight: 800,
+                                color: "#1b5e20",
+                              }}
+                            >
+                              {resultText(match)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            color: "#b0b0b0",
+                          }}
+                        >
+                          —
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}

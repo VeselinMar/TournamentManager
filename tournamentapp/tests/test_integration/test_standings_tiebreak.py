@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tournamentapp.models import Match, Team, Tournament
-from tournamentapp.utils import get_team_standings, match_points
+from tournamentapp.utils import get_team_standings
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def make_team(tournament):
 
 @pytest.fixture
 def play(tournament, field):
-    """Create a finished match and award points the same way the app does."""
+    """Create a finished match; standings are calculated from it."""
     counter = {"n": 0}
 
     def _play(home, away, home_goals, away_goals):
@@ -30,11 +30,6 @@ def play(tournament, field):
             is_finished=True,
             start_time=timezone.now() + timedelta(minutes=counter["n"]),
         )
-        home_pts, away_pts = match_points(tournament, home_goals, away_goals)
-        Team.objects.filter(pk=home.pk).update(tournament_points=home.tournament_points + home_pts)
-        Team.objects.filter(pk=away.pk).update(tournament_points=away.tournament_points + away_pts)
-        home.refresh_from_db()
-        away.refresh_from_db()
     return _play
 
 
