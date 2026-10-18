@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, Outlet, useParams } from "react-router-dom";
+import { useNavigate, Outlet, useParams, useLocation } from "react-router-dom";
+import { trackView } from "../api/tracking";
 import { getTournament } from "../api/tournament";
 import type { Tournament } from "../types/tournament";
 import Header from "../components/Header";
@@ -13,6 +14,8 @@ export default function TournamentPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const location = useLocation();
 
   const topRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -36,6 +39,13 @@ export default function TournamentPage() {
       document.title = tournament.name;
     }
   }, [tournament?.name]);
+
+  // One anonymous view per opened section (the index route is the schedule)
+  const lastSegment = location.pathname.replace(/\/+$/, "").split("/").pop() ?? "";
+  const section = lastSegment.toLowerCase() === slug ? "schedule" : lastSegment;
+  useEffect(() => {
+    if (tournament) trackView(slug, section);
+  }, [tournament, slug, section]);
 
   if (loading) return <div>Loading tournament...</div>;
   if (error) return <div>{error}</div>;

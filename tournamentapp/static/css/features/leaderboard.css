@@ -43,3 +43,28 @@
   border-left: 3px solid #2e7d32;
   padding-left: 0.5rem;
 }
+
+/* Statistics page */
+.stat-total {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid #e6e6e6;
+  text-align: left;
+}
+
+.stats-table th:not(:first-child),
+.stats-table td:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

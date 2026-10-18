@@ -57,9 +57,9 @@ export default function SponsorCarousel({
       >
         {s.link_url ? (
           <a
-            href={s.link_url}
+            href={s.click_url ?? s.link_url}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow sponsored"
           >
             {content}
           </a>
@@ -113,9 +113,9 @@ export default function SponsorCarousel({
           return s.link_url ? (
             <a
               key={`${s.name}-${i}`}
-              href={s.link_url}
+              href={s.click_url ?? s.link_url}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noopener noreferrer nofollow sponsored"
               title={s.name}
               style={{ flexShrink: 0 }}
             >

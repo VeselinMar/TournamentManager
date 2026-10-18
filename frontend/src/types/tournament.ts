@@ -1,7 +1,10 @@
 export type Sponsor = {
+  id: number;
   name: string;
   image_url: string | null;
   link_url: string | null;
+  /** Counts the click, then redirects to link_url */
+  click_url: string | null;
 };
 
 export type Tournament = {

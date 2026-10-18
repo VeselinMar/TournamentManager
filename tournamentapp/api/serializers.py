@@ -71,11 +71,15 @@ class TournamentMetaSerializer(serializers.ModelSerializer):
         ]
 
     def get_sponsors(self, obj):
+        from django.urls import reverse
         return [
             {
+                'id': s.pk,
                 'name': s.name,
                 'image_url': s.image.url if s.image else None,
                 'link_url': s.link_url,
+                # Counts the click, then redirects to link_url
+                'click_url': reverse('sponsor-click', args=[s.pk]) if s.link_url else None,
             }
             for s in obj.sponsors.all()
         ]

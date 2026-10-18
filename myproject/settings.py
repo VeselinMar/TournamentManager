@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "vendors",
     "programme",
     "announcements",
+    "analytics",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ],
+    # Only views that opt in (e.g. the tracking beacon) are throttled
+    "DEFAULT_THROTTLE_RATES": {
+        "tracking": "60/min",
+    },
 }
 
 # Database
