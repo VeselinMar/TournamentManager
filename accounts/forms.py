@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.forms import AuthenticationForm
 from .models import AppUser
 
@@ -25,6 +26,12 @@ class RegisterForm(forms.ModelForm):
 
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("Passwords don't match")
+
+        if password2:
+            # Apply AUTH_PASSWORD_VALIDATORS (length, common, numeric, similarity)
+            candidate = self.instance
+            candidate.email = self.cleaned_data.get("email", candidate.email)
+            validate_password(password2, user=candidate)
         return password2
 
     def save(self, commit=True):

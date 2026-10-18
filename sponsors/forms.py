@@ -16,10 +16,8 @@ class SponsorBannerForm(forms.ModelForm):
     )
     class Meta:
         model = SponsorBanner
-        fields = ['tournament', 'name', 'link_url', 'image']
-        widgets = {
-            'tournament': forms.HiddenInput(),
-        }
+        # The tournament is taken from the URL in the view, never from the request body
+        fields = ['name', 'link_url', 'image']
 
     def clean_image(self):
         image = self.cleaned_data.get('image')

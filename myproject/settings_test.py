@@ -15,3 +15,13 @@ DATABASES = {
         "NAME": ":memory:",
     }
 }
+
+# Tests always use local storage, independent of the DEBUG value in .env
+import tempfile
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+MEDIA_ROOT = tempfile.mkdtemp(prefix="tm-test-media-")
+MEDIA_URL = "/media/"
+STATIC_URL = "/static/"

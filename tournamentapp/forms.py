@@ -5,19 +5,41 @@ from datetime import datetime, time, date
 from .models import Team, Match, Player, GoalEvent, Field, MatchEvent, Tournament
 from .utils import recalculate_match_points
 
-class TournamentCreateForm(forms.ModelForm):
+
+class TiebreakRuleOptionalMixin:
+    """Older clients may not send the tie-break field; keep the stored value
+    (or the model default) instead of failing validation."""
+
+    def _make_tiebreak_optional(self):
+        if 'tiebreak_rule' in self.fields:
+            self.fields['tiebreak_rule'].required = False
+
+    def clean_tiebreak_rule(self):
+        value = self.cleaned_data.get('tiebreak_rule')
+        if value:
+            return value
+        if self.instance and self.instance.pk:
+            return self.instance.tiebreak_rule
+        return Tournament.TIEBREAK_HEAD_TO_HEAD
+
+class TournamentCreateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'format', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension']
+        fields = ['name', 'tournament_date', 'format', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'tiebreak_rule']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
             'yellow_cards_for_suspension': 'Yellow cards for suspension',
             'format': 'Tournament Format',
+            'tiebreak_rule': 'Tie-break rule',
         }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._make_tiebreak_optional()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -32,10 +54,10 @@ class TournamentCreateForm(forms.ModelForm):
             raise forms.ValidationError("Suspension threshold must be at least 1.")
         return cleaned_data
 
-class TournamentUpdateForm(forms.ModelForm):
+class TournamentUpdateForm(TiebreakRuleOptionalMixin, forms.ModelForm):
     class Meta:
         model = Tournament
-        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements']
+        fields = ['name', 'tournament_date', 'points_for_win', 'points_for_draw', 'yellow_cards_for_suspension', 'tiebreak_rule', 'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements']
         labels = {
             'points_for_win': 'Points for win',
             'points_for_draw': 'Points for draw',
@@ -44,6 +66,7 @@ class TournamentUpdateForm(forms.ModelForm):
             'show_vendors': 'Show vendors on public page',
             'show_side_events': 'Show programme on public page',
             'show_announcements': 'Show announcements on public page',
+            'tiebreak_rule': 'Tie-break rule',
         }
         widgets = {
             'tournament_date': forms.DateInput(attrs={'type': 'date'}),
@@ -51,6 +74,7 @@ class TournamentUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._make_tiebreak_optional()
         # lock points fields if scored matches exist
         if self.instance and self.instance.pk:
             if self.instance.matches.filter(is_finished=True).exists():
@@ -198,28 +222,15 @@ class MatchEditForm(forms.ModelForm):
 
     def save(self, commit=True):
         match = super().save(commit=False)
+        if not commit:
+            return match
 
-        if match.is_finished:
-            self._reverse_previous_points()
-
-        self._apply_match_points(match)
-
-        match.is_finished = True
-        if commit:
-            match.save()
-
-        recalculate_match_points(
-            match=self.match,
-            new_home_score=match.home_score,
-            new_away_score=match.away_score,
+        # Reverses any previous result and applies the new one atomically
+        return recalculate_match_points(
+            match=match,
+            new_home_score=self.cleaned_data['home_score'],
+            new_away_score=self.cleaned_data['away_score'],
         )
-
-        match.is_finished = True
-        
-        if commit:
-            match.save()
-
-        return match
 
 class MatchRescheduleForm(forms.Form):
     start_time = forms.TimeField(

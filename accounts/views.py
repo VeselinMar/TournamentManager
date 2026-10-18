@@ -19,13 +19,11 @@ class RegisterView(CreateView):
             password=form.cleaned_data["password1"]
         )
 
-        login(self.request, authenticated_user)
-
-        if authenticated_user:
+        if authenticated_user is not None:
             login(self.request, authenticated_user)
             return redirect(get_post_login_redirect(user))
 
-        return redirect(get_post_login_redirect(user))
+        return redirect('custom-login')
 
 class UserLoginView(LoginView):
     template_name = 'accounts/login.html'

@@ -40,6 +40,19 @@ class Tournament(models.Model):
     )
     is_finished = models.BooleanField(default=False)
 
+    TIEBREAK_HEAD_TO_HEAD = 'head_to_head'
+    TIEBREAK_GOAL_DIFFERENCE = 'goal_difference'
+    TIEBREAK_CHOICES = [
+        (TIEBREAK_HEAD_TO_HEAD, 'Head-to-head first, then overall goal difference (UEFA style)'),
+        (TIEBREAK_GOAL_DIFFERENCE, 'Overall goal difference first, then head-to-head (FIFA style)'),
+    ]
+    tiebreak_rule = models.CharField(
+        max_length=20,
+        choices=TIEBREAK_CHOICES,
+        default=TIEBREAK_HEAD_TO_HEAD,
+        help_text="How teams level on points are ranked.",
+    )
+
     format = models.CharField(
         max_length=20,
         choices=FORMAT_CHOICES,
@@ -130,6 +143,11 @@ class Player(models.Model):
     games_sat_out = models.PositiveSmallIntegerField(
         default=0,
         )
+    suspension_cleared_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Cards given before this moment no longer count towards a suspension.",
+        )
 
 
     class Meta:
@@ -152,14 +170,35 @@ class Player(models.Model):
     def red_cards(self):
         return self.match_events.filter(event_type='red_card').count()
 
+    def _active_card_events(self):
+        events = self.match_events.all()
+        if self.suspension_cleared_at:
+            events = events.filter(created_at__gt=self.suspension_cleared_at)
+        return events
+
+    def active_yellow_cards(self):
+        """Yellow cards that still count towards a suspension."""
+        return self._active_card_events().filter(event_type='yellow_card').count()
+
+    def active_red_cards(self):
+        """Red cards that still count towards a suspension."""
+        return self._active_card_events().filter(event_type='red_card').count()
+
     def is_suspended(self):
-        return self.is_muted or self.yellow_cards() >= self.team.tournament.yellow_cards_for_suspension or self.red_cards() >= 1
-        
+        return (
+            self.is_muted
+            or self.active_yellow_cards() >= self.team.tournament.yellow_cards_for_suspension
+            or self.active_red_cards() >= 1
+        )
+
     def unmute(self):
+        """Lift the suspension. Card history is kept for stats; only the
+        suspension counter is reset."""
+        from django.utils import timezone
         self.is_muted = False
         self.games_sat_out = 0
-        self.match_events.filter(event_type__in=['yellow_card', 'red_card']).delete()
-        self.save(update_fields=['is_muted', 'games_sat_out'])
+        self.suspension_cleared_at = timezone.now()
+        self.save(update_fields=['is_muted', 'games_sat_out', 'suspension_cleared_at'])
 
 class Field(models.Model):
     name = models.CharField(
@@ -236,18 +275,23 @@ class Match(models.Model):
         if overlapping.exists():
             raise ValidationError("Another match is already scheduled at this field and time.")
 
+    def score_from_events(self):
+        """Return (home_goals, away_goals) computed from recorded events.
+        Own goals count for the opposing team."""
+        home_goals = self.events.filter(event_type='goal', team=self.home_team).count()
+        home_goals += self.events.filter(event_type='own_goal', team=self.away_team).count()
+
+        away_goals = self.events.filter(event_type='goal', team=self.away_team).count()
+        away_goals += self.events.filter(event_type='own_goal', team=self.home_team).count()
+        return home_goals, away_goals
+
     def apply_result(self):
         if self.is_finished:
             return
 
         tournament = self.tournament
 
-        # Calculate goals for each team
-        home_goals = self.events.filter(event_type='goal', team=self.home_team).count()
-        home_goals += self.events.filter(event_type='own_goal', team=self.away_team).count()
-
-        away_goals = self.events.filter(event_type='goal', team=self.away_team).count()
-        away_goals += self.events.filter(event_type='own_goal', team=self.home_team).count()
+        home_goals, away_goals = self.score_from_events()
 
         # Set the score fields
         self.home_score = home_goals
