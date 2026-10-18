@@ -89,6 +89,20 @@ class TournamentDeleteView(LoginRequiredMixin, TournamentOwnerMixin, DeleteView)
     success_url = reverse_lazy('landing-page')
 
 
+_manifest_cache = {"mtime": None, "data": None}
+
+
+def _load_spa_manifest():
+    """Read the Vite manifest once per process; re-read only when the file changes."""
+    manifest_path = settings.BASE_DIR / 'tournamentapp' / 'static' / 'spa' / '.vite' / 'manifest.json'
+    mtime = manifest_path.stat().st_mtime
+    if _manifest_cache["mtime"] != mtime:
+        with open(manifest_path, 'r') as f:
+            _manifest_cache["data"] = json.load(f)
+        _manifest_cache["mtime"] = mtime
+    return _manifest_cache["data"]
+
+
 class SpaView(TemplateView):
     template_name = "spa.html"
 
@@ -96,23 +110,10 @@ class SpaView(TemplateView):
         context = super().get_context_data(**kwargs)
         logger = logging.getLogger(__name__)
         try:
-            manifest_path = (
-                settings.BASE_DIR
-                / 'tournamentapp'
-                / 'static'
-                / 'spa'
-                / '.vite'
-                / 'manifest.json'
-            )
-            
-            with open(manifest_path, 'r') as f:
-                manifest = json.load(f)
-            
-            entry = manifest.get('index.html', {})
-            
+            entry = _load_spa_manifest().get('index.html', {})
             js_file = entry.get('file', '')
             css_files = entry.get('css', [])
-            
+
             context.update({
                 'slug': self.kwargs.get('slug', ''),
                 'js': f'spa/{js_file}' if js_file else '',
@@ -121,7 +122,7 @@ class SpaView(TemplateView):
         except Exception as e:
             logger.exception(f"Error loading manifest: {e}")
             context.update({'slug': self.kwargs.get('slug', ''), 'js': '', 'css': []})
-        
+
         return context
 
 class TournamentDetailView(LoginRequiredMixin, TournamentOwnerMixin, DetailView):

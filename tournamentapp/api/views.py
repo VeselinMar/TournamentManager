@@ -8,6 +8,7 @@ from tournamentapp.models import Tournament, Match, Team, Player
 from .serializers import ScheduleSerializer, LeaderboardSerializer, TournamentMetaSerializer
 from tournamentapp.utils import build_timeline, get_team_standings, get_group_tables, get_top_scorers
 from tournamentapp import competition
+from .caching import cached_response
 
 
 def serialize_match(m):
@@ -41,7 +42,10 @@ class ScheduleAPIView(APIView):
 
     def get(self, request, slug):
         tournament = get_object_or_404(Tournament, slug__iexact=slug)
+        return cached_response(request, tournament, "schedule", lambda: self.build(tournament))
 
+    @staticmethod
+    def build(tournament):
         timeline, field_names = build_timeline(tournament)
 
         rows = [
@@ -59,11 +63,11 @@ class ScheduleAPIView(APIView):
             .prefetch_related('slots')
         )
 
-        return Response({
+        return {
             "field_names": field_names,
             "timeline": rows,
             "current_matches": [serialize_match(m) for m in current_matches],
-        })
+        }
 
 
 def _standing_row(team, rank, qualifies=False):
@@ -94,6 +98,10 @@ class LeaderboardAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        return cached_response(request, tournament, "leaderboard", lambda: self.build(tournament))
+
+    @staticmethod
+    def build(tournament):
         tables = get_group_tables(tournament)
         top_scorers = get_top_scorers(tournament)
         per_group = tournament.qualifiers_per_group if tournament.uses_groups else 0
@@ -126,8 +134,7 @@ class LeaderboardAPIView(APIView):
             ]
         }
 
-        serializer = LeaderboardSerializer(data)
-        return Response(serializer.data)
+        return LeaderboardSerializer(data).data
 
 
 class BracketAPIView(APIView):
@@ -135,8 +142,12 @@ class BracketAPIView(APIView):
 
     def get(self, request, slug):
         tournament = get_object_or_404(Tournament, slug=slug)
+        return cached_response(request, tournament, "bracket", lambda: self.build(tournament))
+
+    @staticmethod
+    def build(tournament):
         rounds = competition.bracket_rounds(tournament) if tournament.uses_groups else []
-        return Response({
+        return {
             'format': tournament.format,
             'rounds': [
                 {
@@ -146,16 +157,14 @@ class BracketAPIView(APIView):
                 }
                 for r in rounds
             ],
-        })
+        }
 
 
 class TournamentMetaAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(
-            Tournament.objects.prefetch_related("sponsors"),
-            slug=slug
+        tournament = get_object_or_404(Tournament, slug=slug)
+        return cached_response(
+            request, tournament, "meta", lambda: TournamentMetaSerializer(tournament).data
         )
-        serializer = TournamentMetaSerializer(tournament)
-        return Response(serializer.data)

@@ -34,6 +34,7 @@ from typing import List, Optional
 from django.db import transaction
 from django.db.models import Max
 
+from .cache import batched_invalidation, invalidate
 from .models import Group, Match, MatchEvent, MatchSlot, Team, Tournament
 
 
@@ -90,7 +91,7 @@ def set_group_count(tournament, count):
         raise CompetitionError(f"Number of groups must be between 1 and {len(ascii_uppercase)}.")
     _ensure_no_schedule(tournament)
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         existing = list(tournament.groups.order_by('order', 'name'))
         for extra in existing[count:]:
             extra.teams.update(group=None)
@@ -110,7 +111,7 @@ def random_draw(tournament, rng=None):
     rng = rng or random.SystemRandom()
     teams = list(tournament.teams.all())
     rng.shuffle(teams)
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         for index, team in enumerate(teams):
             team.group = groups[index % len(groups)]
             team.save(update_fields=['group'])
@@ -328,7 +329,9 @@ def schedule_groups_knockout(tournament, start_time, game_duration, pause_durati
     group_slot = game_duration + pause_duration
     ko_slot = knockout_slot_duration(tournament, game_duration, pause_duration)
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
+        invalidate(tournament.pk)  # group matches use bulk_create (no signals)
+
         # ---- group stage
         rounds_by_group = [
             (group, round_robin_rounds(group.teams.order_by('pk')))
@@ -528,6 +531,12 @@ def refresh_knockout(tournament):
     by_pk = {m.pk: m for m in knockout}
     conflicts = []
 
+    with batched_invalidation():
+        _fill_slots(knockout, by_pk, seeds, started_ids, conflicts)
+    return conflicts
+
+
+def _fill_slots(knockout, by_pk, seeds, started_ids, conflicts):
     for match in knockout:
         changed = []
         for slot in match.slots.all():
@@ -561,8 +570,6 @@ def refresh_knockout(tournament):
         if changed:
             match.save(update_fields=changed)
 
-    return conflicts
-
 
 def apply_knockout_result(match, home_score, away_score, home_penalties=None,
                           away_penalties=None, extra_time=False):
@@ -594,7 +601,7 @@ def apply_knockout_result(match, home_score, away_score, home_penalties=None,
         winner = match.home_team if home_penalties > away_penalties else match.away_team
         decided_by = Match.DECIDED_PENALTIES
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         match.home_score = home_score
         match.away_score = away_score
         match.home_penalties = home_penalties if decided_by == Match.DECIDED_PENALTIES else None
@@ -677,7 +684,7 @@ def set_slot_team(match, side, team):
     if team is not None and other is not None and other.pk == team.pk:
         raise CompetitionError("A team cannot play against itself.")
 
-    with transaction.atomic():
+    with transaction.atomic(), batched_invalidation():
         attr = 'home_team' if side == MatchSlot.HOME else 'away_team'
         slot.is_manual_override = team is not None
         slot.save(update_fields=['is_manual_override'])

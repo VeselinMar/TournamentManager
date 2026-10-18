@@ -148,6 +148,37 @@ else:
         )
     }
 
+# ------------------------------------------------------------------------------
+# Cache
+# ------------------------------------------------------------------------------
+# Public API responses are cached under per-tournament versions (see
+# tournamentapp/cache.py), so a per-process memory cache is safe. Set REDIS_URL
+# to share one cache between all workers (fewer cache misses, shared rate limits).
+# The deploy's commit is part of every key, so a new release never reads
+# responses in an old format. Render sets RENDER_GIT_COMMIT automatically.
+CODE_VERSION = config("RENDER_GIT_COMMIT", default="dev")[:12]
+REDIS_URL = config("REDIS_URL", default="")
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": f"tm-{CODE_VERSION}",
+            "TIMEOUT": 60 * 60,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "tournament-manager",
+            "KEY_PREFIX": f"tm-{CODE_VERSION}",
+            "TIMEOUT": 60 * 60,
+            "OPTIONS": {"MAX_ENTRIES": 2000},
+        }
+    }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

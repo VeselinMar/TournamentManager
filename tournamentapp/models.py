@@ -111,6 +111,16 @@ class Tournament(models.Model):
                 slug = f"{base}-{n}"
                 n += 1
             self.slug = slug
+
+        # cache_version is only ever changed by an atomic UPDATE (see cache.py).
+        # A full save of an instance loaded earlier must not write an old
+        # value back, or outdated cached pages could be served again.
+        if (not self._state.adding and kwargs.get('update_fields') is None
+                and not kwargs.get('force_insert') and not (args and args[0])):
+            kwargs['update_fields'] = [
+                f.name for f in self._meta.concrete_fields
+                if not f.primary_key and f.name != 'cache_version'
+            ]
         super().save(*args, **kwargs)
     
 class Group(models.Model):

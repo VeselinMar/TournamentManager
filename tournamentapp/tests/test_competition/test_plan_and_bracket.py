@@ -42,15 +42,15 @@ def test_plan_single_group_uses_places(build_tournament):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("groups, settings, message", [
+@pytest.mark.parametrize("groups, options, message", [
     ({}, {}, "Create at least one group"),
     ({'A': {'T1': 1}, 'B': {'T2': 1, 'T3': 1}}, {}, "at least 2 teams"),
     ({'A': {'T1': 1, 'T2': 1}}, {'qualifiers_per_group': 3}, "smallest group has only 2"),
     ({'A': {'T1': 1, 'T2': 1}}, {'qualifiers_per_group': 1}, "At least 2 teams must qualify"),
     ({'A': {'T1': 1, 'T2': 1, 'T3': 1}}, {'qualifiers_per_group': 3, 'best_placed_qualifiers': 1}, "at most 0"),
 ])
-def test_plan_validation(build_tournament, groups, settings, message):
-    tournament = build_tournament(groups, **settings)
+def test_plan_validation(build_tournament, groups, options, message):
+    tournament = build_tournament(groups, **options)
     with pytest.raises(CompetitionError, match=message):
         qualifier_plan(tournament)
 

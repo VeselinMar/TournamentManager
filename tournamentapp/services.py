@@ -1,6 +1,7 @@
 from .forms import TeamCreateForm
 from django.contrib import messages
 from .models import Player
+from .cache import batched_invalidation
 
 def handle_batch_lines(request, tournament, lines):
     """
@@ -14,6 +15,11 @@ def handle_batch_lines(request, tournament, lines):
     Returns:
         created_teams, created_players: integers
     """
+    with batched_invalidation():
+        return _handle_lines(request, tournament, lines)
+
+
+def _handle_lines(request, tournament, lines):
     created_teams = 0
     created_players = 0
     current_team = None
