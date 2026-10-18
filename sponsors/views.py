@@ -11,17 +11,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from tournamentapp.models import Tournament
 
 
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, UpdateView, ListView
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponseForbidden
-from .models import SponsorBanner
-from .forms import SponsorBannerForm
-from django.views.decorators.http import require_POST, require_http_methods
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from tournamentapp.models import Tournament
-
 logger = logging.getLogger(__name__)
 
 class SponsorBannerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -34,10 +23,13 @@ class SponsorBannerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVie
         return self.request.user == tournament.owner
 
     def get_tournament(self):
-        return Tournament.objects.get(pk=self.kwargs['tournament_id'])
+        if not hasattr(self, '_tournament'):
+            self._tournament = get_object_or_404(Tournament, pk=self.kwargs['tournament_id'])
+        return self._tournament
 
-    def get_initial(self):
-        return {'tournament': self.get_tournament()}
+    def form_valid(self, form):
+        form.instance.tournament = self.get_tournament()
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy('sponsor-list', kwargs={'tournament_id': self.kwargs['tournament_id']})
@@ -60,7 +52,9 @@ class SponsorBannerListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.get_tournament().sponsors.all()
 
     def get_tournament(self):
-        return Tournament.objects.get(pk=self.kwargs['tournament_id'])
+        if not hasattr(self, '_tournament'):
+            self._tournament = get_object_or_404(Tournament, pk=self.kwargs['tournament_id'])
+        return self._tournament
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

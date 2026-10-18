@@ -55,7 +55,7 @@ class TournamentMetaSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'slug', 'is_finished', 'tournament_date',
             'show_leaderboard', 'show_vendors', 'show_side_events', 'show_announcements',
-            'sponsors'
+            'tiebreak_rule', 'sponsors'
         ]
 
     def get_sponsors(self, obj):

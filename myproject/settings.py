@@ -15,7 +15,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # Debug mode
-DEBUG = config("DEBUG", default=True, cast=bool)
+# Safe default: production must never run in debug mode by accident
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 FORMS_URLFIELD_ASSUME_HTTPS = True
 

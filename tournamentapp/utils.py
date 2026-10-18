@@ -251,66 +251,116 @@ def propagate_match_delay(match, new_start_time):
             )
         )
 
+def _empty_stats():
+    return {'played': 0, 'wins': 0, 'draws': 0, 'losses': 0,
+            'goals_for': 0, 'goals_against': 0, 'points': 0}
+
+
+def _accumulate(stats, team_id, goals_for, goals_against, points):
+    row = stats[team_id]
+    row['played'] += 1
+    row['goals_for'] += goals_for
+    row['goals_against'] += goals_against
+    row['points'] += points
+    if goals_for > goals_against:
+        row['wins'] += 1
+    elif goals_for == goals_against:
+        row['draws'] += 1
+    else:
+        row['losses'] += 1
+
+
+def _collect_stats(tournament, matches, team_ids=None):
+    """
+    Aggregate results from finished matches. Scores are taken from the
+    stored match result, so own goals and manually entered scores count.
+    If `team_ids` is given, only matches between those teams are used
+    (head-to-head mini-table).
+    """
+    stats = defaultdict(_empty_stats)
+    for m in matches:
+        if team_ids is not None and not (m.home_team_id in team_ids and m.away_team_id in team_ids):
+            continue
+        home_pts, away_pts = match_points(tournament, m.home_score, m.away_score)
+        _accumulate(stats, m.home_team_id, m.home_score, m.away_score, home_pts)
+        _accumulate(stats, m.away_team_id, m.away_score, m.home_score, away_pts)
+    return stats
+
+
 def get_team_standings(tournament):
     """
-    Returns a list of teams sorted by:
-    1. Tournament points (DESC)
-    2. Tie-breakers: goal difference among tied teams
-    Fully optimized, avoids N+1.
-    """
+    Return the tournament's teams in ranking order.
 
+    Teams are ordered by tournament points. Teams level on points are
+    separated according to `tournament.tiebreak_rule`:
+
+    head_to_head (default, UEFA style):
+        1. points in matches between the tied teams
+        2. goal difference in those matches
+        3. goals scored in those matches
+        4. overall goal difference
+        5. overall goals scored
+    goal_difference (FIFA style):
+        1. overall goal difference
+        2. overall goals scored
+        3-5. the head-to-head criteria above
+
+    Team name is the final, deterministic fallback.
+
+    Each returned team carries: played, wins, draws, losses, goals_for,
+    goals_against, goal_difference and goal_difference_vs_tied.
+    """
     teams = list(Team.objects.filter(tournament=tournament))
+    matches = list(
+        Match.objects.filter(tournament=tournament, is_finished=True)
+        .only('home_team_id', 'away_team_id', 'home_score', 'away_score')
+    )
+
+    overall = _collect_stats(tournament, matches)
+    for team in teams:
+        row = overall[team.id]
+        team.played = row['played']
+        team.wins = row['wins']
+        team.draws = row['draws']
+        team.losses = row['losses']
+        team.goals_for = row['goals_for']
+        team.goals_against = row['goals_against']
+        team.goal_difference = row['goals_for'] - row['goals_against']
+        team.goal_difference_vs_tied = 0
+
     points_groups = defaultdict(list)
     for team in teams:
         points_groups[team.tournament_points].append(team)
 
-    # Prefetch finished matches
-    matches = Match.objects.filter(
-        tournament=tournament,
-        is_finished=True
-    ).select_related('home_team', 'away_team')
-
-    # Prefetch goal events
-    events = MatchEvent.objects.filter(
-        match__in=matches,
-        event_type='goal'
-    ).select_related('team', 'match')
-
-    # map: match_id -> list of events
-    match_events_map = defaultdict(list)
-    for event in events:
-        match_events_map[event.match_id].append(event)
-
+    use_head_to_head_first = tournament.tiebreak_rule != Tournament.TIEBREAK_GOAL_DIFFERENCE
     sorted_teams = []
 
     for points in sorted(points_groups.keys(), reverse=True):
         group = points_groups[points]
 
-        if len(group) == 1:
-            group[0].goal_difference_vs_tied = 0  # set attribute for consistency
-            sorted_teams.extend(group)
-            continue
+        if len(group) > 1:
+            tied_ids = {t.id for t in group}
+            h2h = _collect_stats(tournament, matches, team_ids=tied_ids)
+            for team in group:
+                row = h2h[team.id]
+                team.h2h_points = row['points']
+                team.goal_difference_vs_tied = row['goals_for'] - row['goals_against']
+                team.h2h_goals_for = row['goals_for']
 
-        # Tie-breaker
-        for team in group:
-            opponents = {t.id for t in group if t != team}
-            goals_for = 0
-            goals_against = 0
+        def sort_key(t):
+            head_to_head = (
+                -getattr(t, 'h2h_points', 0),
+                -t.goal_difference_vs_tied,
+                -getattr(t, 'h2h_goals_for', 0),
+            )
+            overall_record = (-t.goal_difference, -t.goals_for)
+            primary, secondary = (
+                (head_to_head, overall_record) if use_head_to_head_first
+                else (overall_record, head_to_head)
+            )
+            return primary + secondary + (t.name.lower(),)
 
-            for m in matches:  # use 'm' instead of 'match' to avoid shadowing
-                if m.id not in match_events_map:
-                    continue
-
-                if {m.home_team_id, m.away_team_id} & opponents and team.id in (m.home_team_id, m.away_team_id):
-                    for event in match_events_map[m.id]:
-                        if event.team_id == team.id:
-                            goals_for += 1
-                        elif event.team_id in opponents:
-                            goals_against += 1
-
-            team.goal_difference_vs_tied = goals_for - goals_against
-
-        group.sort(key=lambda t: (-t.goal_difference_vs_tied, t.name))
+        group.sort(key=sort_key)
         sorted_teams.extend(group)
 
     return sorted_teams
@@ -378,40 +428,48 @@ def build_timeline(tournament):
 
     return timeline, field_names
 
+def match_points(tournament, home_goals, away_goals):
+    """Return (home_points, away_points) for a result, using the tournament's point settings."""
+    if home_goals > away_goals:
+        return tournament.points_for_win, tournament.points_for_loss
+    if away_goals > home_goals:
+        return tournament.points_for_loss, tournament.points_for_win
+    return tournament.points_for_draw, tournament.points_for_draw
+
+
 def recalculate_match_points(match, new_home_score, new_away_score):
     """
-    Recalculates tournament points for both teams based on a match result.
+    Apply a manually entered result to a match.
 
-    - Reverses previous result if match was already finished
-    - Applies new result
-    - Updates team points atomically
+    - Reverses the previously stored result if the match was already finished
+      (values are read from the database, not from the in-memory instance)
+    - Applies the new result using the tournament's configured points
+    - Marks the match as finished
     """
-
-    home_team = match.home_team
-    away_team = match.away_team
+    tournament = match.tournament
 
     with transaction.atomic():
-        # Reverse previous result if match already finished
-        if match.is_finished:
-            if match.home_score > match.away_score:
-                home_team.tournament_points = max(0, home_team.tournament_points - 3)
-            elif match.home_score < match.away_score:
-                away_team.tournament_points = max(0, away_team.tournament_points - 3)
-            else:
-                home_team.tournament_points = max(0, home_team.tournament_points - 1)
-                away_team.tournament_points = max(0, away_team.tournament_points - 1)
+        stored = Match.objects.select_for_update().get(pk=match.pk)
+        home = Team.objects.select_for_update().get(pk=stored.home_team_id)
+        away = Team.objects.select_for_update().get(pk=stored.away_team_id)
 
-        # Apply new result
-        if new_home_score > new_away_score:
-            home_team.tournament_points += 3
-        elif new_home_score < new_away_score:
-            away_team.tournament_points += 3
-        else:
-            home_team.tournament_points += 1
-            away_team.tournament_points += 1
+        if stored.is_finished:
+            old_home_pts, old_away_pts = match_points(tournament, stored.home_score, stored.away_score)
+            home.tournament_points = max(0, home.tournament_points - old_home_pts)
+            away.tournament_points = max(0, away.tournament_points - old_away_pts)
 
-        home_team.save()
-        away_team.save()
+        new_home_pts, new_away_pts = match_points(tournament, new_home_score, new_away_score)
+        home.tournament_points += new_home_pts
+        away.tournament_points += new_away_pts
+        home.save(update_fields=['tournament_points'])
+        away.save(update_fields=['tournament_points'])
+
+        stored.home_score = new_home_score
+        stored.away_score = new_away_score
+        stored.is_finished = True
+        stored.save(update_fields=['home_score', 'away_score', 'is_finished'])
+
+    return stored
 
 def reset_tournament_schedule(tournament):
     """

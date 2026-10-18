@@ -360,15 +360,8 @@ class MatchEditView(LoginRequiredMixin, TournamentAccessMixin, UpdateView):
             raise Http404("Match does not belong to this tournament.")
         return match
 
-    def form_valid(self, form):
-        old_start_time = self.get_object().start_time
-        response = super().form_valid(form)
-        new_start_time = form.instance.start_time
-
-        if new_start_time != old_start_time:
-            propagate_match_delay(self.object, new_start_time)
-
-        return response
+    def get_success_url(self):
+        return reverse('tournament-detail', kwargs={'pk': self.get_tournament().pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -428,21 +421,34 @@ def create_match_event(request, tournament_id, match_id):
     team_side = request.POST.get('team')
     player_id = request.POST.get('player_id')
     team_id = request.POST.get('team_id')
-    minute = request.POST.get('minute', '0')
+    minute = request.POST.get('minute') or '0'
+
+    valid_event_types = {choice for choice, _ in MatchEvent.EVENT_TYPES}
+    if event_type not in valid_event_types:
+        return JsonResponse({'success': False, 'error': 'Invalid event type'}, status=400)
+
+    if team_side not in ('home', 'away'):
+        return JsonResponse({'success': False, 'error': 'Invalid team side'}, status=400)
 
     if not player_id or not team_id:
         return JsonResponse({'success': False, 'error': 'Missing player_id or team_id'}, status=400)
 
     try:
         team_id = int(team_id)
-    except ValueError:
-        return JsonResponse({'success': False, 'error': 'Invalid team_id'}, status=400)
+        minute = int(minute)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Invalid team_id or minute'}, status=400)
+
+    if minute < 0:
+        return JsonResponse({'success': False, 'error': 'Minute cannot be negative'}, status=400)
 
     # Decide if home or away team was referenced
     team = match.home_team if team_side == 'home' else match.away_team
-    player = get_object_or_404(Player, id=player_id)
+    if team.id != team_id:
+        return JsonResponse({'success': False, 'error': 'Team does not match the selected side'}, status=400)
 
-    if player.team.id != team_id:
+    player = Player.objects.filter(id=player_id, team=team).first()
+    if player is None:
         return JsonResponse({'success': False, 'error': 'Player does not belong to this team'}, status=400)
 
     if event_type == 'goal' and player.is_muted:
@@ -457,7 +463,7 @@ def create_match_event(request, tournament_id, match_id):
         minute=minute,
     )
     if event_type == 'yellow_card':
-        if player.yellow_cards() >= match.tournament.yellow_cards_for_suspension:
+        if player.active_yellow_cards() >= match.tournament.yellow_cards_for_suspension:
             player.is_muted = True
             player.save(update_fields=['is_muted'])
     elif event_type == 'red_card':
@@ -466,17 +472,14 @@ def create_match_event(request, tournament_id, match_id):
 
         
     # Recalculate scores
-    home_score = (
-        match.events.filter(event_type='goal', team=match.home_team).count() +
-        match.events.filter(event_type='own_goal', team=match.away_team).count()
-    )
-    away_score = (
-        match.events.filter(event_type='goal', team=match.away_team).count() +
-        match.events.filter(event_type='own_goal', team=match.home_team).count()
-    )
+    home_score, away_score = match.score_from_events()
 
     if match.is_finished:
         recalculate_points(match)
+    else:
+        # Keep the stored score current during a live match
+        match.home_score, match.away_score = home_score, away_score
+        match.save(update_fields=['home_score', 'away_score'])
 
     return JsonResponse({
         'success': True,
@@ -494,7 +497,7 @@ def create_match_event(request, tournament_id, match_id):
 
 @login_required
 def add_player(request, tournament_id, team_id):
-    tournament = get_object_or_404(Tournament, id=tournament_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, owner=request.user)
 
     team = get_object_or_404(Team, id=team_id, tournament=tournament)
 
@@ -543,12 +546,12 @@ def remove_match_event(request, tournament_id, event_id):
     event.delete()
 
     if match.is_finished:
+        # Finished match: reverse old points and re-apply from remaining events
         recalculate_points(match)
     else:
-        match.home_score = 0
-        match.away_score = 0
-        match.save()
-        match.apply_result()
+        # Live match: only refresh the score, the match stays open
+        match.home_score, match.away_score = match.score_from_events()
+        match.save(update_fields=['home_score', 'away_score'])
 
     return JsonResponse({
         'success': True,

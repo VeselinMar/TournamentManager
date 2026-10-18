@@ -62,10 +62,7 @@ class LeaderboardAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, slug):
-        tournament = get_object_or_404(Tournament.objects.prefetch_related(
-            Prefetch('matches', queryset=Match.objects.filter(is_finished=True)
-                     .select_related('home_team', 'away_team'))
-        ), slug=slug)
+        tournament = get_object_or_404(Tournament, slug=slug)
 
         if not tournament.show_leaderboard:
             return Response(
@@ -73,42 +70,22 @@ class LeaderboardAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        finished_matches = tournament.matches.all()
-
         teams = get_team_standings(tournament)
         top_scorers = get_top_scorers(tournament)
 
-        standings = []
-        for team in teams:
-            team_matches = [
-                m for m in finished_matches
-                if m.home_team_id == team.id or m.away_team_id == team.id
-            ]
-
-            wins = draws = losses = goals_for = goals_against = 0
-            for m in team_matches:
-                is_home = m.home_team_id == team.id
-                gf = m.home_score if is_home else m.away_score
-                ga = m.away_score if is_home else m.home_score
-                goals_for += gf
-                goals_against += ga
-                if gf > ga:
-                    wins += 1
-                elif gf == ga:
-                    draws += 1
-                else:
-                    losses += 1
-
-            standings.append({
+        standings = [
+            {
                 'team_name': team.name,
                 'points': team.tournament_points,
-                'wins': wins,
-                'draws': draws,
-                'losses': losses,
-                'goals_for': goals_for,
-                'goals_against': goals_against,
-                'goal_difference': goals_for - goals_against,
-            })
+                'wins': team.wins,
+                'draws': team.draws,
+                'losses': team.losses,
+                'goals_for': team.goals_for,
+                'goals_against': team.goals_against,
+                'goal_difference': team.goal_difference,
+            }
+            for team in teams
+        ]
 
         data = {
             'standings': standings,
